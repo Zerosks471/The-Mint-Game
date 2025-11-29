@@ -513,10 +513,6 @@ export class GameService {
         include: { businessType: true },
       });
 
-      const playerStats = await tx.playerStats.findUnique({
-        where: { userId },
-      });
-
       await tx.playerStats.update({
         where: { userId },
         data: {

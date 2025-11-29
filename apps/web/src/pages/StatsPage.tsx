@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, IChartApi, ISeriesApi, LineData, Time } from 'lightweight-charts';
+import { createChart, ColorType, IChartApi, ISeriesApi, LineData, Time, AreaSeries } from 'lightweight-charts';
 import { gameApi, EarningsSnapshot, EarningsSummary } from '../api/game';
 import { formatCurrency } from '@mint/utils';
 
@@ -84,7 +84,7 @@ export function StatsPage() {
 
     chartRef.current = chart;
 
-    const series = chart.addAreaSeries({
+    const series = chart.addSeries(AreaSeries, {
       lineColor: '#10b981',
       topColor: 'rgba(16, 185, 129, 0.4)',
       bottomColor: 'rgba(16, 185, 129, 0.0)',

@@ -191,6 +191,7 @@ export class LeaderboardService {
     const now = new Date();
     for (let i = 0; i < players.length; i++) {
       const player = players[i];
+      if (!player) continue;
       const newRank = i + 1;
       const previousRank = existingRankMap.get(player.userId) || null;
 
@@ -232,7 +233,7 @@ export class LeaderboardService {
     const users = await prisma.user.findMany({
       where: { accountStatus: 'active' },
       include: {
-        stats: true,
+        playerStats: true,
         properties: {
           include: { propertyType: true },
         },
@@ -241,9 +242,9 @@ export class LeaderboardService {
     });
 
     return users
-      .filter((u) => u.stats)
+      .filter((u) => u.playerStats)
       .map((user) => {
-        let netWorth = new Decimal(user.stats!.cash);
+        let netWorth = new Decimal(user.playerStats!.cash);
 
         // Add property values
         for (const prop of user.properties) {
@@ -271,17 +272,17 @@ export class LeaderboardService {
   private async getIncomeRankings() {
     const users = await prisma.user.findMany({
       where: { accountStatus: 'active' },
-      include: { stats: true },
+      include: { playerStats: true },
     });
 
     return users
-      .filter((u) => u.stats)
+      .filter((u) => u.playerStats)
       .map((user) => ({
         userId: user.id,
         username: user.username,
         displayName: user.displayName,
         avatarId: user.avatarId,
-        score: new Decimal(user.stats!.effectiveIncomeHour),
+        score: new Decimal(user.playerStats!.effectiveIncomeHour),
       }));
   }
 
@@ -291,16 +292,16 @@ export class LeaderboardService {
   private async getPrestigeRankings() {
     const users = await prisma.user.findMany({
       where: { accountStatus: 'active' },
-      include: { stats: true },
+      include: { playerStats: true },
     });
 
     return users
-      .filter((u) => u.stats)
+      .filter((u) => u.playerStats)
       .map((user) => {
         // Score = prestigeLevel * 1000 + prestigePoints (so level is primary sort)
-        const score = new Decimal(user.stats!.prestigeLevel)
+        const score = new Decimal(user.playerStats!.prestigeLevel)
           .mul(1000)
-          .add(user.stats!.prestigePoints);
+          .add(user.playerStats!.prestigePoints);
 
         return {
           userId: user.id,

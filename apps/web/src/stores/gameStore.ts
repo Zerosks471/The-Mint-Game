@@ -129,7 +129,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
         get().fetchPlayerBusinesses(),
         get().fetchOfflineStatus(),
       ]);
-    } catch (err) {
+    } catch {
       set({ error: 'Failed to load game data' });
     } finally {
       set({ isLoading: false });

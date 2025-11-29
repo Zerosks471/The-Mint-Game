@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
             });
             return false;
           }
-        } catch (err) {
+        } catch {
           set({
             error: 'Network error. Please try again.',
             isLoading: false,
@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
             });
             return false;
           }
-        } catch (err) {
+        } catch {
           set({
             error: 'Network error. Please try again.',
             isLoading: false,

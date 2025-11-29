@@ -1,5 +1,6 @@
 import { prisma } from '@mint/database';
 import { Decimal } from '@prisma/client/runtime/library';
+import { ErrorCodes } from '@mint/types';
 import { AppError } from '../middleware/errorHandler';
 
 export interface PrestigeStatus {
@@ -85,7 +86,7 @@ export class PrestigeService {
     });
 
     if (!stats) {
-      throw new AppError('Player stats not found', 404);
+      throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
     }
 
     const netWorth = await this.calculateNetWorth(userId);
@@ -167,13 +168,14 @@ export class PrestigeService {
       });
 
       if (!stats) {
-        throw new AppError('Player stats not found', 404);
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
       }
 
       const netWorth = await this.calculateNetWorth(userId);
 
       if (netWorth.lessThan(PrestigeService.MINIMUM_NET_WORTH)) {
         throw new AppError(
+          ErrorCodes.VALIDATION_ERROR,
           `Need at least $${PrestigeService.MINIMUM_NET_WORTH.toLocaleString()} net worth to Go Public`,
           400
         );
@@ -247,7 +249,7 @@ export class PrestigeService {
       });
 
       if (!perk || !perk.isActive) {
-        throw new AppError('Perk not found', 404);
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Perk not found', 404);
       }
 
       const stats = await tx.playerStats.findUnique({
@@ -255,7 +257,7 @@ export class PrestigeService {
       });
 
       if (!stats) {
-        throw new AppError('Player stats not found', 404);
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
       }
 
       // Get current level
@@ -266,13 +268,13 @@ export class PrestigeService {
       const currentLevel = existingPerk?.level ?? 0;
 
       if (currentLevel >= perk.maxLevel) {
-        throw new AppError('Perk already at max level', 400);
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Perk already at max level', 400);
       }
 
       const cost = this.calculatePerkCost(perk.cost, currentLevel);
 
       if (stats.prestigePoints < cost) {
-        throw new AppError('Not enough prestige points', 400);
+        throw new AppError(ErrorCodes.INSUFFICIENT_FUNDS, 'Not enough prestige points', 400);
       }
 
       // Update or create player perk

@@ -242,9 +242,10 @@ export class UserService {
     return { accessToken, refreshToken, expiresAt };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sanitizeUser(user: any) {
-    const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } =
-      user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } = user;
     return sanitized;
   }
 }

@@ -1,5 +1,6 @@
 import { prisma } from '@mint/database';
 import { Decimal } from '@prisma/client/runtime/library';
+import { ErrorCodes } from '@mint/types';
 import { AppError } from '../middleware/errorHandler';
 
 export interface DailyRewardData {
@@ -128,7 +129,7 @@ export class DailyService {
       return {
         day,
         rewardType: reward?.rewardType || 'cash',
-        rewardData: (reward?.rewardData as DailyRewardData) || { amount: 500 },
+        rewardData: (reward?.rewardData as unknown as DailyRewardData) || { amount: 500 },
         isMilestone: [7, 14, 21, 30].includes(day),
       };
     });
@@ -143,7 +144,7 @@ export class DailyService {
         ? {
             day: effectiveDay,
             rewardType: nextRewardRecord.rewardType,
-            rewardData: nextRewardRecord.rewardData as DailyRewardData,
+            rewardData: nextRewardRecord.rewardData as unknown as DailyRewardData,
           }
         : null,
       upcomingRewards: sortedUpcoming,
@@ -173,7 +174,7 @@ export class DailyService {
 
       // Check if can claim
       if (!this.canClaimToday(streak.lastClaimAt)) {
-        throw new AppError('Already claimed today\'s reward', 400);
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Already claimed today\'s reward', 400);
       }
 
       const streakBroken = this.isStreakBroken(streak.lastClaimAt);
@@ -185,10 +186,10 @@ export class DailyService {
       });
 
       if (!reward) {
-        throw new AppError('Reward not found', 404);
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Reward not found', 404);
       }
 
-      const rewardData = reward.rewardData as DailyRewardData;
+      const rewardData = reward.rewardData as unknown as DailyRewardData;
 
       // Calculate new streak
       const newStreak = streakBroken ? 1 : streak.currentStreak + 1;
@@ -214,7 +215,7 @@ export class DailyService {
       });
 
       if (!stats) {
-        throw new AppError('Player stats not found', 404);
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
       }
 
       // Apply rewards
@@ -272,7 +273,7 @@ export class DailyService {
     return rewards.map((r) => ({
       day: r.day,
       rewardType: r.rewardType,
-      rewardData: r.rewardData as DailyRewardData,
+      rewardData: r.rewardData as unknown as DailyRewardData,
       isMilestone: [7, 14, 21, 30].includes(r.day),
     }));
   }

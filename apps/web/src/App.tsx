@@ -33,7 +33,7 @@ function HomePage() {
         database: data.checks?.database ?? false,
         timestamp: data.timestamp,
       });
-    } catch (error) {
+    } catch {
       setApiStatus({
         status: 'error',
         database: false,

@@ -28,7 +28,7 @@ export function PrestigePage() {
       if (perksRes.success && perksRes.data) {
         setPerks(perksRes.data);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load prestige data');
     } finally {
       setIsLoading(false);
@@ -52,7 +52,7 @@ export function PrestigePage() {
       } else {
         setError(res.error?.message || 'Failed to go public');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to go public');
     } finally {
       setIsPrestiging(false);
@@ -75,7 +75,7 @@ export function PrestigePage() {
       } else {
         setError(res.error?.message || 'Failed to buy perk');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to buy perk');
     }
   };

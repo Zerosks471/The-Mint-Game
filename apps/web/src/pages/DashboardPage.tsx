@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
-import { gameApi } from '../api/game';
+import { PlayerStats, PlayerBusiness } from '../api/game';
 
 // Donut progress circle component - shows progress toward earning a cent
 function EarningDonut({ progress }: { progress: number }) {
@@ -55,7 +55,7 @@ function RollingCash({ value }: { value: number }) {
 }
 
 // Detailed Income card
-function IncomeCard({ stats }: { stats: ReturnType<typeof useGameStore>['stats'] }) {
+function IncomeCard({ stats }: { stats: PlayerStats | null }) {
   const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
   const incomePerDay = incomePerHour * 24;
   const multiplier = parseFloat(stats?.currentMultiplier || '1');
@@ -118,9 +118,9 @@ function PropertiesCard({ total, managed, income }: { total: number; managed: nu
 }
 
 // Detailed Businesses card
-function BusinessesCard({ total, businesses }: { total: number; businesses: ReturnType<typeof useGameStore>['playerBusinesses'] }) {
-  const readyCount = businesses.filter(b => b.cycleComplete).length;
-  const totalRevenue = businesses.reduce((sum, b) => sum + parseFloat(b.currentRevenue), 0);
+function BusinessesCard({ total, businesses }: { total: number; businesses: PlayerBusiness[] }) {
+  const readyCount = businesses.filter((b: PlayerBusiness) => b.cycleComplete).length;
+  const totalRevenue = businesses.reduce((sum: number, b: PlayerBusiness) => sum + parseFloat(b.currentRevenue), 0);
 
   return (
     <div className="rounded-xl border-2 p-4 bg-purple-50 border-purple-200 text-purple-700">

@@ -31,14 +31,9 @@ router.get(
         throw new AppError(ErrorCodes.NOT_FOUND, 'User not found', 404);
       }
 
-      // Sanitize user
-      const {
-        passwordHash,
-        twoFactorSecret,
-        emailVerifyToken,
-        passwordResetToken,
-        ...sanitized
-      } = user;
+      // Sanitize user - remove sensitive fields
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } = user;
 
       res.json({
         success: true,
