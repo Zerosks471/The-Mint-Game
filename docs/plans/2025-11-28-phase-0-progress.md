@@ -2,7 +2,7 @@
 
 **Project:** The Mint
 **Started:** November 28, 2025
-**Status:** In Progress (5/8 tasks completed)
+**Status:** COMPLETE (8/8 tasks completed)
 
 ---
 
@@ -14,10 +14,10 @@
 | 2 | Create shared packages (types, utils) | ✅ Completed | `b0ebb73`, `4dcc825` |
 | 3 | Set up database package with Prisma | ✅ Completed | `bfa5412` |
 | 4 | Create API Gateway service | ✅ Completed | `b9d51b8` |
-| 5 | Set up React frontend with Vite | ✅ Completed | (latest) |
-| 6 | Configure Docker development environment | ⏳ Pending | - |
-| 7 | Set up CI/CD with GitHub Actions | ⏳ Pending | - |
-| 8 | Create environment configuration | ⏳ Pending | - |
+| 5 | Set up React frontend with Vite | ✅ Completed | (see git log) |
+| 6 | Configure Docker development environment | ✅ Completed | `26da9b9` |
+| 7 | Set up CI/CD with GitHub Actions | ✅ Completed | `2260fc3` |
+| 8 | Create environment configuration | ✅ Completed | (final commit) |
 
 ---
 
@@ -165,32 +165,62 @@ the-mint/
 
 ---
 
-## Pending Tasks
+### Task 6: Docker Development Environment ✅
 
-### Task 6: Docker Development Environment ⏳
+**Files Created:**
+- `docker-compose.yml` - PostgreSQL 16, Redis 7, MailHog
+- `docker-compose.override.yml` - Development port overrides
+- `.dockerignore` - Docker ignore patterns
+- `scripts/dev-setup.sh` - Complete development setup script
 
-**Files to Create:**
-- `docker-compose.yml` - PostgreSQL, Redis, MailHog
-- `docker-compose.override.yml` - Development overrides
-- `.dockerignore`
-- `scripts/dev-setup.sh` - Setup script
+**Services Configured:**
+| Service | Port | Purpose |
+|---------|------|---------|
+| PostgreSQL | 5432 | Database |
+| Redis | 6379 | Cache/Sessions |
+| MailHog SMTP | 1025 | Email testing |
+| MailHog UI | 8025 | Email viewer |
+
+**Features:**
+- Health checks for all services
+- Persistent volumes for data
+- One-command setup (`pnpm setup`)
 
 ---
 
-### Task 7: CI/CD with GitHub Actions ⏳
+### Task 7: CI/CD with GitHub Actions ✅
 
-**Files to Create:**
-- `.github/workflows/ci.yml` - Lint, typecheck, build, test
+**Files Created:**
+- `.github/workflows/ci.yml` - Full CI pipeline
 - `.github/workflows/deploy.yml` - Staging deployment
-- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/PULL_REQUEST_TEMPLATE.md` - PR template
+
+**CI Pipeline Jobs:**
+1. **lint-and-typecheck** - ESLint and TypeScript checks
+2. **build** - Build all packages
+3. **test** - Run tests with PostgreSQL/Redis containers
+
+**Features:**
+- Concurrency control (cancels in-progress runs)
+- pnpm caching for faster builds
+- Service containers for realistic testing
+- Vercel deployment configuration
 
 ---
 
-### Task 8: Environment Configuration ⏳
+### Task 8: Environment Configuration ✅
 
-**Files to Create:**
+**Files Created:**
 - `.env.example` - Root environment template
-- `README.md` - Project documentation
+- `README.md` - Comprehensive project documentation
+
+**Environment Variables:**
+- Database configuration (DATABASE_URL)
+- Redis configuration (REDIS_URL)
+- JWT secrets (ACCESS/REFRESH)
+- Application URLs (APP_URL, API_URL)
+- Stripe placeholders (commented, Phase 3)
+- Email/SMTP placeholders (commented, Phase 2)
 
 ---
 
@@ -221,14 +251,69 @@ pnpm setup            # Run development setup script
 
 ---
 
-## Next Steps
+## Project Structure
 
-1. Complete Task 6: Docker development environment
-2. Complete Task 7: CI/CD with GitHub Actions
-3. Complete Task 8: Environment configuration and README
-4. Verify all services work together
-5. Proceed to Phase 1: Core Game MVP
+```
+the-mint/
+├── apps/
+│   └── web/                  # React frontend (Vite + Tailwind)
+├── packages/
+│   ├── database/             # Prisma schema and client
+│   ├── types/                # Shared TypeScript types
+│   └── utils/                # Shared utility functions
+├── services/
+│   ├── api-gateway/          # Express.js API gateway
+│   ├── user/                 # User service (Phase 1)
+│   └── game/                 # Game state service (Phase 1)
+├── scripts/
+│   └── dev-setup.sh          # Development setup script
+├── docs/
+│   └── plans/                # Design and planning documents
+├── .github/
+│   └── workflows/            # CI/CD workflows
+├── docker-compose.yml        # Docker services
+├── package.json              # Root package
+├── turbo.json                # Turborepo config
+├── tsconfig.base.json        # Base TypeScript config
+└── README.md                 # Project documentation
+```
 
 ---
 
-*Progress updated: November 28, 2025*
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Zustand |
+| Backend | Node.js, Express.js, TypeScript |
+| Database | PostgreSQL 16, Prisma ORM |
+| Cache | Redis 7 |
+| Build | pnpm, Turborepo |
+| CI/CD | GitHub Actions |
+| Deployment | Vercel (frontend), TBD (backend) |
+
+---
+
+## Next Steps: Phase 1
+
+Phase 0 is complete! The foundation is ready for Phase 1: Core Game MVP
+
+**Phase 1 Scope:**
+1. User authentication (register, login, JWT)
+2. Properties system (buy, upgrade, collect income)
+3. Businesses system (buy, level up, cycles)
+4. Basic game loop (income calculation, offline earnings)
+5. Player progression (levels, experience)
+
+**To start Phase 1:**
+```bash
+# Start development environment
+pnpm setup
+
+# Start all services
+pnpm dev
+```
+
+---
+
+*Phase 0 completed: November 28, 2025*
