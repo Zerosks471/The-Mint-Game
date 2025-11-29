@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import { config } from './config';
 import { requestIdMiddleware, errorHandler, notFoundHandler } from './middleware';
 import routes from './routes';
@@ -43,6 +44,9 @@ export function createApp(): Application {
   // Body parsing
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+  // Cookie parsing
+  app.use(cookieParser());
 
   // Routes
   app.use('/api', routes);
