@@ -6,7 +6,7 @@ declare global {
 }
 
 const log: Prisma.LogLevel[] = process.env.NODE_ENV === 'development'
-  ? ['query', 'error', 'warn']
+  ? ['error', 'warn']  // Removed 'query' to reduce console spam
   : ['error'];
 
 export const prisma = globalThis.prisma ?? new PrismaClient({ log });
