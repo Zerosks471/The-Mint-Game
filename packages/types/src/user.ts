@@ -19,7 +19,7 @@ export interface User {
   isPremium: boolean;
   premiumUntil: Date | null;
   tutorialCompleted: boolean;
-  referralCode: string;
+  referralCode: string | null;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt: Date | null;
