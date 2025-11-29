@@ -12,24 +12,26 @@
 
 ## Task Overview
 
-| Task | Description | Estimated Steps |
-|------|-------------|-----------------|
-| 1 | Initialize monorepo with pnpm and Turborepo | 8 |
-| 2 | Create shared packages (types, utils) | 10 |
-| 3 | Set up database package with Prisma | 12 |
-| 4 | Create API Gateway service | 15 |
-| 5 | Set up React frontend with Vite | 12 |
-| 6 | Configure Docker development environment | 8 |
-| 7 | Set up CI/CD with GitHub Actions | 10 |
-| 8 | Create environment configuration | 6 |
+| Task | Description                                 | Estimated Steps |
+| ---- | ------------------------------------------- | --------------- |
+| 1    | Initialize monorepo with pnpm and Turborepo | 8               |
+| 2    | Create shared packages (types, utils)       | 10              |
+| 3    | Set up database package with Prisma         | 12              |
+| 4    | Create API Gateway service                  | 15              |
+| 5    | Set up React frontend with Vite             | 12              |
+| 6    | Configure Docker development environment    | 8               |
+| 7    | Set up CI/CD with GitHub Actions            | 10              |
+| 8    | Create environment configuration            | 6               |
 
 **Total Steps:** ~81 bite-sized steps
+.
 
 ---
 
 ## Task 1: Initialize Monorepo with pnpm and Turborepo
 
 **Files:**
+
 - Create: `package.json`
 - Create: `pnpm-workspace.yaml`
 - Create: `turbo.json`
@@ -90,9 +92,9 @@ git init
 
 ```yaml
 packages:
-  - "packages/*"
-  - "apps/*"
-  - "services/*"
+  - 'packages/*'
+  - 'apps/*'
+  - 'services/*'
 ```
 
 **Step 5: Create turbo.json**
@@ -228,9 +230,7 @@ module.exports = {
     node: true,
     es2022: true,
   },
-  extends: [
-    'eslint:recommended',
-  ],
+  extends: ['eslint:recommended'],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
@@ -274,6 +274,7 @@ git commit -m "chore: initialize monorepo with pnpm and Turborepo
 ## Task 2: Create Shared Packages (types, utils)
 
 **Files:**
+
 - Create: `packages/types/package.json`
 - Create: `packages/types/tsconfig.json`
 - Create: `packages/types/src/index.ts`
@@ -624,7 +625,7 @@ export const ErrorCodes = {
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
 } as const;
 
-export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 ```
 
 **Step 6: Create packages/types/src/index.ts**
@@ -824,6 +825,7 @@ git commit -m "feat: add shared types and utils packages
 ## Task 3: Set Up Database Package with Prisma
 
 **Files:**
+
 - Create: `packages/database/package.json`
 - Create: `packages/database/tsconfig.json`
 - Create: `packages/database/prisma/schema.prisma`
@@ -1317,9 +1319,10 @@ declare global {
 }
 
 const prismaClientOptions = {
-  log: process.env.NODE_ENV === 'development'
-    ? ['query', 'error', 'warn'] as const
-    : ['error'] as const,
+  log:
+    process.env.NODE_ENV === 'development'
+      ? (['query', 'error', 'warn'] as const)
+      : (['error'] as const),
 };
 
 export const prisma = globalThis.prisma ?? new PrismaClient(prismaClientOptions);
@@ -1386,6 +1389,7 @@ git commit -m "feat: add database package with Prisma schema
 ## Task 4: Create API Gateway Service
 
 **Files:**
+
 - Create: `services/api-gateway/package.json`
 - Create: `services/api-gateway/tsconfig.json`
 - Create: `services/api-gateway/src/index.ts`
@@ -1515,9 +1519,8 @@ declare global {
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction) {
   const clientRequestId = req.get('X-Request-ID');
 
-  req.requestId = clientRequestId && isValidUUID(clientRequestId)
-    ? clientRequestId
-    : crypto.randomUUID();
+  req.requestId =
+    clientRequestId && isValidUUID(clientRequestId) ? clientRequestId : crypto.randomUUID();
 
   req.startTime = Date.now();
 
@@ -1582,12 +1585,7 @@ export class NotFoundError extends AppError {
   }
 }
 
-export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-) {
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction) {
   console.error('Request error:', {
     requestId: req.requestId,
     path: req.path,
@@ -1728,23 +1726,20 @@ export function createApp() {
   app.use(helmet());
 
   // CORS
-  app.use(cors({
-    origin: config.APP_URL,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Request-ID',
-      'X-Client-Version',
-    ],
-    exposedHeaders: [
-      'X-Request-ID',
-      'X-RateLimit-Limit',
-      'X-RateLimit-Remaining',
-      'X-RateLimit-Reset',
-    ],
-  }));
+  app.use(
+    cors({
+      origin: config.APP_URL,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'X-Client-Version'],
+      exposedHeaders: [
+        'X-Request-ID',
+        'X-RateLimit-Limit',
+        'X-RateLimit-Remaining',
+        'X-RateLimit-Reset',
+      ],
+    })
+  );
 
   // Compression
   app.use(compression());
@@ -1866,6 +1861,7 @@ git commit -m "feat: add API Gateway service
 ## Task 5: Set Up React Frontend with Vite
 
 **Files:**
+
 - Create: `apps/web/package.json`
 - Create: `apps/web/tsconfig.json`
 - Create: `apps/web/vite.config.ts`
@@ -1991,10 +1987,7 @@ export default defineConfig({
 ```javascript
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
@@ -2060,7 +2053,10 @@ export default {
     <title>The Mint</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>
@@ -2119,9 +2115,7 @@ function HomePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       <div className="text-center">
-        <h1 className="text-5xl font-display font-bold text-mint-600 mb-4">
-          🌿 The Mint
-        </h1>
+        <h1 className="text-5xl font-display font-bold text-mint-600 mb-4">🌿 The Mint</h1>
         <p className="text-xl text-gray-600 mb-8">
           Build Your Financial Empire. One Click at a Time.
         </p>
@@ -2191,6 +2185,7 @@ git commit -m "feat: add React frontend with Vite
 ## Task 6: Configure Docker Development Environment
 
 **Files:**
+
 - Create: `docker-compose.yml`
 - Create: `docker-compose.override.yml`
 - Create: `.dockerignore`
@@ -2210,11 +2205,11 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: themint
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -2224,11 +2219,11 @@ services:
     container_name: mint-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -2238,8 +2233,8 @@ services:
     container_name: mint-mailhog
     restart: unless-stopped
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
     logging:
       driver: none
 
@@ -2257,11 +2252,11 @@ version: '3.8'
 services:
   postgres:
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   redis:
     ports:
-      - "6379:6379"
+      - '6379:6379'
 ```
 
 **Step 3: Create .dockerignore**
@@ -2380,6 +2375,7 @@ git commit -m "feat: add Docker development environment
 ## Task 7: Set Up CI/CD with GitHub Actions
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`
 - Create: `.github/workflows/deploy.yml`
 - Create: `.github/PULL_REQUEST_TEMPLATE.md`
@@ -2591,6 +2587,7 @@ jobs:
 ## Related Issues
 
 <!-- Link any related issues here -->
+
 Closes #
 
 ## Testing
@@ -2629,6 +2626,7 @@ git commit -m "feat: add CI/CD workflows with GitHub Actions
 ## Task 8: Create Environment Configuration
 
 **Files:**
+
 - Create: `.env.example`
 - Update: Various `.env.example` files
 
@@ -2672,7 +2670,7 @@ NODE_ENV="development"
 
 **Step 2: Create a README.md**
 
-```markdown
+````markdown
 # The Mint 🌿
 
 Build Your Financial Empire. One Click at a Time.
@@ -2692,13 +2690,16 @@ Build Your Financial Empire. One Click at a Time.
    git clone <repo-url>
    cd the-mint
    ```
+````
 
 2. **Run setup script**
+
    ```bash
    pnpm setup
    ```
 
 3. **Start development servers**
+
    ```bash
    pnpm dev
    ```
@@ -2728,16 +2729,16 @@ the-mint/
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all services in development mode |
-| `pnpm build` | Build all packages and services |
-| `pnpm lint` | Lint all packages |
-| `pnpm typecheck` | Type check all packages |
-| `pnpm test` | Run all tests |
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:push` | Push schema to database |
-| `pnpm db:studio` | Open Prisma Studio |
+| Command            | Description                            |
+| ------------------ | -------------------------------------- |
+| `pnpm dev`         | Start all services in development mode |
+| `pnpm build`       | Build all packages and services        |
+| `pnpm lint`        | Lint all packages                      |
+| `pnpm typecheck`   | Type check all packages                |
+| `pnpm test`        | Run all tests                          |
+| `pnpm db:generate` | Generate Prisma client                 |
+| `pnpm db:push`     | Push schema to database                |
+| `pnpm db:studio`   | Open Prisma Studio                     |
 
 ## Development
 
@@ -2781,7 +2782,8 @@ pnpm db:studio
 ## License
 
 Private - All Rights Reserved
-```
+
+````
 
 **Step 3: Final commit for Phase 0**
 
@@ -2794,7 +2796,7 @@ git commit -m "docs: add README and environment configuration
 - Document project structure and commands
 
 Phase 0 Complete! ✅"
-```
+````
 
 ---
 
@@ -2822,4 +2824,4 @@ After Phase 0 is complete:
 
 ---
 
-*Plan created November 28, 2025*
+_Plan created November 28, 2025_
