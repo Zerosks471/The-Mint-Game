@@ -1,0 +1,417 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER DOMAIN
+// ============================================================================
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  username              String    @unique
+  passwordHash          String    @map("password_hash")
+
+  // Profile
+  displayName           String?   @map("display_name")
+  avatarId              String    @default("default_avatar") @map("avatar_id")
+  bio                   String?
+  countryCode           String?   @map("country_code")
+  timezone              String    @default("UTC")
+
+  // Account status
+  emailVerified         Boolean   @default(false) @map("email_verified")
+  emailVerifyToken      String?   @map("email_verify_token")
+  accountStatus         String    @default("active") @map("account_status")
+
+  // Security
+  passwordResetToken    String?   @map("password_reset_token")
+  passwordResetExpires  DateTime? @map("password_reset_expires")
+  failedLoginAttempts   Int       @default(0) @map("failed_login_attempts")
+  lockedUntil           DateTime? @map("locked_until")
+  twoFactorEnabled      Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret       String?   @map("two_factor_secret")
+
+  // Preferences
+  theme                 String    @default("light")
+  soundEnabled          Boolean   @default(true) @map("sound_enabled")
+  musicEnabled          Boolean   @default(true) @map("music_enabled")
+  notificationsEnabled  Boolean   @default(true) @map("notifications_enabled")
+  language              String    @default("en")
+
+  // Premium
+  isPremium             Boolean   @default(false) @map("is_premium")
+  premiumUntil          DateTime? @map("premium_until")
+  stripeCustomerId      String?   @map("stripe_customer_id")
+
+  // Onboarding
+  tutorialCompleted     Boolean   @default(false) @map("tutorial_completed")
+  referralCode          String?   @unique @map("referral_code")
+  referredByUserId      String?   @map("referred_by_user_id")
+
+  // Analytics
+  signupPlatform        String?   @map("signup_platform")
+  signupIp              String?   @map("signup_ip")
+
+  // Timestamps
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  lastLoginAt           DateTime? @map("last_login_at")
+  lastActiveAt          DateTime? @map("last_active_at")
+  deletedAt             DateTime? @map("deleted_at")
+
+  // Relations
+  referredBy            User?     @relation("Referrals", fields: [referredByUserId], references: [id])
+  referrals             User[]    @relation("Referrals")
+  playerStats           PlayerStats?
+  sessions              UserSession[]
+  properties            PlayerProperty[]
+  businesses            PlayerBusiness[]
+  achievements          PlayerAchievement[]
+  cosmetics             PlayerCosmetic[]
+  subscriptions         Subscription[]
+  purchases             Purchase[]
+  friendsRequested      Friendship[] @relation("FriendRequester")
+  friendsReceived       Friendship[] @relation("FriendAddressee")
+  ownedClubs            Club[]       @relation("ClubOwner")
+  clubMemberships       ClubMembership[]
+
+  @@map("users")
+}
+
+model UserSession {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  sessionToken    String    @unique @map("session_token")
+  deviceType      String?   @map("device_type")
+  deviceName      String?   @map("device_name")
+  ipAddress       String?   @map("ip_address")
+  userAgent       String?   @map("user_agent")
+  isActive        Boolean   @default(true) @map("is_active")
+  lastActivityAt  DateTime  @default(now()) @map("last_activity_at")
+  expiresAt       DateTime  @map("expires_at")
+  revokedAt       DateTime? @map("revoked_at")
+  revokeReason    String?   @map("revoke_reason")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model PlayerStats {
+  userId              String    @id @map("user_id")
+  cash                Decimal   @default(1000.00) @db.Decimal(24, 2)
+  premiumCurrency     Int       @default(0) @map("premium_currency")
+  lifetimeCashEarned  Decimal   @default(0) @map("lifetime_cash_earned") @db.Decimal(28, 2)
+  playerLevel         Int       @default(1) @map("player_level")
+  experiencePoints    BigInt    @default(0) @map("experience_points")
+  prestigeLevel       Int       @default(0) @map("prestige_level")
+  prestigePoints      Int       @default(0) @map("prestige_points")
+  prestigeMultiplier  Decimal   @default(1.0000) @map("prestige_multiplier") @db.Decimal(6, 4)
+  timesPrestiged      Int       @default(0) @map("times_prestiged")
+  baseIncomePerHour   Decimal   @default(0) @map("base_income_per_hour") @db.Decimal(20, 2)
+  currentMultiplier   Decimal   @default(1.0000) @map("current_multiplier") @db.Decimal(8, 4)
+  effectiveIncomeHour Decimal   @default(0) @map("effective_income_hour") @db.Decimal(20, 2)
+  lastCollectionAt    DateTime  @default(now()) @map("last_collection_at")
+  offlineCapHours     Int       @default(8) @map("offline_cap_hours")
+  totalPropertiesOwned Int      @default(0) @map("total_properties_owned")
+  totalBusinessesOwned Int      @default(0) @map("total_businesses_owned")
+  highestNetWorth     Decimal   @default(0) @map("highest_net_worth") @db.Decimal(24, 2)
+  totalPlayTimeMins   Int       @default(0) @map("total_play_time_mins")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("player_stats")
+}
+
+// ============================================================================
+// PROPERTY DOMAIN
+// ============================================================================
+
+model PropertyType {
+  id                Int       @id @default(autoincrement())
+  slug              String    @unique
+  name              String
+  description       String?
+  iconUrl           String?   @map("icon_url")
+  imageUrl          String?   @map("image_url")
+  category          String
+  tier              Int       @default(1)
+  unlockRequirement Json?     @map("unlock_requirement")
+  baseCost          Decimal   @map("base_cost") @db.Decimal(20, 2)
+  costMultiplier    Decimal   @default(1.15) @map("cost_multiplier") @db.Decimal(8, 4)
+  baseIncomeHour    Decimal   @map("base_income_hour") @db.Decimal(16, 2)
+  incomeMultiplier  Decimal   @default(1.10) @map("income_multiplier") @db.Decimal(8, 4)
+  managerCost       Decimal?  @map("manager_cost") @db.Decimal(18, 2)
+  managerName       String?   @map("manager_name")
+  maxQuantity       Int       @default(1000) @map("max_quantity")
+  maxUpgradeLevel   Int       @default(100) @map("max_upgrade_level")
+  sortOrder         Int       @default(0) @map("sort_order")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  playerProperties  PlayerProperty[]
+
+  @@map("property_types")
+}
+
+model PlayerProperty {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  propertyTypeId    Int       @map("property_type_id")
+  quantity          Int       @default(1)
+  totalSpent        Decimal   @default(0) @map("total_spent") @db.Decimal(22, 2)
+  upgradeLevel      Int       @default(0) @map("upgrade_level")
+  managerHired      Boolean   @default(false) @map("manager_hired")
+  managerHiredAt    DateTime? @map("manager_hired_at")
+  currentIncomeHour Decimal   @default(0) @map("current_income_hour") @db.Decimal(18, 2)
+  nextPurchaseCost  Decimal?  @map("next_purchase_cost") @db.Decimal(20, 2)
+  nextUpgradeCost   Decimal?  @map("next_upgrade_cost") @db.Decimal(20, 2)
+  skinId            String?   @map("skin_id")
+  firstPurchasedAt  DateTime  @default(now()) @map("first_purchased_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyType      PropertyType @relation(fields: [propertyTypeId], references: [id])
+
+  @@unique([userId, propertyTypeId])
+  @@map("player_properties")
+}
+
+// ============================================================================
+// BUSINESS DOMAIN
+// ============================================================================
+
+model BusinessType {
+  id                Int       @id @default(autoincrement())
+  slug              String    @unique
+  name              String
+  description       String?
+  iconUrl           String?   @map("icon_url")
+  imageUrl          String?   @map("image_url")
+  category          String
+  tier              Int       @default(1)
+  unlockRequirement Json?     @map("unlock_requirement")
+  baseCost          Decimal   @map("base_cost") @db.Decimal(20, 2)
+  baseRevenue       Decimal   @map("base_revenue") @db.Decimal(16, 2)
+  cycleSeconds      Int       @default(3600) @map("cycle_seconds")
+  levelCostMult     Decimal   @default(1.12) @map("level_cost_mult") @db.Decimal(8, 4)
+  levelRevenueMult  Decimal   @default(1.08) @map("level_revenue_mult") @db.Decimal(8, 4)
+  maxEmployees      Int       @default(10) @map("max_employees")
+  employeeBaseCost  Decimal?  @map("employee_base_cost") @db.Decimal(16, 2)
+  employeeBonusPct  Decimal   @default(5.00) @map("employee_bonus_pct") @db.Decimal(5, 2)
+  maxLevel          Int       @default(200) @map("max_level")
+  sortOrder         Int       @default(0) @map("sort_order")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  playerBusinesses  PlayerBusiness[]
+
+  @@map("business_types")
+}
+
+model PlayerBusiness {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  businessTypeId    Int       @map("business_type_id")
+  level             Int       @default(1)
+  totalInvested     Decimal   @default(0) @map("total_invested") @db.Decimal(22, 2)
+  employeeCount     Int       @default(0) @map("employee_count")
+  currentCycleStart DateTime  @default(now()) @map("current_cycle_start")
+  cycleSeconds      Int?      @map("cycle_seconds")
+  cyclesCompleted   BigInt    @default(0) @map("cycles_completed")
+  totalRevenue      Decimal   @default(0) @map("total_revenue") @db.Decimal(24, 2)
+  isAutomated       Boolean   @default(false) @map("is_automated")
+  currentRevenue    Decimal   @default(0) @map("current_revenue") @db.Decimal(18, 2)
+  nextLevelCost     Decimal?  @map("next_level_cost") @db.Decimal(20, 2)
+  purchasedAt       DateTime  @default(now()) @map("purchased_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessType      BusinessType @relation(fields: [businessTypeId], references: [id])
+
+  @@unique([userId, businessTypeId])
+  @@map("player_businesses")
+}
+
+// ============================================================================
+// SOCIAL DOMAIN
+// ============================================================================
+
+model Friendship {
+  id            String    @id @default(uuid())
+  requesterId   String    @map("requester_id")
+  addresseeId   String    @map("addressee_id")
+  status        String    @default("pending")
+  requestedAt   DateTime  @default(now()) @map("requested_at")
+  respondedAt   DateTime? @map("responded_at")
+
+  requester     User      @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee     User      @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@map("friendships")
+}
+
+model Club {
+  id              String    @id @default(uuid())
+  name            String
+  description     String?
+  ownerId         String    @map("owner_id")
+  isPublic        Boolean   @default(true) @map("is_public")
+  memberCount     Int       @default(1) @map("member_count")
+  maxMembers      Int       @default(20) @map("max_members")
+  clubLevel       Int       @default(1) @map("club_level")
+  incomeBonusPct  Decimal   @default(5.00) @map("income_bonus_pct") @db.Decimal(5, 2)
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  owner           User      @relation("ClubOwner", fields: [ownerId], references: [id])
+  memberships     ClubMembership[]
+
+  @@map("clubs")
+}
+
+model ClubMembership {
+  clubId          String    @map("club_id")
+  userId          String    @map("user_id")
+  role            String    @default("member")
+  status          String    @default("active")
+  joinedAt        DateTime  @default(now()) @map("joined_at")
+
+  club            Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clubId, userId])
+  @@map("club_memberships")
+}
+
+// ============================================================================
+// ACHIEVEMENTS & COSMETICS
+// ============================================================================
+
+model Achievement {
+  id                String    @id
+  name              String
+  description       String
+  iconUrl           String?   @map("icon_url")
+  category          String
+  tier              String    @default("bronze")
+  points            Int       @default(10)
+  requirementType   String    @map("requirement_type")
+  requirementValue  Decimal   @map("requirement_value") @db.Decimal(24, 2)
+  rewardCash        Decimal   @default(0) @map("reward_cash") @db.Decimal(18, 2)
+  rewardPremium     Int       @default(0) @map("reward_premium")
+  rewardCosmeticId  String?   @map("reward_cosmetic_id")
+  isSecret          Boolean   @default(false) @map("is_secret")
+  sortOrder         Int       @default(0) @map("sort_order")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  playerAchievements PlayerAchievement[]
+
+  @@map("achievements")
+}
+
+model PlayerAchievement {
+  userId          String    @map("user_id")
+  achievementId   String    @map("achievement_id")
+  progress        Decimal   @default(0) @db.Decimal(24, 2)
+  isCompleted     Boolean   @default(false) @map("is_completed")
+  rewardClaimed   Boolean   @default(false) @map("reward_claimed")
+  completedAt     DateTime? @map("completed_at")
+  claimedAt       DateTime? @map("claimed_at")
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement     Achievement @relation(fields: [achievementId], references: [id])
+
+  @@id([userId, achievementId])
+  @@map("player_achievements")
+}
+
+model Cosmetic {
+  id              String    @id
+  name            String
+  description     String?
+  type            String
+  category        String?
+  rarity          String    @default("common")
+  previewUrl      String?   @map("preview_url")
+  assetUrl        String?   @map("asset_url")
+  acquisitionType String    @map("acquisition_type")
+  premiumCost     Int?      @map("premium_cost")
+  isAvailable     Boolean   @default(true) @map("is_available")
+  sortOrder       Int       @default(0) @map("sort_order")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  playerCosmetics PlayerCosmetic[]
+
+  @@map("cosmetics")
+}
+
+model PlayerCosmetic {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  cosmeticId      String    @map("cosmetic_id")
+  isEquipped      Boolean   @default(false) @map("is_equipped")
+  acquiredVia     String    @map("acquired_via")
+  acquiredAt      DateTime  @default(now()) @map("acquired_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cosmetic        Cosmetic  @relation(fields: [cosmeticId], references: [id])
+
+  @@unique([userId, cosmeticId])
+  @@map("player_cosmetics")
+}
+
+// ============================================================================
+// PAYMENT DOMAIN
+// ============================================================================
+
+model Subscription {
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  planId                String    @map("plan_id")
+  stripeCustomerId      String    @map("stripe_customer_id")
+  stripeSubscriptionId  String    @unique @map("stripe_subscription_id")
+  status                String
+  cancelAtPeriodEnd     Boolean   @default(false) @map("cancel_at_period_end")
+  currentPeriodStart    DateTime  @map("current_period_start")
+  currentPeriodEnd      DateTime  @map("current_period_end")
+  trialStart            DateTime? @map("trial_start")
+  trialEnd              DateTime? @map("trial_end")
+  canceledAt            DateTime? @map("canceled_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model Purchase {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  productType       String    @map("product_type")
+  productId         String    @map("product_id")
+  productName       String    @map("product_name")
+  quantity          Int       @default(1)
+  price             Decimal   @db.Decimal(10, 2)
+  currency          String    @default("USD")
+  paymentMethod     String    @map("payment_method")
+  stripePaymentId   String?   @map("stripe_payment_id")
+  status            String
+  fulfilled         Boolean   @default(false)
+  fulfilledAt       DateTime? @map("fulfilled_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+}
