@@ -352,12 +352,18 @@ export class GameService {
       orderBy: { businessType: { sortOrder: 'asc' } },
     });
 
-    // Add cycle progress
-    return businesses.map((biz) => ({
-      ...biz,
-      cycleProgress: this.calculateCycleProgress(biz),
-      cycleComplete: this.isCycleComplete(biz),
-    }));
+    // Add cycle progress and format BigInt
+    return businesses.map((biz) => this.formatBusiness(biz));
+  }
+
+  // Format business to convert BigInt to Number for JSON serialization
+  private formatBusiness(business: any) {
+    return {
+      ...business,
+      cyclesCompleted: Number(business.cyclesCompleted),
+      cycleProgress: this.calculateCycleProgress(business),
+      cycleComplete: this.isCycleComplete(business),
+    };
   }
 
   async buyBusiness(userId: string, businessTypeId: number) {
@@ -417,7 +423,7 @@ export class GameService {
         },
       });
 
-      return business;
+      return this.formatBusiness(business);
     });
   }
 
@@ -476,7 +482,7 @@ export class GameService {
         data: { cash: { decrement: cost } },
       });
 
-      return updated;
+      return this.formatBusiness(updated);
     });
   }
 
@@ -522,7 +528,7 @@ export class GameService {
       // Add XP and check level up
       await this.addExperience(tx, userId, Number(revenue) / 100);
 
-      return { business: updated, collected: revenue };
+      return { business: this.formatBusiness(updated), collected: revenue };
     });
   }
 

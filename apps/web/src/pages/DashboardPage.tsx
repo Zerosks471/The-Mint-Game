@@ -40,38 +40,171 @@ function EarningDonut({ progress }: { progress: number }) {
   );
 }
 
-// Smooth cash ticker component with fixed layout
+// Gas pump style rolling cash display - simple version
+function RollingCash({ value }: { value: number }) {
+  const formatted = value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  return (
+    <span className="tabular-nums font-mono text-2xl font-bold">
+      ${formatted}
+    </span>
+  );
+}
+
+// Detailed Income card
+function IncomeCard({ stats }: { stats: ReturnType<typeof useGameStore>['stats'] }) {
+  const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
+  const incomePerDay = incomePerHour * 24;
+  const multiplier = parseFloat(stats?.currentMultiplier || '1');
+  const bonusPercent = Math.round((multiplier - 1) * 100);
+
+  return (
+    <div className="rounded-xl border-2 p-4 bg-green-50 border-green-200 text-green-700">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-2xl">📈</span>
+        {bonusPercent > 0 && (
+          <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-medium">
+            +{bonusPercent}% bonus
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-bold">+{formatCurrency(incomePerHour)}</p>
+      <p className="text-sm opacity-75">Per Hour</p>
+      <div className="mt-2 pt-2 border-t border-green-200 text-xs space-y-0.5">
+        <div className="flex justify-between">
+          <span className="opacity-75">Per Day</span>
+          <span className="font-medium">{formatCurrency(incomePerDay)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="opacity-75">Multiplier</span>
+          <span className="font-medium">{multiplier.toFixed(2)}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Detailed Properties card
+function PropertiesCard({ total, managed, income }: { total: number; managed: number; income: number }) {
+  const managedPercent = total > 0 ? Math.round((managed / total) * 100) : 0;
+
+  return (
+    <div className="rounded-xl border-2 p-4 bg-blue-50 border-blue-200 text-blue-700">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-2xl">🏢</span>
+        {managed > 0 && (
+          <span className="text-xs bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded-full font-medium">
+            👔 {managed} managed
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-bold">{total}</p>
+      <p className="text-sm opacity-75">Properties</p>
+      <div className="mt-2 pt-2 border-t border-blue-200 text-xs space-y-0.5">
+        <div className="flex justify-between">
+          <span className="opacity-75">Income</span>
+          <span className="font-medium text-green-600">+{formatCurrency(income)}/hr</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="opacity-75">Automated</span>
+          <span className="font-medium">{managedPercent}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Detailed Businesses card
+function BusinessesCard({ total, businesses }: { total: number; businesses: ReturnType<typeof useGameStore>['playerBusinesses'] }) {
+  const readyCount = businesses.filter(b => b.cycleComplete).length;
+  const totalRevenue = businesses.reduce((sum, b) => sum + parseFloat(b.currentRevenue), 0);
+
+  return (
+    <div className="rounded-xl border-2 p-4 bg-purple-50 border-purple-200 text-purple-700">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-2xl">💼</span>
+        {readyCount > 0 && (
+          <span className="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-medium animate-pulse">
+            {readyCount} ready!
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-bold">{total}</p>
+      <p className="text-sm opacity-75">Businesses</p>
+      <div className="mt-2 pt-2 border-t border-purple-200 text-xs space-y-0.5">
+        <div className="flex justify-between">
+          <span className="opacity-75">Pending</span>
+          <span className="font-medium text-green-600">{formatCurrency(totalRevenue)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="opacity-75">Ready</span>
+          <span className="font-medium">{readyCount} / {total}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Smooth cash ticker component with real-time updates
 function CashTicker() {
   const { stats, displayedCash, incomePerSecond, startTicker, stopTicker } = useGameStore();
-  const [centProgress, setCentProgress] = useState(0);
-  const lastCentRef = useRef(0);
+  const [localCash, setLocalCash] = useState(0);
+  const [minuteProgress, setMinuteProgress] = useState(0);
+  const animationRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef<number>(Date.now());
+  const minuteStartRef = useRef<number>(Date.now());
+
+  // Calculate income rates
+  const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
+  const incomePerSec = incomePerHour / 3600;
+  const incomePerMin = incomePerSec * 60;
 
   useEffect(() => {
     if (stats) {
       startTicker();
+      setLocalCash(displayedCash || parseFloat(stats.cash));
     }
     return () => stopTicker();
   }, [stats, startTicker, stopTicker]);
 
-  // Track progress toward earning each cent
-  // The donut fills up as you earn fractions of a cent, resets when you earn a full cent
+  // Smooth animation loop using requestAnimationFrame for buttery updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      const currentCash = displayedCash || 0;
-      // Get the fractional cents (e.g., $148.0234 -> 0.34 cents progress toward next cent)
-      const cents = currentCash * 100;
-      const fractionalCent = cents - Math.floor(cents);
-      setCentProgress(fractionalCent);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [displayedCash]);
+    const animate = () => {
+      const now = Date.now();
+      const deltaMs = now - lastUpdateRef.current;
+      lastUpdateRef.current = now;
 
-  const cash = displayedCash || parseFloat(stats?.cash || '0');
-  const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
-  const incomePerSec = incomePerHour / 3600;
+      if (incomePerSecond > 0) {
+        const increment = incomePerSecond * (deltaMs / 1000);
+        setLocalCash(prev => prev + increment);
+      }
 
-  // Calculate time to earn 1 cent
-  const secondsPerCent = incomePerSec > 0 ? 0.01 / incomePerSec : 0;
+      // Track progress through the current minute (0-100%)
+      const elapsedInMinute = (now - minuteStartRef.current) % 60000;
+      setMinuteProgress(elapsedInMinute / 60000);
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    // Sync with store's displayedCash periodically
+    const syncInterval = setInterval(() => {
+      if (displayedCash > 0) {
+        setLocalCash(displayedCash);
+      }
+    }, 1000);
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      clearInterval(syncInterval);
+    };
+  }, [displayedCash, incomePerSecond]);
 
   // Format small amounts with more precision
   const formatSmallCurrency = (amount: number) => {
@@ -83,46 +216,36 @@ function CashTicker() {
     return formatCurrency(amount);
   };
 
-  // Format time nicely
-  const formatTime = (seconds: number) => {
-    if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    if (seconds < 3600) return `${(seconds / 60).toFixed(1)}m`;
-    return `${(seconds / 3600).toFixed(1)}h`;
-  };
-
   return (
     <div className="rounded-xl border-2 p-4 bg-mint-50 border-mint-200 text-mint-700">
       <div className="flex items-center justify-between mb-2">
         <span className="text-2xl">💵</span>
-        {/* Live earning indicator */}
         {incomePerHour > 0 && (
-          <span className="flex items-center gap-1 text-xs text-green-600">
+          <span className="flex items-center gap-1 text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-medium">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
             earning
           </span>
         )}
       </div>
-      <p className="text-2xl font-bold tabular-nums" style={{ minWidth: '120px' }}>
-        {formatCurrency(cash)}
+      <p className="text-2xl font-bold tabular-nums">
+        <RollingCash value={localCash} />
       </p>
-      {/* Show per-second rate with donut showing progress to next cent */}
-      <div className="flex flex-col gap-0.5 mt-1">
-        {incomePerHour > 0 ? (
-          <>
-            <span className="text-sm font-medium text-green-600 tabular-nums">
-              +{formatSmallCurrency(incomePerSec)}/sec
-            </span>
-            <div className="flex items-center gap-1.5 text-green-500">
-              <EarningDonut progress={centProgress} />
-              <span className="text-xs tabular-nums opacity-75">
-                1¢ every {formatTime(secondsPerCent)}
-              </span>
+      <p className="text-sm opacity-75">Total Cash</p>
+      {incomePerHour > 0 && (
+        <div className="mt-2 pt-2 border-t border-mint-200 text-xs space-y-0.5">
+          <div className="flex justify-between">
+            <span className="opacity-75">Per Minute</span>
+            <span className="font-medium text-green-600">+{formatSmallCurrency(incomePerMin)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="opacity-75">This Minute</span>
+            <div className="flex items-center gap-1">
+              <EarningDonut progress={minuteProgress} />
+              <span className="font-medium">{Math.floor(minuteProgress * 60)}s</span>
             </div>
-          </>
-        ) : null}
-      </div>
-      <p className="text-sm opacity-75 mt-1">Total Cash</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -237,23 +360,15 @@ export function DashboardPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <CashTicker />
-        <StatCard
-          label="Income/Hour"
-          value={`+${formatCurrency(parseFloat(stats?.effectiveIncomeHour || '0'))}`}
-          icon="📈"
-          color="green"
+        <IncomeCard stats={stats} />
+        <PropertiesCard
+          total={stats?.totalPropertiesOwned || 0}
+          managed={managedProperties.length}
+          income={totalPropertyIncome}
         />
-        <StatCard
-          label="Properties"
-          value={stats?.totalPropertiesOwned || 0}
-          icon="🏢"
-          color="blue"
-        />
-        <StatCard
-          label="Businesses"
-          value={stats?.totalBusinessesOwned || 0}
-          icon="💼"
-          color="purple"
+        <BusinessesCard
+          total={stats?.totalBusinessesOwned || 0}
+          businesses={playerBusinesses}
         />
       </div>
 
@@ -398,28 +513,3 @@ export function DashboardPage() {
   );
 }
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: string;
-  color: 'mint' | 'green' | 'blue' | 'purple';
-}
-
-function StatCard({ label, value, icon, color }: StatCardProps) {
-  const colorClasses = {
-    mint: 'bg-mint-50 border-mint-200 text-mint-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
-  };
-
-  return (
-    <div className={`rounded-xl border-2 p-4 ${colorClasses[color]}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">{icon}</span>
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-sm opacity-75">{label}</p>
-    </div>
-  );
-}

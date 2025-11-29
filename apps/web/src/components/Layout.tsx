@@ -1,8 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
+import { gameApi, DailyStatus } from '../api/game';
+import { DailyRewardModal } from './DailyRewardModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,11 +14,43 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { stats } = useGameStore();
+  const { stats, refreshStats } = useGameStore();
+  const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
+  const [showDailyModal, setShowDailyModal] = useState(false);
+
+  // Fetch daily reward status on mount
+  useEffect(() => {
+    const fetchDailyStatus = async () => {
+      try {
+        const res = await gameApi.getDailyStatus();
+        if (res.success && res.data) {
+          setDailyStatus(res.data);
+          // Auto-open modal if reward is available
+          if (res.data.canClaim) {
+            setShowDailyModal(true);
+          }
+        }
+      } catch {
+        // Silently fail - daily rewards aren't critical
+      }
+    };
+    fetchDailyStatus();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+  const handleDailyClaim = () => {
+    // Refresh stats after claiming reward
+    refreshStats();
+    // Refresh daily status
+    gameApi.getDailyStatus().then((res) => {
+      if (res.success && res.data) {
+        setDailyStatus(res.data);
+      }
+    });
   };
 
   const navItems = [
@@ -24,6 +58,9 @@ export function Layout({ children }: LayoutProps) {
     { path: '/properties', label: 'Properties', icon: '🏢' },
     { path: '/businesses', label: 'Businesses', icon: '💼' },
     { path: '/stats', label: 'Stats', icon: '📊' },
+    { path: '/achievements', label: 'Achievements', icon: '🎖️' },
+    { path: '/leaderboards', label: 'Rankings', icon: '🏆' },
+    { path: '/prestige', label: 'Go Public', icon: '🚀' },
   ];
 
   return (
@@ -61,6 +98,22 @@ export function Layout({ children }: LayoutProps) {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
+              {/* Daily Reward Button */}
+              <button
+                onClick={() => setShowDailyModal(true)}
+                className={`relative flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  dailyStatus?.canClaim
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 animate-pulse'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <span>🎁</span>
+                <span className="hidden sm:inline">Daily</span>
+                {dailyStatus?.canClaim && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+
               <span className="text-sm text-gray-600">
                 {user?.username}
                 {user?.isPremium && (
@@ -119,6 +172,13 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
+
+      {/* Daily Reward Modal */}
+      <DailyRewardModal
+        isOpen={showDailyModal}
+        onClose={() => setShowDailyModal(false)}
+        onClaim={handleDailyClaim}
+      />
     </div>
   );
 }

@@ -3,6 +3,10 @@ import healthRoutes from './health';
 import authRouter from './auth';
 import userRouter from './user';
 import gameRouter from './game';
+import prestigeRouter from './prestige';
+import dailyRouter from './daily';
+import leaderboardRouter from './leaderboard';
+import achievementsRouter from './achievements';
 
 const router: Router = Router();
 
@@ -25,6 +29,18 @@ v1Router.use('/user', userRouter);
 
 // Game routes
 v1Router.use('/game', gameRouter);
+
+// Prestige routes
+v1Router.use('/prestige', prestigeRouter);
+
+// Daily rewards routes
+v1Router.use('/daily', dailyRouter);
+
+// Leaderboard routes
+v1Router.use('/leaderboards', leaderboardRouter);
+
+// Achievements routes
+v1Router.use('/achievements', achievementsRouter);
 
 router.use('/v1', v1Router);
 

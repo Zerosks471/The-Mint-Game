@@ -55,6 +55,7 @@ interface GameState {
   // Helpers
   clearError: () => void;
   reset: () => void;
+  refreshStats: () => Promise<void>;
 }
 
 const initialState = {
@@ -288,5 +289,14 @@ export const useGameStore = create<GameState>()((set, get) => ({
     // Stop ticker before reset
     get().stopTicker();
     set(initialState);
+  },
+
+  refreshStats: async () => {
+    await get().fetchStats();
+    // Also update the displayed cash from the new stats
+    const stats = get().stats;
+    if (stats) {
+      set({ displayedCash: parseFloat(stats.cash) });
+    }
   },
 }));

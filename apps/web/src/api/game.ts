@@ -120,6 +120,151 @@ export interface EarningsSummary {
   businessesOwned: number;
 }
 
+export interface PrestigeStatus {
+  prestigeLevel: number;
+  prestigePoints: number;
+  timesPrestiged: number;
+  prestigeMultiplier: string;
+  currentNetWorth: string;
+  potentialPoints: number;
+  canPrestige: boolean;
+  minimumNetWorth: number;
+}
+
+export interface PrestigePerk {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  tier: number;
+  cost: number;
+  effect: { type: string; value: number };
+  maxLevel: number;
+  iconUrl: string | null;
+  sortOrder: number;
+  currentLevel: number;
+  canPurchase: boolean;
+  totalCost: number;
+}
+
+export interface DailyRewardData {
+  amount: number;
+  bonusCoins?: number;
+  prestigePoints?: number;
+}
+
+export interface DailyStatus {
+  currentStreak: number;
+  longestStreak: number;
+  currentDay: number;
+  canClaim: boolean;
+  lastClaimAt: string | null;
+  nextReward: {
+    day: number;
+    rewardType: string;
+    rewardData: DailyRewardData;
+  } | null;
+  upcomingRewards: Array<{
+    day: number;
+    rewardType: string;
+    rewardData: DailyRewardData;
+    isMilestone: boolean;
+  }>;
+}
+
+export interface DailyClaimResult {
+  day: number;
+  rewardType: string;
+  rewardData: DailyRewardData;
+  newStreak: number;
+  newCash: string;
+  streakBroken: boolean;
+}
+
+export interface DailyReward {
+  day: number;
+  rewardType: string;
+  rewardData: DailyRewardData;
+  isMilestone: boolean;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  previousRank: number | null;
+  userId: string;
+  username: string | null;
+  displayName: string | null;
+  avatarId: string | null;
+  score: string;
+  isCurrentUser: boolean;
+}
+
+export interface LeaderboardResponse {
+  leaderboardId: string;
+  name: string;
+  description: string;
+  entries: LeaderboardEntry[];
+  totalEntries: number;
+  lastUpdated: string | null;
+}
+
+export interface PlayerRankResponse {
+  leaderboardId: string;
+  rank: number | null;
+  previousRank: number | null;
+  score: string | null;
+  totalPlayers: number;
+  percentile: number | null;
+}
+
+export interface LeaderboardType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface AchievementWithProgress {
+  id: string;
+  name: string;
+  description: string;
+  iconUrl: string | null;
+  category: string;
+  tier: string;
+  points: number;
+  requirementType: string;
+  requirementValue: string;
+  rewardCash: string;
+  rewardPremium: number;
+  isSecret: boolean;
+  sortOrder: number;
+  isUnlocked: boolean;
+  unlockedAt: string | null;
+  currentProgress: number;
+  progressPercent: number;
+}
+
+export interface AchievementSummary {
+  totalAchievements: number;
+  unlockedCount: number;
+  totalPoints: number;
+  earnedPoints: number;
+  categories: Array<{
+    name: string;
+    total: number;
+    unlocked: number;
+  }>;
+}
+
+export interface NewlyUnlockedAchievement {
+  id: string;
+  name: string;
+  description: string;
+  tier: string;
+  points: number;
+  rewardCash: string;
+}
+
 export const gameApi = {
   // Player stats
   async getStats(): Promise<ApiResponse<PlayerStats>> {
@@ -239,5 +384,83 @@ export const gameApi = {
 
   async createSnapshot(type: 'hourly' | 'daily' = 'hourly'): Promise<ApiResponse<EarningsSnapshot>> {
     return apiClient.post<EarningsSnapshot>('/game/stats/snapshot', { type });
+  },
+
+  // Prestige
+  async getPrestigeStatus(): Promise<ApiResponse<PrestigeStatus>> {
+    return apiClient.get<PrestigeStatus>('/prestige/status');
+  },
+
+  async getPrestigePerks(): Promise<ApiResponse<PrestigePerk[]>> {
+    return apiClient.get<PrestigePerk[]>('/prestige/perks');
+  },
+
+  async goPublic(): Promise<ApiResponse<{ pointsEarned: number; newPrestigeLevel: number }>> {
+    return apiClient.post<{ pointsEarned: number; newPrestigeLevel: number }>('/prestige/go-public');
+  },
+
+  async buyPerk(
+    perkId: string
+  ): Promise<ApiResponse<{ perk: PrestigePerk; remainingPoints: number }>> {
+    return apiClient.post<{ perk: PrestigePerk; remainingPoints: number }>('/prestige/buy-perk', {
+      perkId,
+    });
+  },
+
+  // Daily Rewards
+  async getDailyStatus(): Promise<ApiResponse<DailyStatus>> {
+    return apiClient.get<DailyStatus>('/daily/status');
+  },
+
+  async claimDailyReward(): Promise<ApiResponse<DailyClaimResult>> {
+    return apiClient.post<DailyClaimResult>('/daily/claim');
+  },
+
+  async getAllDailyRewards(): Promise<ApiResponse<DailyReward[]>> {
+    return apiClient.get<DailyReward[]>('/daily/rewards');
+  },
+
+  // Leaderboards
+  async getLeaderboardTypes(): Promise<ApiResponse<LeaderboardType[]>> {
+    return apiClient.get<LeaderboardType[]>('/leaderboards/types');
+  },
+
+  async getLeaderboard(
+    type: string,
+    limit: number = 100,
+    offset: number = 0
+  ): Promise<ApiResponse<LeaderboardResponse>> {
+    return apiClient.get<LeaderboardResponse>(
+      `/leaderboards/${type}?limit=${limit}&offset=${offset}`
+    );
+  },
+
+  async getMyRank(type: string): Promise<ApiResponse<PlayerRankResponse>> {
+    return apiClient.get<PlayerRankResponse>(`/leaderboards/${type}/me`);
+  },
+
+  async refreshLeaderboards(): Promise<ApiResponse<{ updated: string[] }>> {
+    return apiClient.post<{ updated: string[] }>('/leaderboards/refresh');
+  },
+
+  // Achievements
+  async getAchievements(): Promise<ApiResponse<AchievementWithProgress[]>> {
+    return apiClient.get<AchievementWithProgress[]>('/achievements');
+  },
+
+  async getAchievementSummary(): Promise<ApiResponse<AchievementSummary>> {
+    return apiClient.get<AchievementSummary>('/achievements/summary');
+  },
+
+  async getRecentAchievements(limit: number = 5): Promise<ApiResponse<AchievementWithProgress[]>> {
+    return apiClient.get<AchievementWithProgress[]>(`/achievements/recent?limit=${limit}`);
+  },
+
+  async checkAchievements(): Promise<
+    ApiResponse<{ newlyUnlocked: NewlyUnlockedAchievement[]; count: number }>
+  > {
+    return apiClient.post<{ newlyUnlocked: NewlyUnlockedAchievement[]; count: number }>(
+      '/achievements/check'
+    );
   },
 };

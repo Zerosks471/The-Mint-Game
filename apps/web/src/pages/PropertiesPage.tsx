@@ -238,6 +238,9 @@ function OwnedPropertyCard({
           <p className="font-bold text-green-700">
             +{formatCurrency(parseFloat(property.currentIncomeHour))}
           </p>
+          <p className="text-xs text-green-500 mt-1">
+            ≈ {formatCurrency(parseFloat(property.currentIncomeHour) / 3600)}/sec
+          </p>
         </div>
       </div>
 
@@ -331,6 +334,12 @@ function ShopPropertyCard({ type, owned, cost, cash, onBuy, isLoading }: ShopPro
               <span className="text-gray-500">Base Income</span>
               <span className="font-medium text-green-600">
                 +{formatCurrency(parseFloat(type.baseIncomeHour))}/hr
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Per Second</span>
+              <span className="font-medium text-green-500 text-xs">
+                ≈ {formatCurrency(parseFloat(type.baseIncomeHour) / 3600)}/sec
               </span>
             </div>
             {owned && (

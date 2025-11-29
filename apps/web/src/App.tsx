@@ -5,6 +5,9 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { BusinessesPage } from './pages/BusinessesPage';
 import { StatsPage } from './pages/StatsPage';
+import { PrestigePage } from './pages/PrestigePage';
+import { LeaderboardPage } from './pages/LeaderboardPage';
+import { AchievementsPage } from './pages/AchievementsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 
@@ -155,6 +158,36 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <StatsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/prestige"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PrestigePage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leaderboards"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <LeaderboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/achievements"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AchievementsPage />
             </Layout>
           </ProtectedRoute>
         }
