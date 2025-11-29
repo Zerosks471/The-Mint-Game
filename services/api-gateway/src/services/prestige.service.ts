@@ -69,12 +69,18 @@ export class PrestigeService {
 
   /**
    * Calculate prestige points based on net worth
-   * Formula: sqrt(netWorth / 1,000,000) * (1 + prestigeLevel * 0.1)
+   * Formula: sqrt(netWorth / 100,000) * (1 + prestigeLevel * 0.1)
+   * Minimum 1 point when meeting threshold
    */
   calculatePrestigePoints(netWorth: Decimal, prestigeLevel: number): number {
-    const base = Math.sqrt(netWorth.toNumber() / 1_000_000);
+    // Use 100k divisor so $100k = 1 base point, $400k = 2, $900k = 3, etc.
+    const base = Math.sqrt(netWorth.toNumber() / 100_000);
     const multiplier = 1 + prestigeLevel * 0.1;
-    return Math.floor(base * multiplier);
+    const points = Math.floor(base * multiplier);
+    // Guarantee at least 1 point if player meets minimum threshold
+    return netWorth.greaterThanOrEqualTo(PrestigeService.MINIMUM_NET_WORTH)
+      ? Math.max(1, points)
+      : points;
   }
 
   /**
