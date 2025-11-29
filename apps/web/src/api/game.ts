@@ -265,6 +265,45 @@ export interface NewlyUnlockedAchievement {
   rewardCash: string;
 }
 
+export interface IPOStatus {
+  id: string;
+  tickerSymbol: string;
+  ipoPrice: string;
+  currentPrice: string;
+  highPrice: string;
+  lowPrice: string;
+  basePoints: number;
+  currentMultiplier: number;
+  potentialPoints: number;
+  trend: 'bullish' | 'bearish' | 'neutral';
+  trendStrength: number;
+  activeEvent: {
+    slug: string;
+    name: string;
+    description: string;
+    isPositive: boolean;
+    expiresAt: string;
+  } | null;
+  priceHistory: Array<{ time: number; price: number }>;
+  startsAt: string;
+  expiresAt: string;
+  timeRemainingMs: number;
+  percentChange: number;
+}
+
+export interface IPOLaunchResult {
+  id: string;
+  tickerSymbol: string;
+  ipoPrice: string;
+  basePoints: number;
+}
+
+export interface IPOSellResult {
+  pointsEarned: number;
+  multiplier: number;
+  newPrestigeLevel: number;
+}
+
 export const gameApi = {
   // Player stats
   async getStats(): Promise<ApiResponse<PlayerStats>> {
@@ -462,5 +501,22 @@ export const gameApi = {
     return apiClient.post<{ newlyUnlocked: NewlyUnlockedAchievement[]; count: number }>(
       '/achievements/check'
     );
+  },
+
+  // IPO
+  async getIPOStatus(): Promise<ApiResponse<IPOStatus | null> & { hasActiveIPO?: boolean }> {
+    return apiClient.get<IPOStatus | null>('/ipo/status');
+  },
+
+  async launchIPO(): Promise<ApiResponse<IPOStatus>> {
+    return apiClient.post<IPOStatus>('/ipo/launch');
+  },
+
+  async sellIPOShares(): Promise<ApiResponse<IPOSellResult>> {
+    return apiClient.post<IPOSellResult>('/ipo/sell');
+  },
+
+  async cancelIPO(): Promise<ApiResponse<{ pointsEarned: number; newPrestigeLevel: number }>> {
+    return apiClient.post<{ pointsEarned: number; newPrestigeLevel: number }>('/ipo/cancel');
   },
 };
