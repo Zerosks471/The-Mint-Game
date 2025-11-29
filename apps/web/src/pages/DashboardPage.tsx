@@ -270,9 +270,15 @@ export function DashboardPage() {
   }, [fetchAll]);
 
   useEffect(() => {
-    // Show offline modal if there are pending earnings
-    if (offlineStatus && parseFloat(offlineStatus.pendingEarnings) > 0) {
-      setShowOfflineModal(true);
+    // Show offline modal only if user was away for meaningful time (>5 min) AND has meaningful earnings (>$1)
+    if (offlineStatus) {
+      const pendingEarnings = parseFloat(offlineStatus.pendingEarnings);
+      const wasAwayLongEnough = offlineStatus.elapsedHours >= 0.1; // At least 6 minutes
+      const hasMeaningfulEarnings = pendingEarnings >= 1; // At least $1
+
+      if (wasAwayLongEnough && hasMeaningfulEarnings) {
+        setShowOfflineModal(true);
+      }
     }
   }, [offlineStatus]);
 

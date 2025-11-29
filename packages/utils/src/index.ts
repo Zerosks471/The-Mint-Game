@@ -1,17 +1,9 @@
 // Utility functions
 
 /**
- * Format a number as currency
+ * Format a number as currency (standard USD format: $1,234.56)
  */
-export function formatCurrency(amount: number, compact = true): string {
-  if (compact && Math.abs(amount) >= 1000) {
-    const suffixes = ['', 'K', 'M', 'B', 'T', 'Q'];
-    const tier = Math.floor(Math.log10(Math.abs(amount)) / 3);
-    const suffix = suffixes[Math.min(tier, suffixes.length - 1)];
-    const scale = Math.pow(10, tier * 3);
-    const scaled = amount / scale;
-    return `$${scaled.toFixed(scaled < 10 ? 2 : 1)}${suffix}`;
-  }
+export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
