@@ -7,6 +7,7 @@ import prestigeRouter from './prestige';
 import dailyRouter from './daily';
 import leaderboardRouter from './leaderboard';
 import achievementsRouter from './achievements';
+import ipoRouter from './ipo';
 
 const router: Router = Router();
 
@@ -41,6 +42,9 @@ v1Router.use('/leaderboards', leaderboardRouter);
 
 // Achievements routes
 v1Router.use('/achievements', achievementsRouter);
+
+// IPO routes
+v1Router.use('/ipo', ipoRouter);
 
 router.use('/v1', v1Router);
 
