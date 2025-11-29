@@ -23,6 +23,7 @@ export function Layout({ children }: LayoutProps) {
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/properties', label: 'Properties', icon: '🏢' },
     { path: '/businesses', label: 'Businesses', icon: '💼' },
+    { path: '/stats', label: 'Stats', icon: '📊' },
   ];
 
   return (

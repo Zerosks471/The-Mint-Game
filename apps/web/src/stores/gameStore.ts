@@ -18,6 +18,12 @@ interface GameState {
   playerBusinesses: PlayerBusiness[];
   offlineStatus: OfflineStatus | null;
 
+  // Ticker state
+  displayedCash: number;
+  incomePerSecond: number;
+  tickerInterval: ReturnType<typeof setInterval> | null;
+  syncInterval: ReturnType<typeof setInterval> | null;
+
   // UI State
   isLoading: boolean;
   error: string | null;
@@ -35,10 +41,16 @@ interface GameState {
   buyProperty: (typeId: number) => Promise<boolean>;
   upgradeProperty: (propertyId: string) => Promise<boolean>;
   hireManager: (propertyId: string) => Promise<boolean>;
+  sellProperty: (propertyId: string, quantity?: number) => Promise<boolean>;
   buyBusiness: (typeId: number) => Promise<boolean>;
   levelUpBusiness: (businessId: string) => Promise<boolean>;
   collectBusinessRevenue: (businessId: string) => Promise<string | null>;
   collectOfflineEarnings: () => Promise<string | null>;
+
+  // Ticker
+  collectEarnings: () => Promise<void>;
+  startTicker: () => void;
+  stopTicker: () => void;
 
   // Helpers
   clearError: () => void;
@@ -52,6 +64,10 @@ const initialState = {
   businessTypes: [],
   playerBusinesses: [],
   offlineStatus: null,
+  displayedCash: 0,
+  incomePerSecond: 0,
+  tickerInterval: null as ReturnType<typeof setInterval> | null,
+  syncInterval: null as ReturnType<typeof setInterval> | null,
   isLoading: false,
   error: null,
 };
@@ -152,6 +168,17 @@ export const useGameStore = create<GameState>()((set, get) => ({
     return false;
   },
 
+  sellProperty: async (propertyId: string, quantity: number = 1) => {
+    set({ error: null });
+    const response = await gameApi.sellProperty(propertyId, quantity);
+    if (response.success) {
+      await Promise.all([get().fetchStats(), get().fetchPlayerProperties()]);
+      return true;
+    }
+    set({ error: response.error?.message || 'Failed to sell property' });
+    return false;
+  },
+
   buyBusiness: async (typeId: number) => {
     set({ error: null });
     const response = await gameApi.buyBusiness(typeId);
@@ -196,7 +223,70 @@ export const useGameStore = create<GameState>()((set, get) => ({
     return null;
   },
 
+  // Collect earnings from server and sync cash
+  collectEarnings: async () => {
+    const response = await gameApi.collectEarnings();
+    if (response.success && response.data) {
+      const newCash = parseFloat(response.data.newCash);
+      const incomePerHour = parseFloat(response.data.incomePerHour);
+      set({
+        displayedCash: newCash,
+        incomePerSecond: incomePerHour / 3600,
+      });
+      // Also update stats
+      await get().fetchStats();
+    }
+  },
+
+  // Start real-time cash ticker (updates displayed cash every 100ms)
+  startTicker: () => {
+    // Clear any existing intervals
+    const existingTicker = get().tickerInterval;
+    const existingSync = get().syncInterval;
+    if (existingTicker) clearInterval(existingTicker);
+    if (existingSync) clearInterval(existingSync);
+
+    // Initialize displayedCash from current stats
+    const stats = get().stats;
+    if (stats) {
+      const incomePerHour = parseFloat(stats.effectiveIncomeHour);
+      set({
+        displayedCash: parseFloat(stats.cash),
+        incomePerSecond: incomePerHour / 3600,
+      });
+    }
+
+    // Collect from server immediately to sync
+    get().collectEarnings();
+
+    // Update displayed cash locally every 100ms
+    const tickerInterval = setInterval(() => {
+      const { displayedCash, incomePerSecond } = get();
+      if (incomePerSecond > 0) {
+        set({ displayedCash: displayedCash + incomePerSecond * 0.1 });
+      }
+    }, 100);
+
+    // Sync with server every 5 seconds
+    const syncInterval = setInterval(() => {
+      get().collectEarnings();
+    }, 5000);
+
+    set({ tickerInterval, syncInterval });
+  },
+
+  stopTicker: () => {
+    const { tickerInterval, syncInterval } = get();
+    if (tickerInterval) clearInterval(tickerInterval);
+    if (syncInterval) clearInterval(syncInterval);
+    set({ tickerInterval: null, syncInterval: null });
+  },
+
   clearError: () => set({ error: null }),
 
-  reset: () => set(initialState),
+  reset: () => {
+    // Stop ticker before reset
+    get().stopTicker();
+    set(initialState);
+  },
 }));

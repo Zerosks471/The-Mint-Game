@@ -18,6 +18,7 @@ export function PropertiesPage() {
     buyProperty,
     upgradeProperty,
     hireManager,
+    sellProperty,
     clearError,
   } = useGameStore();
 
@@ -45,6 +46,12 @@ export function PropertiesPage() {
   const handleHireManager = async (propertyId: string) => {
     setActionLoading(`manager-${propertyId}`);
     await hireManager(propertyId);
+    setActionLoading(null);
+  };
+
+  const handleSell = async (propertyId: string) => {
+    setActionLoading(`sell-${propertyId}`);
+    await sellProperty(propertyId, 1);
     setActionLoading(null);
   };
 
@@ -142,10 +149,13 @@ export function PropertiesPage() {
                   cash={cash}
                   onUpgrade={() => handleUpgrade(property.id)}
                   onHireManager={() => handleHireManager(property.id)}
+                  onSell={() => handleSell(property.id)}
                   isLoading={
                     actionLoading === `upgrade-${property.id}` ||
-                    actionLoading === `manager-${property.id}`
+                    actionLoading === `manager-${property.id}` ||
+                    actionLoading === `sell-${property.id}`
                   }
+                  isSelling={actionLoading === `sell-${property.id}`}
                 />
               ))}
             </div>
@@ -178,7 +188,9 @@ interface OwnedPropertyCardProps {
   cash: number;
   onUpgrade: () => void;
   onHireManager: () => void;
+  onSell: () => void;
   isLoading: boolean;
+  isSelling: boolean;
 }
 
 function OwnedPropertyCard({
@@ -186,12 +198,16 @@ function OwnedPropertyCard({
   cash,
   onUpgrade,
   onHireManager,
+  onSell,
   isLoading,
+  isSelling,
 }: OwnedPropertyCardProps) {
   const upgradeCost = property.nextUpgradeCost ? parseFloat(property.nextUpgradeCost) : null;
   const managerCost = property.propertyType.managerCost
     ? parseFloat(property.propertyType.managerCost)
     : null;
+  // Sell value is 50% of base cost per unit
+  const sellValue = parseFloat(property.propertyType.baseCost) * 0.5;
 
   const canUpgrade = upgradeCost !== null && cash >= upgradeCost;
   const canHireManager = !property.managerHired && managerCost !== null && cash >= managerCost;
@@ -258,9 +274,18 @@ function OwnedPropertyCard({
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
         >
-          {isLoading ? 'Upgrading...' : `Upgrade - ${formatCurrency(upgradeCost)}`}
+          {isLoading && !isSelling ? 'Upgrading...' : `Upgrade - ${formatCurrency(upgradeCost)}`}
         </button>
       )}
+
+      {/* Sell Button */}
+      <button
+        onClick={onSell}
+        disabled={isLoading}
+        className="w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors bg-red-100 hover:bg-red-200 text-red-700 border border-red-200"
+      >
+        {isSelling ? 'Selling...' : `Sell 1 - +${formatCurrency(sellValue)}`}
+      </button>
     </div>
   );
 }

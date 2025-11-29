@@ -1,7 +1,131 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
+import { gameApi } from '../api/game';
+
+// Donut progress circle component - shows progress toward earning a cent
+function EarningDonut({ progress }: { progress: number }) {
+  const size = 16;
+  const strokeWidth = 2.5;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
+
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      {/* Background circle */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className="opacity-20"
+      />
+      {/* Progress circle */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffset}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+// Smooth cash ticker component with fixed layout
+function CashTicker() {
+  const { stats, displayedCash, incomePerSecond, startTicker, stopTicker } = useGameStore();
+  const [centProgress, setCentProgress] = useState(0);
+  const lastCentRef = useRef(0);
+
+  useEffect(() => {
+    if (stats) {
+      startTicker();
+    }
+    return () => stopTicker();
+  }, [stats, startTicker, stopTicker]);
+
+  // Track progress toward earning each cent
+  // The donut fills up as you earn fractions of a cent, resets when you earn a full cent
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentCash = displayedCash || 0;
+      // Get the fractional cents (e.g., $148.0234 -> 0.34 cents progress toward next cent)
+      const cents = currentCash * 100;
+      const fractionalCent = cents - Math.floor(cents);
+      setCentProgress(fractionalCent);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [displayedCash]);
+
+  const cash = displayedCash || parseFloat(stats?.cash || '0');
+  const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
+  const incomePerSec = incomePerHour / 3600;
+
+  // Calculate time to earn 1 cent
+  const secondsPerCent = incomePerSec > 0 ? 0.01 / incomePerSec : 0;
+
+  // Format small amounts with more precision
+  const formatSmallCurrency = (amount: number) => {
+    if (amount < 0.01) {
+      return `$${amount.toFixed(4)}`;
+    } else if (amount < 1) {
+      return `$${amount.toFixed(3)}`;
+    }
+    return formatCurrency(amount);
+  };
+
+  // Format time nicely
+  const formatTime = (seconds: number) => {
+    if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
+    if (seconds < 60) return `${seconds.toFixed(1)}s`;
+    if (seconds < 3600) return `${(seconds / 60).toFixed(1)}m`;
+    return `${(seconds / 3600).toFixed(1)}h`;
+  };
+
+  return (
+    <div className="rounded-xl border-2 p-4 bg-mint-50 border-mint-200 text-mint-700">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-2xl">💵</span>
+        {/* Live earning indicator */}
+        {incomePerHour > 0 && (
+          <span className="flex items-center gap-1 text-xs text-green-600">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+            earning
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-bold tabular-nums" style={{ minWidth: '120px' }}>
+        {formatCurrency(cash)}
+      </p>
+      {/* Show per-second rate with donut showing progress to next cent */}
+      <div className="flex flex-col gap-0.5 mt-1">
+        {incomePerHour > 0 ? (
+          <>
+            <span className="text-sm font-medium text-green-600 tabular-nums">
+              +{formatSmallCurrency(incomePerSec)}/sec
+            </span>
+            <div className="flex items-center gap-1.5 text-green-500">
+              <EarningDonut progress={centProgress} />
+              <span className="text-xs tabular-nums opacity-75">
+                1¢ every {formatTime(secondsPerCent)}
+              </span>
+            </div>
+          </>
+        ) : null}
+      </div>
+      <p className="text-sm opacity-75 mt-1">Total Cash</p>
+    </div>
+  );
+}
 
 export function DashboardPage() {
   const {
@@ -112,12 +236,7 @@ export function DashboardPage() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Cash"
-          value={formatCurrency(parseFloat(stats?.cash || '0'))}
-          icon="💵"
-          color="mint"
-        />
+        <CashTicker />
         <StatCard
           label="Income/Hour"
           value={`+${formatCurrency(parseFloat(stats?.effectiveIncomeHour || '0'))}`}

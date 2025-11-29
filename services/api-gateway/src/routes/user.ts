@@ -5,6 +5,15 @@ import { authenticate, AuthenticatedRequest, AppError } from '../middleware';
 
 const router = Router();
 
+// Helper to serialize BigInt values to strings for JSON
+function serializeBigInt<T>(obj: T): T {
+  return JSON.parse(
+    JSON.stringify(obj, (_key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    )
+  );
+}
+
 // GET /api/v1/user/me - Get current user with stats
 router.get(
   '/me',
@@ -33,7 +42,7 @@ router.get(
 
       res.json({
         success: true,
-        data: sanitized,
+        data: serializeBigInt(sanitized),
       });
     } catch (error) {
       next(error);
@@ -57,7 +66,7 @@ router.get(
 
       res.json({
         success: true,
-        data: stats,
+        data: serializeBigInt(stats),
       });
     } catch (error) {
       next(error);

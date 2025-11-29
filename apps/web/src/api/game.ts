@@ -93,6 +93,33 @@ export interface CollectResult {
   incomePerHour?: string;
 }
 
+export interface EarningsSnapshot {
+  id: string;
+  userId: string;
+  snapshotType: string;
+  timestamp: string;
+  totalCash: string;
+  incomePerHour: string;
+  propertiesOwned: number;
+  businessesOwned: number;
+  netWorth: string;
+  cashEarned: string;
+  cashSpent: string;
+}
+
+export interface EarningsSummary {
+  currentCash: string;
+  currentNetWorth: string;
+  currentIncomePerHour: string;
+  lifetimeEarnings: string;
+  totalSpent: string;
+  peakNetWorth: string;
+  peakIncome: string;
+  snapshotCount: number;
+  propertiesOwned: number;
+  businessesOwned: number;
+}
+
 export const gameApi = {
   // Player stats
   async getStats(): Promise<ApiResponse<PlayerStats>> {
@@ -120,6 +147,25 @@ export const gameApi = {
     return apiClient.post<PlayerProperty>(`/game/properties/${propertyId}/hire-manager`);
   },
 
+  async sellProperty(
+    propertyId: string,
+    quantity: number = 1
+  ): Promise<
+    ApiResponse<{
+      soldQuantity: number;
+      remainingQuantity: number;
+      cashReceived: string;
+      propertyDeleted: boolean;
+    }>
+  > {
+    return apiClient.post<{
+      soldQuantity: number;
+      remainingQuantity: number;
+      cashReceived: string;
+      propertyDeleted: boolean;
+    }>(`/game/properties/${propertyId}/sell`, { quantity });
+  },
+
   // Businesses
   async getBusinessTypes(): Promise<ApiResponse<BusinessType[]>> {
     return apiClient.get<BusinessType[]>('/game/businesses/types');
@@ -145,6 +191,23 @@ export const gameApi = {
     );
   },
 
+  // Real-time earnings (collect from all properties while playing)
+  async collectEarnings(): Promise<
+    ApiResponse<{
+      collected: string;
+      newCash: string;
+      elapsedSeconds: number;
+      incomePerHour: string;
+    }>
+  > {
+    return apiClient.post<{
+      collected: string;
+      newCash: string;
+      elapsedSeconds: number;
+      incomePerHour: string;
+    }>('/game/collect');
+  },
+
   // Offline earnings
   async getOfflineStatus(): Promise<ApiResponse<OfflineStatus>> {
     return apiClient.get<OfflineStatus>('/game/offline/status');
@@ -152,5 +215,29 @@ export const gameApi = {
 
   async collectOfflineEarnings(): Promise<ApiResponse<CollectResult>> {
     return apiClient.post<CollectResult>('/game/offline/collect');
+  },
+
+  // Earnings history
+  async getEarningsHistory(options?: {
+    type?: 'hourly' | 'daily';
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<ApiResponse<EarningsSnapshot[]>> {
+    const params = new URLSearchParams();
+    if (options?.type) params.append('type', options.type);
+    if (options?.limit) params.append('limit', options.limit.toString());
+    if (options?.startDate) params.append('startDate', options.startDate);
+    if (options?.endDate) params.append('endDate', options.endDate);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiClient.get<EarningsSnapshot[]>(`/game/stats/history${query}`);
+  },
+
+  async getEarningsSummary(): Promise<ApiResponse<EarningsSummary>> {
+    return apiClient.get<EarningsSummary>('/game/stats/summary');
+  },
+
+  async createSnapshot(type: 'hourly' | 'daily' = 'hourly'): Promise<ApiResponse<EarningsSnapshot>> {
+    return apiClient.post<EarningsSnapshot>('/game/stats/snapshot', { type });
   },
 };

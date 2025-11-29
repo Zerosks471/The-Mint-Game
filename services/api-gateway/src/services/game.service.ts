@@ -243,6 +243,88 @@ export class GameService {
     });
   }
 
+  // Sell property (recover from softlock)
+  async sellProperty(userId: string, propertyId: string, quantity: number = 1) {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const playerProperty = await tx.playerProperty.findUnique({
+        where: { id: propertyId },
+        include: { propertyType: true },
+      });
+
+      if (!playerProperty || playerProperty.userId !== userId) {
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Property not found', 404);
+      }
+
+      if (quantity < 1 || quantity > playerProperty.quantity) {
+        throw new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          `Cannot sell ${quantity} properties. You own ${playerProperty.quantity}.`,
+          400
+        );
+      }
+
+      // Return 50% of base cost per unit sold (not upgrade costs or scaled costs)
+      const sellValue = new Prisma.Decimal(playerProperty.propertyType.baseCost)
+        .mul(quantity)
+        .mul(0.5);
+
+      const remainingQuantity = playerProperty.quantity - quantity;
+
+      if (remainingQuantity === 0) {
+        // Delete the property record entirely
+        await tx.playerProperty.delete({
+          where: { id: propertyId },
+        });
+      } else {
+        // Update quantity and income
+        const incomePerUnit = this.calculatePropertyIncome(
+          playerProperty.propertyType,
+          playerProperty.upgradeLevel
+        );
+
+        await tx.playerProperty.update({
+          where: { id: propertyId },
+          data: {
+            quantity: remainingQuantity,
+            currentIncomeHour: incomePerUnit.mul(remainingQuantity),
+            nextPurchaseCost: this.calculatePropertyCost(
+              playerProperty.propertyType,
+              remainingQuantity
+            ),
+          },
+        });
+      }
+
+      // Update player stats
+      const playerStats = await tx.playerStats.findUnique({
+        where: { userId },
+      });
+
+      if (!playerStats) {
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
+      }
+
+      const newTotalIncome = await this.calculateTotalIncome(tx, userId);
+
+      await tx.playerStats.update({
+        where: { userId },
+        data: {
+          cash: { increment: sellValue },
+          totalPropertiesOwned: { decrement: quantity },
+          baseIncomePerHour: newTotalIncome,
+          effectiveIncomeHour: newTotalIncome.mul(playerStats.currentMultiplier),
+        },
+      });
+
+      return {
+        soldQuantity: quantity,
+        remainingQuantity,
+        cashReceived: sellValue,
+        propertyDeleted: remainingQuantity === 0,
+      };
+    });
+  }
+
   // ==================== BUSINESSES ====================
 
   async getBusinessTypes(userId: string) {
@@ -511,6 +593,62 @@ export class GameService {
 
   // ==================== OFFLINE EARNINGS ====================
 
+  // Collect earnings from ALL properties (called while playing)
+  async collectEarnings(userId: string) {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const playerStats = await tx.playerStats.findUnique({
+        where: { userId },
+      });
+
+      if (!playerStats) {
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
+      }
+
+      const now = new Date();
+      const lastCollection = new Date(playerStats.lastCollectionAt);
+      const elapsedMs = now.getTime() - lastCollection.getTime();
+      const elapsedHours = elapsedMs / (1000 * 60 * 60);
+
+      // Minimum 1 second elapsed
+      if (elapsedHours < 0.00028) {
+        return {
+          collected: new Prisma.Decimal(0),
+          newCash: playerStats.cash,
+          elapsedSeconds: 0,
+        };
+      }
+
+      // ALL properties earn while online
+      const allProperties = await tx.playerProperty.findMany({
+        where: { userId },
+      });
+
+      let totalIncomePerHour = new Prisma.Decimal(0);
+      for (const prop of allProperties) {
+        totalIncomePerHour = totalIncomePerHour.add(prop.currentIncomeHour);
+      }
+
+      const earnings = totalIncomePerHour.mul(elapsedHours).mul(playerStats.currentMultiplier);
+
+      const updated = await tx.playerStats.update({
+        where: { userId },
+        data: {
+          cash: { increment: earnings },
+          lifetimeCashEarned: { increment: earnings },
+          lastCollectionAt: now,
+        },
+      });
+
+      return {
+        collected: earnings,
+        newCash: updated.cash,
+        elapsedSeconds: Math.floor(elapsedMs / 1000),
+        incomePerHour: totalIncomePerHour.mul(playerStats.currentMultiplier),
+      };
+    });
+  }
+
+  // Collect OFFLINE earnings (only managed properties - shown on login)
   async collectOfflineEarnings(userId: string) {
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const playerStats = await tx.playerStats.findUnique({
@@ -637,6 +775,189 @@ export class GameService {
       total = total.add(prop.currentIncomeHour);
     }
     return total;
+  }
+
+  // ==================== EARNINGS HISTORY ====================
+
+  // Create a snapshot of player's current financial state
+  async createEarningsSnapshot(userId: string, snapshotType: 'hourly' | 'daily' = 'hourly') {
+    const playerStats = await prisma.playerStats.findUnique({
+      where: { userId },
+    });
+
+    if (!playerStats) {
+      throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
+    }
+
+    // Calculate net worth (cash + value of assets)
+    const properties = await prisma.playerProperty.findMany({
+      where: { userId },
+      include: { propertyType: true },
+    });
+
+    let assetsValue = new Prisma.Decimal(0);
+    for (const prop of properties) {
+      // Value properties at 50% of base cost (sell value)
+      assetsValue = assetsValue.add(
+        new Prisma.Decimal(prop.propertyType.baseCost).mul(prop.quantity).mul(0.5)
+      );
+    }
+
+    const netWorth = playerStats.cash.add(assetsValue);
+
+    // Get last snapshot to calculate earnings/spending since then
+    const lastSnapshot = await prisma.earningsSnapshot.findFirst({
+      where: { userId, snapshotType },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    const cashEarned = lastSnapshot
+      ? Prisma.Decimal.max(playerStats.cash.sub(lastSnapshot.totalCash), new Prisma.Decimal(0))
+      : new Prisma.Decimal(0);
+
+    const cashSpent = lastSnapshot
+      ? Prisma.Decimal.max(lastSnapshot.totalCash.sub(playerStats.cash), new Prisma.Decimal(0))
+      : new Prisma.Decimal(0);
+
+    return prisma.earningsSnapshot.create({
+      data: {
+        userId,
+        snapshotType,
+        totalCash: playerStats.cash,
+        incomePerHour: playerStats.effectiveIncomeHour,
+        propertiesOwned: playerStats.totalPropertiesOwned,
+        businessesOwned: playerStats.totalBusinessesOwned,
+        netWorth,
+        cashEarned,
+        cashSpent,
+      },
+    });
+  }
+
+  // Get earnings history for charts
+  async getEarningsHistory(
+    userId: string,
+    options: {
+      type?: 'hourly' | 'daily';
+      limit?: number;
+      startDate?: Date;
+      endDate?: Date;
+    } = {}
+  ) {
+    const { type = 'hourly', limit = 168, startDate, endDate } = options; // Default 168 hours (1 week)
+
+    const where: any = { userId, snapshotType: type };
+    if (startDate || endDate) {
+      where.timestamp = {};
+      if (startDate) where.timestamp.gte = startDate;
+      if (endDate) where.timestamp.lte = endDate;
+    }
+
+    const snapshots = await prisma.earningsSnapshot.findMany({
+      where,
+      orderBy: { timestamp: 'asc' },
+      take: limit,
+    });
+
+    // Also include current state as latest point
+    const playerStats = await prisma.playerStats.findUnique({
+      where: { userId },
+    });
+
+    if (playerStats) {
+      const properties = await prisma.playerProperty.findMany({
+        where: { userId },
+        include: { propertyType: true },
+      });
+
+      let assetsValue = new Prisma.Decimal(0);
+      for (const prop of properties) {
+        assetsValue = assetsValue.add(
+          new Prisma.Decimal(prop.propertyType.baseCost).mul(prop.quantity).mul(0.5)
+        );
+      }
+
+      snapshots.push({
+        id: 'current',
+        userId,
+        snapshotType: type,
+        timestamp: new Date(),
+        totalCash: playerStats.cash,
+        incomePerHour: playerStats.effectiveIncomeHour,
+        propertiesOwned: playerStats.totalPropertiesOwned,
+        businessesOwned: playerStats.totalBusinessesOwned,
+        netWorth: playerStats.cash.add(assetsValue),
+        cashEarned: new Prisma.Decimal(0),
+        cashSpent: new Prisma.Decimal(0),
+      });
+    }
+
+    return snapshots;
+  }
+
+  // Get summary statistics
+  async getEarningsSummary(userId: string) {
+    const playerStats = await prisma.playerStats.findUnique({
+      where: { userId },
+    });
+
+    if (!playerStats) {
+      throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
+    }
+
+    // Get all-time stats
+    const snapshots = await prisma.earningsSnapshot.findMany({
+      where: { userId },
+      orderBy: { timestamp: 'asc' },
+    });
+
+    // Calculate totals
+    let totalEarned = new Prisma.Decimal(0);
+    let totalSpent = new Prisma.Decimal(0);
+    let peakNetWorth = new Prisma.Decimal(0);
+    let peakIncome = new Prisma.Decimal(0);
+
+    for (const snapshot of snapshots) {
+      totalEarned = totalEarned.add(snapshot.cashEarned);
+      totalSpent = totalSpent.add(snapshot.cashSpent);
+      if (snapshot.netWorth.greaterThan(peakNetWorth)) {
+        peakNetWorth = snapshot.netWorth;
+      }
+      if (snapshot.incomePerHour.greaterThan(peakIncome)) {
+        peakIncome = snapshot.incomePerHour;
+      }
+    }
+
+    // Calculate current net worth
+    const properties = await prisma.playerProperty.findMany({
+      where: { userId },
+      include: { propertyType: true },
+    });
+
+    let assetsValue = new Prisma.Decimal(0);
+    for (const prop of properties) {
+      assetsValue = assetsValue.add(
+        new Prisma.Decimal(prop.propertyType.baseCost).mul(prop.quantity).mul(0.5)
+      );
+    }
+
+    const currentNetWorth = playerStats.cash.add(assetsValue);
+    if (currentNetWorth.greaterThan(peakNetWorth)) {
+      peakNetWorth = currentNetWorth;
+    }
+
+    return {
+      currentCash: playerStats.cash,
+      currentNetWorth,
+      currentIncomePerHour: playerStats.effectiveIncomeHour,
+      lifetimeEarnings: playerStats.lifetimeCashEarned,
+      totalSpent,
+      peakNetWorth,
+      peakIncome,
+      snapshotCount: snapshots.length,
+      propertiesOwned: playerStats.totalPropertiesOwned,
+      businessesOwned: playerStats.totalBusinessesOwned,
+    };
   }
 }
 

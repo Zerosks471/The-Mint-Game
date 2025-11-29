@@ -415,3 +415,24 @@ model Purchase {
 
   @@map("purchases")
 }
+
+// ============================================================================
+// EARNINGS HISTORY (for charts/analytics)
+// ============================================================================
+
+model EarningsSnapshot {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  snapshotType    String    @map("snapshot_type") // 'hourly', 'daily'
+  timestamp       DateTime  @default(now())
+  totalCash       Decimal   @map("total_cash") @db.Decimal(24, 2)
+  incomePerHour   Decimal   @map("income_per_hour") @db.Decimal(20, 2)
+  propertiesOwned Int       @map("properties_owned")
+  businessesOwned Int       @map("businesses_owned")
+  netWorth        Decimal   @map("net_worth") @db.Decimal(24, 2)
+  cashEarned      Decimal   @default(0) @map("cash_earned") @db.Decimal(20, 2) // Earnings since last snapshot
+  cashSpent       Decimal   @default(0) @map("cash_spent") @db.Decimal(20, 2)  // Spending since last snapshot
+
+  @@index([userId, snapshotType, timestamp])
+  @@map("earnings_snapshots")
+}

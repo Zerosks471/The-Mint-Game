@@ -4,6 +4,7 @@ import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { BusinessesPage } from './pages/BusinessesPage';
+import { StatsPage } from './pages/StatsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 
@@ -144,6 +145,16 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <BusinessesPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stats"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <StatsPage />
             </Layout>
           </ProtectedRoute>
         }

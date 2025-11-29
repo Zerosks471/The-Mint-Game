@@ -9,16 +9,17 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, checkAuth } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
+  const [authVerified, setAuthVerified] = useState(false);
 
   useEffect(() => {
     const verify = async () => {
-      if (!isAuthenticated) {
-        await checkAuth();
-      }
+      // Always check auth on mount to restore access token from refresh token cookie
+      const valid = await checkAuth();
+      setAuthVerified(valid);
       setIsChecking(false);
     };
     verify();
-  }, [isAuthenticated, checkAuth]);
+  }, [checkAuth]);
 
   if (isChecking) {
     return (
@@ -31,7 +32,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!authVerified) {
     return <Navigate to="/auth" replace />;
   }
 
