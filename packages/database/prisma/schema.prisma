@@ -87,6 +87,7 @@ model User {
   receivedGifts         Gift[]       @relation("ReceivedGifts")
   notifications         Notification[]
   clubActivities        ClubActivity[]
+  ipo                   PlayerIPO?
 
   @@map("users")
 }
@@ -460,6 +461,50 @@ model PlayerPrestigePerk {
 
   @@unique([userId, perkId])
   @@map("player_prestige_perks")
+}
+
+// ============================================================================
+// IPO DOMAIN
+// ============================================================================
+
+model PlayerIPO {
+  id              String    @id @default(cuid())
+  userId          String    @unique @map("user_id")
+  tickerSymbol    String    @map("ticker_symbol")
+  ipoPrice        Decimal   @db.Decimal(18, 2) @map("ipo_price")
+  currentPrice    Decimal   @db.Decimal(18, 2) @map("current_price")
+  highPrice       Decimal   @db.Decimal(18, 2) @map("high_price")
+  lowPrice        Decimal   @db.Decimal(18, 2) @map("low_price")
+  basePoints      Int       @map("base_points")
+  trend           String    @default("neutral") // bullish, bearish, neutral
+  trendStrength   Int       @default(1) @map("trend_strength") // 1-5
+  activeEvent     String?   @map("active_event") // event slug or null
+  eventExpiresAt  DateTime? @map("event_expires_at")
+  priceHistory    Json      @default("[]") @map("price_history") // [{time, price}]
+  lastTickAt      DateTime  @default(now()) @map("last_tick_at")
+  tickSeed        Int       @default(0) @map("tick_seed") // For deterministic tick generation
+  startsAt        DateTime  @default(now()) @map("starts_at")
+  expiresAt       DateTime  @map("expires_at") // 8hr max
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("player_ipos")
+}
+
+model MarketEvent {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  name            String
+  description     String
+  effectType      String    @map("effect_type") // trend_bias, instant_spike, tick_modifier
+  effectValue     Decimal   @db.Decimal(5, 2) @map("effect_value")
+  durationMinutes Int       @map("duration_minutes") // 0 for instant
+  isPositive      Boolean   @map("is_positive")
+  rarity          Int       @default(1) // 1=common, 2=uncommon, 3=rare
+  isActive        Boolean   @default(true) @map("is_active")
+
+  @@map("market_events")
 }
 
 // ============================================================================
