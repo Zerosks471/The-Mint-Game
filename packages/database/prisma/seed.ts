@@ -621,6 +621,29 @@ const achievements: Prisma.AchievementCreateInput[] = [
   },
 ];
 
+const marketEvents: Prisma.MarketEventCreateInput[] = [
+  // Positive Events
+  { slug: 'bull-run', name: 'Bull Run', description: 'Market momentum is strong! Prices trending up.', effectType: 'trend_bias', effectValue: 5, durationMinutes: 45, isPositive: true, rarity: 2 },
+  { slug: 'sector-boom-real-estate', name: 'Real Estate Boom', description: 'Property sector is hot!', effectType: 'trend_bias', effectValue: 10, durationMinutes: 30, isPositive: true, rarity: 2 },
+  { slug: 'sector-boom-business', name: 'Business Sector Rally', description: 'Business stocks are surging!', effectType: 'trend_bias', effectValue: 10, durationMinutes: 30, isPositive: true, rarity: 2 },
+  { slug: 'earnings-beat', name: 'Earnings Beat', description: 'Your company crushed expectations!', effectType: 'instant_spike', effectValue: 12, durationMinutes: 0, isPositive: true, rarity: 3 },
+  { slug: 'analyst-upgrade', name: 'Analyst Upgrade', description: 'Wall Street loves you now.', effectType: 'tick_modifier', effectValue: 3, durationMinutes: 20, isPositive: true, rarity: 2 },
+  { slug: 'fed-rate-cut', name: 'Fed Rate Cut', description: 'The Fed cut rates! Markets rally.', effectType: 'trend_bias', effectValue: 5, durationMinutes: 40, isPositive: true, rarity: 3 },
+  { slug: 'viral-news', name: 'Viral News', description: 'Your company is trending!', effectType: 'instant_spike', effectValue: 15, durationMinutes: 0, isPositive: true, rarity: 3 },
+
+  // Negative Events
+  { slug: 'bear-market', name: 'Bear Market', description: 'Market sentiment is turning negative.', effectType: 'trend_bias', effectValue: -5, durationMinutes: 45, isPositive: false, rarity: 2 },
+  { slug: 'sector-crash-real-estate', name: 'Real Estate Crash', description: 'Property bubble bursting!', effectType: 'trend_bias', effectValue: -10, durationMinutes: 30, isPositive: false, rarity: 2 },
+  { slug: 'sector-crash-business', name: 'Business Sector Slump', description: 'Business stocks are tanking.', effectType: 'trend_bias', effectValue: -10, durationMinutes: 30, isPositive: false, rarity: 2 },
+  { slug: 'earnings-miss', name: 'Earnings Miss', description: 'Your company disappointed investors.', effectType: 'instant_spike', effectValue: -12, durationMinutes: 0, isPositive: false, rarity: 3 },
+  { slug: 'analyst-downgrade', name: 'Analyst Downgrade', description: 'Wall Street turned on you.', effectType: 'tick_modifier', effectValue: -3, durationMinutes: 20, isPositive: false, rarity: 2 },
+  { slug: 'fed-rate-hike', name: 'Fed Rate Hike', description: 'The Fed raised rates. Ouch.', effectType: 'trend_bias', effectValue: -5, durationMinutes: 40, isPositive: false, rarity: 3 },
+
+  // Neutral/Chaos Events
+  { slug: 'meme-stock-surge', name: 'Meme Stock Surge', description: 'Wild swings incoming!', effectType: 'tick_modifier', effectValue: 10, durationMinutes: 20, isPositive: true, rarity: 3 },
+  { slug: 'market-holiday', name: 'Market Holiday', description: 'Trading paused for holiday.', effectType: 'trend_bias', effectValue: 0, durationMinutes: 30, isPositive: true, rarity: 1 },
+];
+
 const businessTypes: Prisma.BusinessTypeCreateInput[] = [
   // Tier 1 - Small Business
   {
@@ -748,6 +771,16 @@ async function main() {
     });
   }
   console.log(`✅ Seeded ${businessTypes.length} business types`);
+
+  // Upsert market events
+  for (const event of marketEvents) {
+    await prisma.marketEvent.upsert({
+      where: { slug: event.slug },
+      update: event,
+      create: event,
+    });
+  }
+  console.log(`✅ Seeded ${marketEvents.length} market events`);
 
   // Upsert prestige perks
   for (const perk of prestigePerks) {
