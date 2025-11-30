@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
-import { gameApi, DailyStatus } from '../api/game';
+import { gameApi, DailyStatus, IPOStatus } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
 
 interface LayoutProps {
@@ -17,25 +17,52 @@ export function Layout({ children }: LayoutProps) {
   const { stats, refreshStats } = useGameStore();
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [showDailyModal, setShowDailyModal] = useState(false);
+  const [ipoStatus, setIpoStatus] = useState<IPOStatus | null>(null);
 
-  // Fetch daily reward status on mount
+  // Fetch daily reward status and IPO status on mount
   useEffect(() => {
-    const fetchDailyStatus = async () => {
+    const fetchStatuses = async () => {
       try {
-        const res = await gameApi.getDailyStatus();
-        if (res.success && res.data) {
-          setDailyStatus(res.data);
+        const [dailyRes, ipoRes] = await Promise.all([
+          gameApi.getDailyStatus(),
+          gameApi.getIPOStatus(),
+        ]);
+
+        if (dailyRes.success && dailyRes.data) {
+          setDailyStatus(dailyRes.data);
           // Auto-open modal if reward is available
-          if (res.data.canClaim) {
+          if (dailyRes.data.canClaim) {
             setShowDailyModal(true);
           }
         }
+
+        if (ipoRes.success && ipoRes.data) {
+          setIpoStatus(ipoRes.data);
+        }
       } catch {
-        // Silently fail - daily rewards aren't critical
+        // Silently fail - not critical
       }
     };
-    fetchDailyStatus();
+    fetchStatuses();
   }, []);
+
+  // Poll for IPO status updates when active
+  useEffect(() => {
+    if (!ipoStatus) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await gameApi.getIPOStatus();
+        if (res.success) {
+          setIpoStatus(res.data || null);
+        }
+      } catch {
+        // Silently fail
+      }
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [ipoStatus]);
 
   const handleLogout = async () => {
     await logout();
@@ -98,6 +125,30 @@ export function Layout({ children }: LayoutProps) {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
+              {/* IPO Status Indicator */}
+              {ipoStatus && (
+                <Link
+                  to="/prestige"
+                  className={`relative flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    ipoStatus.percentChange >= 0
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-red-100 text-red-700 hover:bg-red-200'
+                  }`}
+                >
+                  <span>📈</span>
+                  <span className="font-mono">${ipoStatus.tickerSymbol}</span>
+                  <span
+                    className={`text-xs font-bold ${
+                      ipoStatus.percentChange >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    {ipoStatus.percentChange >= 0 ? '+' : ''}
+                    {ipoStatus.percentChange.toFixed(1)}%
+                  </span>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse"></span>
+                </Link>
+              )}
+
               {/* Daily Reward Button */}
               <button
                 onClick={() => setShowDailyModal(true)}

@@ -172,7 +172,7 @@ export class IPOService {
     await prisma.playerIPO.deleteMany({ where: { userId } });
 
     // Create IPO
-    const ipo = await prisma.playerIPO.create({
+    await prisma.playerIPO.create({
       data: {
         userId,
         tickerSymbol,
