@@ -14,6 +14,7 @@ import { AchievementsPage } from './pages/AchievementsPage';
 // import { ClubsPage } from './pages/ClubsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 interface ApiStatus {
   status: string;
@@ -123,6 +124,7 @@ function HomePage() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/auth" element={<AuthPage />} />
@@ -228,6 +230,7 @@ function App() {
         }
       /> */}
     </Routes>
+    </ErrorBoundary>
   );
 }
 

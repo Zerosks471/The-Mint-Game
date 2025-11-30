@@ -226,6 +226,7 @@ export class UserService {
       email: user.email,
       username: user.username,
       isPremium: user.isPremium,
+      isAdmin: user.isAdmin || false,
       sessionId,
     };
 

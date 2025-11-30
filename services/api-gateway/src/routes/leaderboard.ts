@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import { leaderboardService } from '../services/leaderboard.service';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth';
+import { authenticate, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -48,10 +48,9 @@ router.get('/:type/me', async (req: AuthenticatedRequest, res: Response, next: N
   }
 });
 
-// POST /api/v1/leaderboards/refresh - Refresh all leaderboards (admin/cron)
-router.post('/refresh', async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// POST /api/v1/leaderboards/refresh - Refresh all leaderboards (admin only)
+router.post('/refresh', requireAdmin, async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // TODO: Add admin check in production
     const result = await leaderboardService.refreshAllLeaderboards();
     res.json({
       success: true,

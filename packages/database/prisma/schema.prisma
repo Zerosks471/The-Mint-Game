@@ -49,6 +49,9 @@ model User {
   premiumUntil          DateTime? @map("premium_until")
   stripeCustomerId      String?   @map("stripe_customer_id")
 
+  // Admin
+  isAdmin               Boolean   @default(false) @map("is_admin")
+
   // Onboarding
   tutorialCompleted     Boolean   @default(false) @map("tutorial_completed")
   referralCode          String?   @unique @map("referral_code")
@@ -118,7 +121,7 @@ model PlayerStats {
   premiumCurrency     Int       @default(0) @map("premium_currency")
   lifetimeCashEarned  Decimal   @default(0) @map("lifetime_cash_earned") @db.Decimal(28, 2)
   playerLevel         Int       @default(1) @map("player_level")
-  experiencePoints    BigInt    @default(0) @map("experience_points")
+  experiencePoints    Int       @default(0) @map("experience_points")
   prestigeLevel       Int       @default(0) @map("prestige_level")
   prestigePoints      Int       @default(0) @map("prestige_points")
   prestigeMultiplier  Decimal   @default(1.0000) @map("prestige_multiplier") @db.Decimal(6, 4)
@@ -570,8 +573,8 @@ model Gift {
   claimedAt     DateTime? @map("claimed_at")
   createdAt     DateTime  @default(now()) @map("created_at")
 
-  sender        User      @relation("SentGifts", fields: [senderId], references: [id])
-  receiver      User      @relation("ReceivedGifts", fields: [receiverId], references: [id])
+  sender        User      @relation("SentGifts", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver      User      @relation("ReceivedGifts", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@map("gifts")
 }

@@ -1,4 +1,4 @@
-import { prisma, Prisma } from '@mint/database';
+import { prisma } from '@mint/database';
 import { ErrorCodes } from '@mint/types';
 import { AppError } from '../middleware/errorHandler';
 
@@ -429,7 +429,6 @@ export class ClubsService {
     userId: string
   ): ClubInfo {
     const userMembership = club.memberships?.[0];
-    const currentLevel = CLUB_LEVELS.find((l) => l.level === club.clubLevel);
     const nextLevel = CLUB_LEVELS.find((l) => l.level === club.clubLevel + 1);
 
     return {

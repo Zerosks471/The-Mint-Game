@@ -9,6 +9,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     username: string;
     isPremium: boolean;
+    isAdmin: boolean;
     sessionId: string;
   };
 }
@@ -38,6 +39,7 @@ export const authenticate = async (
       email: payload.email,
       username: payload.username,
       isPremium: payload.isPremium,
+      isAdmin: payload.isAdmin || false,
       sessionId: payload.sessionId,
     };
 
@@ -74,6 +76,7 @@ export const optionalAuth = async (
         email: payload.email,
         username: payload.username,
         isPremium: payload.isPremium,
+        isAdmin: payload.isAdmin || false,
         sessionId: payload.sessionId,
       };
     }
@@ -81,5 +84,19 @@ export const optionalAuth = async (
     // Token invalid, continue without user
   }
 
+  next();
+};
+
+export const requireAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    });
+  }
   next();
 };

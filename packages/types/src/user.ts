@@ -18,6 +18,7 @@ export interface User {
   language: string;
   isPremium: boolean;
   premiumUntil: Date | null;
+  isAdmin: boolean;
   tutorialCompleted: boolean;
   referralCode: string | null;
   createdAt: Date;
@@ -61,6 +62,7 @@ export interface JWTPayload {
   email: string;
   username: string;
   isPremium: boolean;
+  isAdmin: boolean;
   sessionId: string;
   type: 'access' | 'refresh';
   iat: number;
