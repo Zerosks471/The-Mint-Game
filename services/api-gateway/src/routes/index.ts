@@ -8,6 +8,9 @@ import dailyRouter from './daily';
 import leaderboardRouter from './leaderboard';
 import achievementsRouter from './achievements';
 import ipoRouter from './ipo';
+import friendsRouter from './friends';
+import clubsRouter from './clubs';
+import giftsRouter from './gifts';
 
 const router: Router = Router();
 
@@ -45,6 +48,15 @@ v1Router.use('/achievements', achievementsRouter);
 
 // IPO routes
 v1Router.use('/ipo', ipoRouter);
+
+// Friends routes
+v1Router.use('/friends', friendsRouter);
+
+// Clubs routes
+v1Router.use('/clubs', clubsRouter);
+
+// Gifts routes
+v1Router.use('/gifts', giftsRouter);
 
 router.use('/v1', v1Router);
 
