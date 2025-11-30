@@ -304,6 +304,90 @@ export interface IPOSellResult {
   newPrestigeLevel: number;
 }
 
+// Friends types
+export interface Friend {
+  id: string;
+  status: string;
+  requestedAt: string;
+  respondedAt: string | null;
+  friend: {
+    id: string;
+    username: string;
+    displayName: string | null;
+  };
+  isRequester: boolean;
+}
+
+export interface FriendRequest {
+  id: string;
+  status: string;
+  requestedAt: string;
+  requester: {
+    id: string;
+    username: string;
+    displayName: string | null;
+  };
+}
+
+export interface UserSearchResult {
+  id: string;
+  username: string;
+  displayName: string | null;
+  isFriend: boolean;
+}
+
+// Club types
+export interface ClubInfo {
+  id: string;
+  name: string;
+  description: string | null;
+  ownerId: string;
+  ownerUsername: string;
+  isPublic: boolean;
+  memberCount: number;
+  maxMembers: number;
+  clubLevel: number;
+  incomeBonusPct: string;
+  totalDonations: string;
+  nextLevelDonations: number | null;
+  createdAt: string;
+  isMember: boolean;
+  isOwner: boolean;
+  role: string | null;
+}
+
+export interface ClubMember {
+  id: string;
+  username: string;
+  displayName: string | null;
+  role: string;
+  joinedAt: string;
+}
+
+export interface ClubActivity {
+  id: string;
+  type: string;
+  data: Record<string, unknown> | null;
+  user: { username: string; displayName: string | null };
+  createdAt: string;
+}
+
+// Gift types
+export interface GiftInfo {
+  id: string;
+  senderId: string;
+  senderUsername: string;
+  receiverId: string;
+  receiverUsername: string;
+  giftType: string;
+  giftData: { amount?: number; boostId?: string };
+  message: string | null;
+  status: string;
+  expiresAt: string;
+  claimedAt: string | null;
+  createdAt: string;
+}
+
 export const gameApi = {
   // Player stats
   async getStats(): Promise<ApiResponse<PlayerStats>> {
@@ -518,5 +602,105 @@ export const gameApi = {
 
   async cancelIPO(): Promise<ApiResponse<{ pointsEarned: number; newPrestigeLevel: number }>> {
     return apiClient.post<{ pointsEarned: number; newPrestigeLevel: number }>('/ipo/cancel');
+  },
+
+  // Friends
+  async getFriends(): Promise<ApiResponse<Friend[]>> {
+    return apiClient.get<Friend[]>('/friends');
+  },
+
+  async getFriendRequests(): Promise<ApiResponse<FriendRequest[]>> {
+    return apiClient.get<FriendRequest[]>('/friends/requests');
+  },
+
+  async getSentRequests(): Promise<ApiResponse<FriendRequest[]>> {
+    return apiClient.get<FriendRequest[]>('/friends/sent');
+  },
+
+  async searchUsers(query: string): Promise<ApiResponse<UserSearchResult[]>> {
+    return apiClient.get<UserSearchResult[]>(`/friends/search?q=${encodeURIComponent(query)}`);
+  },
+
+  async sendFriendRequest(username: string): Promise<ApiResponse<{ id: string }>> {
+    return apiClient.post<{ id: string }>('/friends/request', { username });
+  },
+
+  async acceptFriendRequest(friendshipId: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/friends/${friendshipId}/accept`);
+  },
+
+  async rejectFriendRequest(friendshipId: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/friends/${friendshipId}/reject`);
+  },
+
+  async removeFriend(friendshipId: string): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>(`/friends/${friendshipId}`);
+  },
+
+  // Clubs
+  async getPublicClubs(): Promise<ApiResponse<ClubInfo[]>> {
+    return apiClient.get<ClubInfo[]>('/clubs');
+  },
+
+  async getMyClub(): Promise<ApiResponse<ClubInfo | null>> {
+    return apiClient.get<ClubInfo | null>('/clubs/my');
+  },
+
+  async getClub(clubId: string): Promise<ApiResponse<ClubInfo & { members: ClubMember[] }>> {
+    return apiClient.get<ClubInfo & { members: ClubMember[] }>(`/clubs/${clubId}`);
+  },
+
+  async getClubActivities(clubId: string): Promise<ApiResponse<ClubActivity[]>> {
+    return apiClient.get<ClubActivity[]>(`/clubs/${clubId}/activities`);
+  },
+
+  async createClub(
+    name: string,
+    description?: string,
+    isPublic?: boolean
+  ): Promise<ApiResponse<ClubInfo>> {
+    return apiClient.post<ClubInfo>('/clubs', { name, description, isPublic });
+  },
+
+  async joinClub(clubId: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/clubs/${clubId}/join`);
+  },
+
+  async leaveClub(): Promise<ApiResponse<void>> {
+    return apiClient.post<void>('/clubs/leave');
+  },
+
+  async donateToClub(amount: number): Promise<ApiResponse<{ newLevel: number; newBonus: string }>> {
+    return apiClient.post<{ newLevel: number; newBonus: string }>('/clubs/donate', { amount });
+  },
+
+  async kickClubMember(userId: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/clubs/kick/${userId}`);
+  },
+
+  // Gifts
+  async getPendingGifts(): Promise<ApiResponse<GiftInfo[]>> {
+    return apiClient.get<GiftInfo[]>('/gifts');
+  },
+
+  async getSentGifts(): Promise<ApiResponse<GiftInfo[]>> {
+    return apiClient.get<GiftInfo[]>('/gifts/sent');
+  },
+
+  async getGiftCounts(): Promise<ApiResponse<{ pending: number; sentToday: number; maxPerDay: number }>> {
+    return apiClient.get<{ pending: number; sentToday: number; maxPerDay: number }>('/gifts/counts');
+  },
+
+  async sendGift(
+    receiverId: string,
+    giftType: string,
+    amount?: number,
+    message?: string
+  ): Promise<ApiResponse<GiftInfo>> {
+    return apiClient.post<GiftInfo>('/gifts/send', { receiverId, giftType, amount, message });
+  },
+
+  async claimGift(giftId: string): Promise<ApiResponse<{ claimed: GiftInfo; cashReceived?: number }>> {
+    return apiClient.post<{ claimed: GiftInfo; cashReceived?: number }>(`/gifts/${giftId}/claim`);
   },
 };

@@ -9,6 +9,8 @@ import { StocksPage } from './pages/StocksPage';
 import { PrestigePage } from './pages/PrestigePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { AchievementsPage } from './pages/AchievementsPage';
+import { FriendsPage } from './pages/FriendsPage';
+import { ClubsPage } from './pages/ClubsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 
@@ -199,6 +201,26 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <AchievementsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/friends"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <FriendsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/clubs"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ClubsPage />
             </Layout>
           </ProtectedRoute>
         }

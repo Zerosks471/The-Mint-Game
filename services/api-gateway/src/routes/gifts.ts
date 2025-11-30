@@ -57,7 +57,7 @@ router.post('/send', async (req: AuthenticatedRequest, res: Response, next: Next
 // POST /api/v1/gifts/:id/claim - Claim a gift
 router.post('/:id/claim', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const result = await giftsService.claimGift(req.user!.id, req.params.id);
+    const result = await giftsService.claimGift(req.user!.id, req.params.id!);
     res.json({
       success: true,
       data: result,

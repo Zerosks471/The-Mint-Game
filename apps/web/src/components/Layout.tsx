@@ -87,6 +87,8 @@ export function Layout({ children }: LayoutProps) {
     { path: '/stats', label: 'Stats', icon: '📊' },
     { path: '/prestige', label: 'Go Public', icon: '🚀' },
     { path: '/stocks', label: 'Stocks', icon: '📈' },
+    { path: '/friends', label: 'Friends', icon: '👥' },
+    { path: '/clubs', label: 'Clubs', icon: '🏛️' },
     { path: '/leaderboards', label: 'Rankings', icon: '🏆' },
     { path: '/achievements', label: 'Achievements', icon: '🎖️' },
   ];

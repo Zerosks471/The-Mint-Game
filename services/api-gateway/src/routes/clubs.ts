@@ -47,7 +47,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response, next: NextFunc
 // GET /api/v1/clubs/:id - Get club details
 router.get('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const club = await clubsService.getClub(req.params.id, req.user!.id);
+    const club = await clubsService.getClub(req.params.id!, req.user!.id);
     res.json({ success: true, data: club });
   } catch (error) {
     next(error);
@@ -57,7 +57,7 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFu
 // GET /api/v1/clubs/:id/activities - Get club activity feed
 router.get('/:id/activities', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const activities = await clubsService.getActivities(req.params.id);
+    const activities = await clubsService.getActivities(req.params.id!);
     res.json({ success: true, data: activities });
   } catch (error) {
     next(error);
@@ -67,7 +67,7 @@ router.get('/:id/activities', async (req: AuthenticatedRequest, res: Response, n
 // POST /api/v1/clubs/:id/join - Join club
 router.post('/:id/join', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    await clubsService.joinClub(req.user!.id, req.params.id);
+    await clubsService.joinClub(req.user!.id, req.params.id!);
     res.json({ success: true, message: 'Joined club!' });
   } catch (error) {
     next(error);
@@ -108,7 +108,7 @@ router.post('/donate', async (req: AuthenticatedRequest, res: Response, next: Ne
 // POST /api/v1/clubs/kick/:userId - Kick member
 router.post('/kick/:userId', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    await clubsService.kickMember(req.user!.id, req.params.userId);
+    await clubsService.kickMember(req.user!.id, req.params.userId!);
     res.json({ success: true, message: 'Member kicked' });
   } catch (error) {
     next(error);

@@ -68,7 +68,7 @@ router.post('/request', async (req: AuthenticatedRequest, res: Response, next: N
 // POST /api/v1/friends/:id/accept - Accept friend request
 router.post('/:id/accept', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    await friendsService.acceptRequest(req.user!.id, req.params.id);
+    await friendsService.acceptRequest(req.user!.id, req.params.id!);
     res.json({ success: true, message: 'Friend request accepted' });
   } catch (error) {
     next(error);
@@ -78,7 +78,7 @@ router.post('/:id/accept', async (req: AuthenticatedRequest, res: Response, next
 // POST /api/v1/friends/:id/reject - Reject friend request
 router.post('/:id/reject', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    await friendsService.rejectRequest(req.user!.id, req.params.id);
+    await friendsService.rejectRequest(req.user!.id, req.params.id!);
     res.json({ success: true, message: 'Friend request rejected' });
   } catch (error) {
     next(error);
@@ -88,7 +88,7 @@ router.post('/:id/reject', async (req: AuthenticatedRequest, res: Response, next
 // DELETE /api/v1/friends/:id - Remove friend
 router.delete('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    await friendsService.removeFriend(req.user!.id, req.params.id);
+    await friendsService.removeFriend(req.user!.id, req.params.id!);
     res.json({ success: true, message: 'Friend removed' });
   } catch (error) {
     next(error);

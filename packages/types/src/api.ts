@@ -83,6 +83,7 @@ export const ErrorCodes = {
   // Resource errors
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
+  FORBIDDEN: 'FORBIDDEN',
 
   // Game errors
   INSUFFICIENT_FUNDS: 'INSUFFICIENT_FUNDS',

@@ -310,12 +310,6 @@ export class ClubsService {
     }
 
     // Calculate total donations and new level
-    // We'll track donations via club activities
-    const previousDonations = await prisma.clubActivity.aggregate({
-      where: { clubId: membership.clubId, activityType: 'donated' },
-      _sum: { data: true },
-    });
-
     // Parse previous donation total from activities
     let totalDonations = 0;
     const donationActivities = await prisma.clubActivity.findMany({
