@@ -6,6 +6,27 @@
 
 ---
 
+## Implementation Tasks
+
+### Backend Tasks
+- [ ] Task 1: Add premium income multiplier to game.service.ts
+- [ ] Task 2: Add dynamic offline cap (24hr premium / 8hr free)
+- [ ] Task 3: Ensure isPremium included in /user/me response
+
+### Frontend Tasks
+- [ ] Task 4: Create PremiumBadge.tsx component
+- [ ] Task 5: Create UpgradeModal.tsx component
+- [ ] Task 6: Create UpgradeButton.tsx component
+- [ ] Task 7: Add premium badge + upgrade button to Layout.tsx navbar
+- [ ] Task 8: Add premium badges to LeaderboardPage.tsx
+- [ ] Task 9: Add premium section to StatsPage.tsx
+- [ ] Task 10: Add upgrade CTA to DashboardPage.tsx offline modal
+
+### Testing
+- [ ] Task 11: Manual verification with database toggle
+
+---
+
 ## Overview
 
 Wire up existing `isPremium` database flag to unlock premium benefits throughout the app, with placeholder upgrade UI.
