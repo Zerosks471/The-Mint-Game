@@ -149,21 +149,21 @@ Add route in App.tsx:
 ## Implementation Tasks
 
 ### Backend
-- [ ] Create PATCH `/api/v1/user/settings` endpoint
-- [ ] Create POST `/api/v1/user/change-password` endpoint
-- [ ] Create POST `/api/v1/user/delete-account` endpoint
+- [x] Create PATCH `/api/v1/user/settings` endpoint
+- [x] Create POST `/api/v1/user/change-password` endpoint
+- [x] Create POST `/api/v1/user/delete-account` endpoint
 
 ### Frontend - Core
-- [ ] Create `themeStore.ts` with theme state and toggle
-- [ ] Create `ThemeProvider.tsx` component
-- [ ] Create `SettingsPage.tsx` with all sections
-- [ ] Add Settings route and nav link
+- [x] Create `themeStore.ts` with theme state and toggle
+- [x] Create `ThemeProvider.tsx` component
+- [x] Create `SettingsPage.tsx` with all sections
+- [x] Add Settings route and nav link
 
 ### Frontend - Dark Mode Styling
-- [ ] Update `index.html` with dark background
-- [ ] Update `Layout.tsx` with dark styles
-- [ ] Update `AuthPage.tsx` with dark styles
-- [ ] Update `DashboardPage.tsx` with dark styles
+- [x] Update `index.html` with dark background
+- [x] Update `Layout.tsx` with dark styles
+- [x] Update `AuthPage.tsx` with dark styles
+- [x] Update `DashboardPage.tsx` with dark styles
 - [ ] Update `StatsPage.tsx` with dark styles
 - [ ] Update `LeaderboardPage.tsx` with dark styles
 - [ ] Update `PropertiesPage.tsx` with dark styles
@@ -175,3 +175,4 @@ Add route in App.tsx:
 ---
 
 *Design finalized November 30, 2025*
+*Core implementation completed November 30, 2025*

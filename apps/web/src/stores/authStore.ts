@@ -8,6 +8,11 @@ interface User {
   email: string;
   username: string;
   isPremium: boolean;
+  displayName?: string;
+  theme?: 'light' | 'dark';
+  soundEnabled?: boolean;
+  musicEnabled?: boolean;
+  notificationsEnabled?: boolean;
 }
 
 interface AuthState {
@@ -22,6 +27,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   clearError: () => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -39,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.success && response.data) {
             const { user, accessToken } = response.data;
+            const userData = user as Record<string, unknown>;
             apiClient.setAccessToken(accessToken);
             set({
               user: {
@@ -46,6 +53,11 @@ export const useAuthStore = create<AuthState>()(
                 email: user.email,
                 username: user.username,
                 isPremium: user.isPremium,
+                displayName: userData.displayName as string | undefined,
+                theme: userData.theme as 'light' | 'dark' | undefined,
+                soundEnabled: userData.soundEnabled as boolean | undefined,
+                musicEnabled: userData.musicEnabled as boolean | undefined,
+                notificationsEnabled: userData.notificationsEnabled as boolean | undefined,
               },
               isAuthenticated: true,
               isLoading: false,
@@ -74,6 +86,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.success && response.data) {
             const { user, accessToken } = response.data;
+            const userData = user as Record<string, unknown>;
             apiClient.setAccessToken(accessToken);
             set({
               user: {
@@ -81,6 +94,11 @@ export const useAuthStore = create<AuthState>()(
                 email: user.email,
                 username: user.username,
                 isPremium: user.isPremium,
+                displayName: userData.displayName as string | undefined,
+                theme: userData.theme as 'light' | 'dark' | undefined,
+                soundEnabled: userData.soundEnabled as boolean | undefined,
+                musicEnabled: userData.musicEnabled as boolean | undefined,
+                notificationsEnabled: userData.notificationsEnabled as boolean | undefined,
               },
               isAuthenticated: true,
               isLoading: false,
@@ -150,6 +168,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+
+      setUser: (user: User) => set({ user }),
     }),
     {
       name: 'auth-storage',

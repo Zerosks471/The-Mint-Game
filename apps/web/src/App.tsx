@@ -9,10 +9,12 @@ import { StocksPage } from './pages/StocksPage';
 import { PrestigePage } from './pages/PrestigePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { AchievementsPage } from './pages/AchievementsPage';
+import { SettingsPage } from './pages/SettingsPage';
 // TODO: Friends and Clubs will be separate microservices - re-enable when ready
 // import { FriendsPage } from './pages/FriendsPage';
 // import { ClubsPage } from './pages/ClubsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ThemeProvider } from './components/ThemeProvider';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -125,6 +127,7 @@ function HomePage() {
 function App() {
   return (
     <ErrorBoundary>
+    <ThemeProvider>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/auth" element={<AuthPage />} />
@@ -208,6 +211,16 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <SettingsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       {/* TODO: Friends and Clubs will be separate microservices - re-enable when ready */}
       {/* <Route
         path="/friends"
@@ -230,6 +243,7 @@ function App() {
         }
       /> */}
     </Routes>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 }

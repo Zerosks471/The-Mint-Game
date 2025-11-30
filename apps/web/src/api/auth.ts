@@ -37,4 +37,25 @@ export const authApi = {
   async getMe(): Promise<ApiResponse<any>> {
     return apiClient.get<any>('/user/me');
   },
+
+  async updateSettings(data: {
+    displayName?: string;
+    theme?: 'light' | 'dark';
+    soundEnabled?: boolean;
+    musicEnabled?: boolean;
+    notificationsEnabled?: boolean;
+  }): Promise<ApiResponse<any>> {
+    return apiClient.patch<any>('/user/settings', data);
+  },
+
+  async changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post<{ message: string }>('/user/change-password', data);
+  },
+
+  async deleteAccount(password: string): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.post<{ message: string }>('/user/delete-account', { password });
+  },
 };

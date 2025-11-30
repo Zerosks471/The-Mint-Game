@@ -64,18 +64,18 @@ function IncomeCard({ stats }: { stats: PlayerStats | null }) {
   const bonusPercent = Math.round((multiplier - 1) * 100);
 
   return (
-    <div className="rounded-xl border-2 p-4 bg-green-50 border-green-200 text-green-700">
+    <div className="rounded-xl border-2 p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-700 dark:text-green-400">
       <div className="flex items-center justify-between mb-2">
         <span className="text-2xl">📈</span>
         {bonusPercent > 0 && (
-          <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded-full font-medium">
             +{bonusPercent}% bonus
           </span>
         )}
       </div>
       <p className="text-2xl font-bold">+{formatCurrency(incomePerHour)}</p>
       <p className="text-sm opacity-75">Per Hour</p>
-      <div className="mt-2 pt-2 border-t border-green-200 text-xs space-y-0.5">
+      <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-700 text-xs space-y-0.5">
         <div className="flex justify-between">
           <span className="opacity-75">Per Day</span>
           <span className="font-medium">{formatCurrency(incomePerDay)}</span>
@@ -94,21 +94,21 @@ function PropertiesCard({ total, managed, income }: { total: number; managed: nu
   const managedPercent = total > 0 ? Math.round((managed / total) * 100) : 0;
 
   return (
-    <div className="rounded-xl border-2 p-4 bg-blue-50 border-blue-200 text-blue-700">
+    <div className="rounded-xl border-2 p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400">
       <div className="flex items-center justify-between mb-2">
         <span className="text-2xl">🏢</span>
         {managed > 0 && (
-          <span className="text-xs bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-medium">
             👔 {managed} managed
           </span>
         )}
       </div>
       <p className="text-2xl font-bold">{total}</p>
       <p className="text-sm opacity-75">Properties</p>
-      <div className="mt-2 pt-2 border-t border-blue-200 text-xs space-y-0.5">
+      <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700 text-xs space-y-0.5">
         <div className="flex justify-between">
           <span className="opacity-75">Income</span>
-          <span className="font-medium text-green-600">+{formatCurrency(income)}/hr</span>
+          <span className="font-medium text-green-600 dark:text-green-400">+{formatCurrency(income)}/hr</span>
         </div>
         <div className="flex justify-between">
           <span className="opacity-75">Automated</span>
@@ -125,21 +125,21 @@ function BusinessesCard({ total, businesses }: { total: number; businesses: Play
   const totalRevenue = businesses.reduce((sum: number, b: PlayerBusiness) => sum + parseFloat(b.currentRevenue), 0);
 
   return (
-    <div className="rounded-xl border-2 p-4 bg-purple-50 border-purple-200 text-purple-700">
+    <div className="rounded-xl border-2 p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-400">
       <div className="flex items-center justify-between mb-2">
         <span className="text-2xl">💼</span>
         {readyCount > 0 && (
-          <span className="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-medium animate-pulse">
+          <span className="text-xs bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded-full font-medium animate-pulse">
             {readyCount} ready!
           </span>
         )}
       </div>
       <p className="text-2xl font-bold">{total}</p>
       <p className="text-sm opacity-75">Businesses</p>
-      <div className="mt-2 pt-2 border-t border-purple-200 text-xs space-y-0.5">
+      <div className="mt-2 pt-2 border-t border-purple-200 dark:border-purple-700 text-xs space-y-0.5">
         <div className="flex justify-between">
           <span className="opacity-75">Pending</span>
-          <span className="font-medium text-green-600">{formatCurrency(totalRevenue)}</span>
+          <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(totalRevenue)}</span>
         </div>
         <div className="flex justify-between">
           <span className="opacity-75">Ready</span>
@@ -219,11 +219,11 @@ function CashTicker() {
   };
 
   return (
-    <div className="rounded-xl border-2 p-4 bg-mint-50 border-mint-200 text-mint-700">
+    <div className="rounded-xl border-2 p-4 bg-mint-50 dark:bg-mint-900/20 border-mint-200 dark:border-mint-700 text-mint-700 dark:text-mint-400">
       <div className="flex items-center justify-between mb-2">
         <span className="text-2xl">💵</span>
         {incomePerHour > 0 && (
-          <span className="flex items-center gap-1 text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-medium">
+          <span className="flex items-center gap-1 text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded-full font-medium">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
             earning
           </span>
@@ -234,10 +234,10 @@ function CashTicker() {
       </p>
       <p className="text-sm opacity-75">Total Cash</p>
       {incomePerHour > 0 && (
-        <div className="mt-2 pt-2 border-t border-mint-200 text-xs space-y-0.5">
+        <div className="mt-2 pt-2 border-t border-mint-200 dark:border-mint-700 text-xs space-y-0.5">
           <div className="flex justify-between">
             <span className="opacity-75">Per Minute</span>
-            <span className="font-medium text-green-600">+{formatSmallCurrency(incomePerMin)}</span>
+            <span className="font-medium text-green-600 dark:text-green-400">+{formatSmallCurrency(incomePerMin)}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="opacity-75">This Minute</span>
@@ -301,7 +301,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your empire...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading your empire...</p>
         </div>
       </div>
     );
@@ -309,7 +309,7 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">{error}</div>
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-600 dark:text-red-400">{error}</div>
     );
   }
 
@@ -324,32 +324,32 @@ export function DashboardPage() {
       {/* Offline Earnings Modal */}
       {showOfflineModal && offlineStatus && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
             <div className="text-6xl mb-4">💰</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back!</h2>
             {collectedAmount ? (
               <>
-                <p className="text-gray-600 mb-4">You collected:</p>
-                <p className="text-4xl font-bold text-mint-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">You collected:</p>
+                <p className="text-4xl font-bold text-mint-600 dark:text-mint-400 mb-6">
                   {formatCurrency(parseFloat(collectedAmount))}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
                   While you were away for {offlineStatus.elapsedHours.toFixed(1)} hours, your
                   properties earned:
                 </p>
-                <p className="text-4xl font-bold text-mint-600 mb-2">
+                <p className="text-4xl font-bold text-mint-600 dark:text-mint-400 mb-2">
                   {formatCurrency(parseFloat(offlineStatus.pendingEarnings))}
                 </p>
                 {offlineStatus.capped && !user?.isPremium && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-amber-800 mb-2">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
                       Your earnings were capped at {offlineStatus.capHours} hours.
                     </p>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-amber-600">Get 24hr cap with Premium</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">Get 24hr cap with Premium</p>
                       <UpgradeButton size="sm" />
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export function DashboardPage() {
                 </button>
                 <button
                   onClick={() => setShowOfflineModal(false)}
-                  className="mt-2 text-gray-500 hover:text-gray-700 text-sm"
+                  className="mt-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm"
                 >
                   Dismiss
                 </button>
@@ -390,12 +390,12 @@ export function DashboardPage() {
       {/* Quick Stats */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Properties Summary */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Properties</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Properties</h2>
             <Link
               to="/properties"
-              className="text-sm text-mint-600 hover:text-mint-700 font-medium"
+              className="text-sm text-mint-600 hover:text-mint-700 dark:text-mint-400 dark:hover:text-mint-300 font-medium"
             >
               View All &rarr;
             </Link>
@@ -403,7 +403,7 @@ export function DashboardPage() {
 
           {playerProperties.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No properties yet</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No properties yet</p>
               <Link
                 to="/properties"
                 className="inline-block px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg transition-colors"
@@ -413,13 +413,13 @@ export function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex justify-between text-sm text-gray-500 pb-2 border-b">
+              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 pb-2 border-b dark:border-gray-700">
                 <span>Total Income</span>
-                <span className="font-medium text-green-600">
+                <span className="font-medium text-green-600 dark:text-green-400">
                   +{formatCurrency(totalPropertyIncome)}/hr
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-500">
+              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>Managed Properties</span>
                 <span className="font-medium">
                   {managedProperties.length} / {playerProperties.length}
@@ -429,16 +429,16 @@ export function DashboardPage() {
                 {playerProperties.slice(0, 3).map((prop) => (
                   <div
                     key={prop.id}
-                    className="flex items-center justify-between py-2 border-b last:border-0"
+                    className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{prop.propertyType.name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="font-medium text-gray-900 dark:text-white">{prop.propertyType.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Qty: {prop.quantity} • Lv. {prop.upgradeLevel}
                         {prop.managerHired && ' • 👔'}
                       </p>
                     </div>
-                    <p className="text-sm text-green-600">
+                    <p className="text-sm text-green-600 dark:text-green-400">
                       +{formatCurrency(parseFloat(prop.currentIncomeHour))}/hr
                     </p>
                   </div>
@@ -449,12 +449,12 @@ export function DashboardPage() {
         </div>
 
         {/* Businesses Summary */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Businesses</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Businesses</h2>
             <Link
               to="/businesses"
-              className="text-sm text-mint-600 hover:text-mint-700 font-medium"
+              className="text-sm text-mint-600 hover:text-mint-700 dark:text-mint-400 dark:hover:text-mint-300 font-medium"
             >
               View All &rarr;
             </Link>
@@ -462,7 +462,7 @@ export function DashboardPage() {
 
           {playerBusinesses.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No businesses yet</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No businesses yet</p>
               <Link
                 to="/businesses"
                 className="inline-block px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg transition-colors"
@@ -473,13 +473,13 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {playerBusinesses.slice(0, 4).map((biz) => (
-                <div key={biz.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                <div key={biz.id} className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0">
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{biz.businessType.name}</p>
-                    <p className="text-xs text-gray-500">Level {biz.level}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{biz.businessType.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Level {biz.level}</p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${
                           biz.cycleComplete ? 'bg-green-500' : 'bg-mint-500'
@@ -488,7 +488,7 @@ export function DashboardPage() {
                       />
                     </div>
                     {biz.cycleComplete && (
-                      <span className="text-xs text-green-600 font-medium">Ready!</span>
+                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">Ready!</span>
                     )}
                   </div>
                 </div>
@@ -499,28 +499,28 @@ export function DashboardPage() {
       </div>
 
       {/* Player Progress */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Progress</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Progress</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <p className="text-3xl font-bold text-purple-600">{stats?.playerLevel || 1}</p>
-            <p className="text-sm text-gray-500">Player Level</p>
+            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats?.playerLevel || 1}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Player Level</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-mint-600">
+            <p className="text-3xl font-bold text-mint-600 dark:text-mint-400">
               {formatCurrency(parseFloat(stats?.lifetimeCashEarned || '0'))}
             </p>
-            <p className="text-sm text-gray-500">Lifetime Earnings</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Lifetime Earnings</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-blue-600">
+            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {(parseFloat(stats?.currentMultiplier || '1') * 100 - 100).toFixed(0)}%
             </p>
-            <p className="text-sm text-gray-500">Income Bonus</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Income Bonus</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-amber-600">{stats?.premiumCurrency || 0}</p>
-            <p className="text-sm text-gray-500">Gold Coins</p>
+            <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats?.premiumCurrency || 0}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Gold Coins</p>
           </div>
         </div>
       </div>
