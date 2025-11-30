@@ -4,7 +4,7 @@
 
 **Goal:** Add social features, prestige system, achievements, and UI polish to transform the MVP into an engaging multiplayer experience.
 
-**Duration:** 4 weeks (estimated)
+**Status:** ~60% Complete (Prestige, Leaderboards, Achievements, Daily Rewards done)
 
 ---
 
@@ -494,15 +494,15 @@ POST /api/v1/daily/claim     - Claim today's reward
 
 ## Verification Checklist
 
-- [ ] Prestige resets progress correctly
-- [ ] Prestige points calculated properly
-- [ ] Perks apply multipliers correctly
-- [ ] Leaderboards update every 15 min
+- [x] Prestige resets progress correctly
+- [x] Prestige points calculated properly
+- [x] Perks apply multipliers correctly
+- [x] Leaderboards update every 15 min
 - [ ] Friend requests work both ways
 - [ ] Gifts can be sent and claimed
 - [ ] Clubs provide income bonus
-- [ ] All 20+ achievements trackable
-- [ ] Daily rewards respect streak
+- [x] All 20+ achievements trackable
+- [x] Daily rewards respect streak
 - [ ] Animations perform well (60fps)
 
 ---
