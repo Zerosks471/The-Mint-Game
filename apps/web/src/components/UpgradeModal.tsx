@@ -31,7 +31,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
         {/* Header with gradient */}
         <div className="bg-gradient-to-r from-gold-400 to-amber-400 px-6 py-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
@@ -54,8 +54,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div key={index} className="flex items-start gap-3">
               <span className="text-2xl">{benefit.icon}</span>
               <div>
-                <h3 className="font-semibold text-gray-900">{benefit.title}</h3>
-                <p className="text-sm text-gray-600">{benefit.description}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{benefit.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{benefit.description}</p>
               </div>
             </div>
           ))}
@@ -63,18 +63,18 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
         {/* Pricing */}
         <div className="px-6 pb-4">
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600">Monthly</span>
-              <span className="text-xl font-bold text-gray-900">$4.99/mo</span>
+              <span className="text-gray-600 dark:text-gray-400">Monthly</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">$4.99/mo</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Annual</span>
+              <span className="text-gray-600 dark:text-gray-400">Annual</span>
               <div className="flex items-center gap-2">
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                   Save 33%
                 </span>
-                <span className="text-xl font-bold text-gray-900">$39.99/yr</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">$39.99/yr</span>
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           </button>
           <button
             onClick={onClose}
-            className="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+            className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Maybe Later
           </button>

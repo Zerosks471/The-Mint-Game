@@ -113,8 +113,8 @@ export function LeaderboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Leaderboards</h1>
-          <p className="text-gray-500">See how you stack up against other players</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Leaderboards</h1>
+          <p className="text-gray-500 dark:text-gray-400">See how you stack up against other players</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -156,15 +156,15 @@ export function LeaderboardPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex space-x-2 border-b border-gray-200">
+      <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700">
         {types.map((type) => (
           <button
             key={type.id}
             onClick={() => setActiveType(type.id)}
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeType === type.id
-                ? 'border-mint-500 text-mint-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-mint-500 text-mint-600 dark:text-mint-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
             }`}
           >
             {type.name}
@@ -174,7 +174,7 @@ export function LeaderboardPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
@@ -185,9 +185,9 @@ export function LeaderboardPage() {
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-mint-500"></div>
         </div>
       ) : leaderboard ? (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b font-medium text-gray-600 text-sm">
+          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600 font-medium text-gray-600 dark:text-gray-300 text-sm">
             <div className="col-span-1">Rank</div>
             <div className="col-span-1">Change</div>
             <div className="col-span-6">Player</div>
@@ -196,23 +196,23 @@ export function LeaderboardPage() {
 
           {/* Entries */}
           {leaderboard.entries.length === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-500">
+            <div className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
               No players on the leaderboard yet. Be the first!
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {leaderboard.entries.map((entry) => (
                 <div
                   key={entry.userId}
                   className={`grid grid-cols-12 gap-4 px-6 py-4 items-center ${
-                    entry.isCurrentUser ? 'bg-mint-50' : 'hover:bg-gray-50'
+                    entry.isCurrentUser ? 'bg-mint-50 dark:bg-mint-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   <div className="col-span-1 font-bold text-lg">
                     {entry.rank <= 3 ? (
                       <span className="text-2xl">{getRankBadge(entry.rank)}</span>
                     ) : (
-                      <span className="text-gray-600">#{entry.rank}</span>
+                      <span className="text-gray-600 dark:text-gray-400">#{entry.rank}</span>
                     )}
                   </div>
                   <div className="col-span-1">
@@ -221,28 +221,28 @@ export function LeaderboardPage() {
                   <div className="col-span-6 flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                        entry.isCurrentUser ? 'bg-mint-500' : 'bg-gray-400'
+                        entry.isCurrentUser ? 'bg-mint-500' : 'bg-gray-400 dark:bg-gray-600'
                       }`}
                     >
                       {(entry.displayName || entry.username || '?')[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className={`font-medium flex items-center gap-1.5 ${entry.isCurrentUser ? 'text-mint-700' : 'text-gray-900'}`}>
+                      <p className={`font-medium flex items-center gap-1.5 ${entry.isCurrentUser ? 'text-mint-700 dark:text-mint-400' : 'text-gray-900 dark:text-white'}`}>
                         {entry.displayName || entry.username || 'Anonymous'}
                         {entry.isPremium && <PremiumBadge size="sm" />}
                         {entry.isCurrentUser && (
-                          <span className="ml-1 text-xs bg-mint-100 text-mint-700 px-2 py-0.5 rounded-full">
+                          <span className="ml-1 text-xs bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 px-2 py-0.5 rounded-full">
                             You
                           </span>
                         )}
                       </p>
                       {entry.displayName && entry.username && (
-                        <p className="text-sm text-gray-500">@{entry.username}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">@{entry.username}</p>
                       )}
                     </div>
                   </div>
                   <div className="col-span-4 text-right">
-                    <span className="font-bold text-gray-900">
+                    <span className="font-bold text-gray-900 dark:text-white">
                       {formatScore(entry.score, activeType)}
                     </span>
                   </div>
@@ -253,7 +253,7 @@ export function LeaderboardPage() {
 
           {/* Footer */}
           {leaderboard.lastUpdated && (
-            <div className="px-6 py-3 bg-gray-50 border-t text-sm text-gray-500">
+            <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">
               Last updated: {new Date(leaderboard.lastUpdated).toLocaleString()}
             </div>
           )}

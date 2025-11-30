@@ -163,8 +163,8 @@ export function Layout({ children }: LayoutProps) {
                 onClick={() => setShowDailyModal(true)}
                 className={`relative flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   dailyStatus?.canClaim
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 animate-pulse'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 animate-pulse'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 <span>🎁</span>

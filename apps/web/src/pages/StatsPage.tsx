@@ -215,8 +215,8 @@ export function StatsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Financial Stats</h1>
-        <p className="text-gray-600">Track your empire's growth over time</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Financial Stats</h1>
+        <p className="text-gray-600 dark:text-gray-300">Track your empire's growth over time</p>
       </div>
 
       {/* Summary Cards */}
@@ -318,18 +318,18 @@ export function StatsPage() {
       {summary && (
         <div className="grid md:grid-cols-2 gap-6">
           {/* Peak Stats */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Peak Performance</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Peak Performance</h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Highest Net Worth</span>
-                <span className="font-bold text-emerald-600">
+                <span className="text-gray-600 dark:text-gray-400">Highest Net Worth</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(parseFloat(summary.peakNetWorth))}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Peak Income/Hour</span>
-                <span className="font-bold text-amber-600">
+                <span className="text-gray-600 dark:text-gray-400">Peak Income/Hour</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">
                   +{formatCurrency(parseFloat(summary.peakIncome))}/hr
                 </span>
               </div>
@@ -337,20 +337,20 @@ export function StatsPage() {
           </div>
 
           {/* Portfolio */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Portfolio</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Portfolio</h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Properties Owned</span>
-                <span className="font-bold text-blue-600">{summary.propertiesOwned}</span>
+                <span className="text-gray-600 dark:text-gray-400">Properties Owned</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">{summary.propertiesOwned}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Businesses Owned</span>
-                <span className="font-bold text-purple-600">{summary.businessesOwned}</span>
+                <span className="text-gray-600 dark:text-gray-400">Businesses Owned</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">{summary.businessesOwned}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Data Points</span>
-                <span className="font-bold text-gray-600">{summary.snapshotCount}</span>
+                <span className="text-gray-600 dark:text-gray-400">Data Points</span>
+                <span className="font-bold text-gray-600 dark:text-gray-400">{summary.snapshotCount}</span>
               </div>
             </div>
           </div>
@@ -359,51 +359,51 @@ export function StatsPage() {
 
       {/* Premium Status Section */}
       {user?.isPremium ? (
-        <div className="bg-gradient-to-r from-gold-50 to-amber-50 border-2 border-gold-200 rounded-xl shadow-lg p-6">
+        <div className="bg-gradient-to-r from-gold-50 to-amber-50 dark:from-gold-900/20 dark:to-amber-900/20 border-2 border-gold-200 dark:border-gold-700 rounded-xl shadow-lg p-6">
           <div className="flex items-center gap-3 mb-4">
             <PremiumBadge size="md" />
-            <h2 className="text-lg font-bold text-gray-900">Premium Benefits Active</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Premium Benefits Active</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+            <div className="flex items-center gap-3 bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
               <span className="text-2xl">💰</span>
               <div>
-                <p className="font-semibold text-gray-900">+10% Income Bonus</p>
-                <p className="text-sm text-gray-600">Applied to all earnings</p>
+                <p className="font-semibold text-gray-900 dark:text-white">+10% Income Bonus</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Applied to all earnings</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+            <div className="flex items-center gap-3 bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
               <span className="text-2xl">🌙</span>
               <div>
-                <p className="font-semibold text-gray-900">24hr Offline Cap</p>
-                <p className="text-sm text-gray-600">Earn while you sleep</p>
+                <p className="font-semibold text-gray-900 dark:text-white">24hr Offline Cap</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Earn while you sleep</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+            <div className="flex items-center gap-3 bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
               <span className="text-2xl">⭐</span>
               <div>
-                <p className="font-semibold text-gray-900">Premium Badge</p>
-                <p className="text-sm text-gray-600">Show off your status</p>
+                <p className="font-semibold text-gray-900 dark:text-white">Premium Badge</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Show off your status</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+            <div className="flex items-center gap-3 bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
               <span className="text-2xl">🪙</span>
               <div>
-                <p className="font-semibold text-gray-900">500 Mint Coins/Month</p>
-                <p className="text-sm text-gray-600">Premium currency</p>
+                <p className="font-semibold text-gray-900 dark:text-white">500 Mint Coins/Month</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Premium currency</p>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Upgrade to Premium</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Upgrade to Premium</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Get +10% income, 24hr offline cap, 500 Mint Coins monthly, and an exclusive badge.
               </p>
-              <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+              <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
                 <span className="flex items-center gap-1"><span>💰</span> +10% Income</span>
                 <span className="flex items-center gap-1"><span>🌙</span> 24hr Offline</span>
                 <span className="flex items-center gap-1"><span>⭐</span> Premium Badge</span>
@@ -419,10 +419,10 @@ export function StatsPage() {
 
       {/* Empty State */}
       {history.length === 0 && (
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
           <div className="text-4xl mb-4">📊</div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">No History Yet</h3>
-          <p className="text-gray-600">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">No History Yet</h3>
+          <p className="text-gray-600 dark:text-gray-400">
             Your earnings history will appear here as you play. Keep collecting income to see your
             progress over time!
           </p>
@@ -441,10 +441,10 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, icon, color }: SummaryCardProps) {
   const colorClasses = {
-    green: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    amber: 'bg-amber-50 border-amber-200 text-amber-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
+    green: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400',
+    blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400',
+    amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400',
+    purple: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-400',
   };
 
   return (

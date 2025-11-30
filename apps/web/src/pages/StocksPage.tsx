@@ -140,22 +140,22 @@ export function StocksPage() {
       {/* Result Modal */}
       {result && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
             <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               IPO Complete!
             </h2>
-            <p className="text-gray-600 mb-4">Your company has gone public!</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Your company has gone public!</p>
             <div className="space-y-2 mb-6">
-              <p className="text-lg">
-                <span className="text-purple-600 font-bold">
+              <p className="text-lg dark:text-white">
+                <span className="text-purple-600 dark:text-purple-400 font-bold">
                   +{result.pointsEarned}
                 </span>{' '}
                 prestige points earned
               </p>
-              <p className="text-lg">
+              <p className="text-lg dark:text-white">
                 Now at{' '}
-                <span className="text-purple-600 font-bold">
+                <span className="text-purple-600 dark:text-purple-400 font-bold">
                   Prestige Level {result.newPrestigeLevel}
                 </span>
               </p>
@@ -171,7 +171,7 @@ export function StocksPage() {
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-600 dark:text-red-400">
           {error}
           <button onClick={() => setError(null)} className="ml-2 underline">
             Dismiss
@@ -201,40 +201,40 @@ export function StocksPage() {
           </div>
 
           {/* Launch IPO Card */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Launch Your IPO</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Launch Your IPO</h2>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-6">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">Current Net Worth</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Current Net Worth</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(parseFloat(prestigeStatus?.currentNetWorth || '0'))}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Required to IPO</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Required to IPO</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(prestigeStatus?.minimumNetWorth || 100000)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Base Prestige Points</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Base Prestige Points</p>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {prestigeStatus?.potentialPoints || 0} PP
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">IPO Multiplier Range</p>
-                  <p className="text-2xl font-bold text-green-600">0.7x - 1.5x</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">IPO Multiplier Range</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">0.7x - 1.5x</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                 <span className="text-3xl">⚠️</span>
                 <div>
-                  <p className="font-medium text-amber-800">IPO Risk Warning</p>
-                  <p className="text-sm text-amber-700">
+                  <p className="font-medium text-amber-800 dark:text-amber-400">IPO Risk Warning</p>
+                  <p className="text-sm text-amber-700 dark:text-amber-500">
                     Launching an IPO will reset your properties, businesses, and cash.
                     Your stock price will fluctuate for 8 hours. Sell at the right time to maximize points!
                   </p>
@@ -244,21 +244,21 @@ export function StocksPage() {
 
             {/* Potential Points Preview */}
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-                <p className="text-sm text-red-600">Minimum (0.7x)</p>
-                <p className="text-2xl font-bold text-red-700">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 text-center">
+                <p className="text-sm text-red-600 dark:text-red-400">Minimum (0.7x)</p>
+                <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                   {Math.floor((prestigeStatus?.potentialPoints || 0) * 0.7)} PP
                 </p>
               </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
-                <p className="text-sm text-gray-600">Base (1.0x)</p>
-                <p className="text-2xl font-bold text-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl p-4 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Base (1.0x)</p>
+                <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">
                   {prestigeStatus?.potentialPoints || 0} PP
                 </p>
               </div>
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                <p className="text-sm text-green-600">Maximum (1.5x)</p>
-                <p className="text-2xl font-bold text-green-700">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-4 text-center">
+                <p className="text-sm text-green-600 dark:text-green-400">Maximum (1.5x)</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {Math.floor((prestigeStatus?.potentialPoints || 0) * 1.5)} PP
                 </p>
               </div>
@@ -270,7 +270,7 @@ export function StocksPage() {
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
                 prestigeStatus?.canPrestige
                   ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white shadow-lg hover:shadow-xl'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
               }`}
             >
               {isLaunchingIPO
@@ -282,35 +282,35 @@ export function StocksPage() {
           </div>
 
           {/* How It Works */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">How IPO Works</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">How IPO Works</h2>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-slate-50 rounded-xl p-4">
+              <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-4">
                 <div className="text-3xl mb-2">1️⃣</div>
-                <h3 className="font-bold text-gray-900 mb-1">Launch IPO</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1">Launch IPO</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Your company goes public with a generated ticker symbol based on your username.
                 </p>
               </div>
-              <div className="bg-slate-50 rounded-xl p-4">
+              <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-4">
                 <div className="text-3xl mb-2">2️⃣</div>
-                <h3 className="font-bold text-gray-900 mb-1">Watch the Market</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1">Watch the Market</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Stock price fluctuates over 8 hours. Market events affect your price positively or negatively.
                 </p>
               </div>
-              <div className="bg-slate-50 rounded-xl p-4">
+              <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-4">
                 <div className="text-3xl mb-2">3️⃣</div>
-                <h3 className="font-bold text-gray-900 mb-1">Time Your Exit</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1">Time Your Exit</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Sell when the price is high for up to 1.5x prestige points, or cut losses at 0.7x minimum.
                 </p>
               </div>
-              <div className="bg-slate-50 rounded-xl p-4">
+              <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-4">
                 <div className="text-3xl mb-2">4️⃣</div>
-                <h3 className="font-bold text-gray-900 mb-1">Prestige & Grow</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1">Prestige & Grow</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Cash out your points and use them to buy permanent perks on the Go Public page.
                 </p>
               </div>
@@ -318,15 +318,15 @@ export function StocksPage() {
           </div>
 
           {/* Market Events Preview */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Possible Market Events</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Possible Market Events</h2>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <h3 className="font-medium text-green-600 mb-2 flex items-center gap-2">
+                <h3 className="font-medium text-green-600 dark:text-green-400 mb-2 flex items-center gap-2">
                   <span>📈</span> Positive Events
                 </h3>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                   <li className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                     Analyst Upgrade - Major firm raises rating
@@ -346,10 +346,10 @@ export function StocksPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="font-medium text-red-600 mb-2 flex items-center gap-2">
+                <h3 className="font-medium text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
                   <span>📉</span> Negative Events
                 </h3>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                   <li className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                     Analyst Downgrade - Rating cut

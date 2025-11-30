@@ -84,33 +84,33 @@ export function PropertiesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
-          <p className="text-gray-600">Buy and upgrade properties for passive income</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Properties</h1>
+          <p className="text-gray-600 dark:text-gray-300">Buy and upgrade properties for passive income</p>
         </div>
         <div className="text-right">
-          <p className="text-sm text-gray-500">Your Cash</p>
-          <p className="text-2xl font-bold text-mint-600">{formatCurrency(cash)}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Your Cash</p>
+          <p className="text-2xl font-bold text-mint-600 dark:text-mint-400">{formatCurrency(cash)}</p>
         </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-          <span className="text-red-600">{error}</span>
-          <button onClick={clearError} className="text-red-400 hover:text-red-600">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 flex items-center justify-between">
+          <span className="text-red-600 dark:text-red-400">{error}</span>
+          <button onClick={clearError} className="text-red-400 hover:text-red-600 dark:hover:text-red-300">
             &times;
           </button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 w-fit">
+      <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit">
         <button
           onClick={() => setActiveTab('owned')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'owned'
-              ? 'bg-white text-mint-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white dark:bg-gray-600 text-mint-600 dark:text-mint-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           Owned ({playerProperties.length})
@@ -119,8 +119,8 @@ export function PropertiesPage() {
           onClick={() => setActiveTab('shop')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'shop'
-              ? 'bg-white text-mint-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white dark:bg-gray-600 text-mint-600 dark:text-mint-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           Shop
@@ -131,8 +131,8 @@ export function PropertiesPage() {
       {activeTab === 'owned' && (
         <div className="space-y-4">
           {playerProperties.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <p className="text-gray-500 mb-4">You don't own any properties yet</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">You don't own any properties yet</p>
               <button
                 onClick={() => setActiveTab('shop')}
                 className="px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg transition-colors"
@@ -213,32 +213,32 @@ function OwnedPropertyCard({
   const canHireManager = !property.managerHired && managerCost !== null && cash >= managerCost;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-5 border-l-4 border-mint-500">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border-l-4 border-mint-500">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-bold text-gray-900">{property.propertyType.name}</h3>
-          <p className="text-sm text-gray-500 capitalize">{property.propertyType.category}</p>
+          <h3 className="font-bold text-gray-900 dark:text-white">{property.propertyType.name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{property.propertyType.category}</p>
         </div>
-        <span className="px-2 py-1 bg-mint-100 text-mint-700 text-xs font-medium rounded-full">
+        <span className="px-2 py-1 bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 text-xs font-medium rounded-full">
           Tier {property.propertyType.tier}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-        <div className="bg-gray-50 rounded-lg p-2">
-          <p className="text-gray-500">Quantity</p>
-          <p className="font-bold text-gray-900">{property.quantity}</p>
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+          <p className="text-gray-500 dark:text-gray-400">Quantity</p>
+          <p className="font-bold text-gray-900 dark:text-white">{property.quantity}</p>
         </div>
-        <div className="bg-gray-50 rounded-lg p-2">
-          <p className="text-gray-500">Level</p>
-          <p className="font-bold text-gray-900">{property.upgradeLevel}</p>
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+          <p className="text-gray-500 dark:text-gray-400">Level</p>
+          <p className="font-bold text-gray-900 dark:text-white">{property.upgradeLevel}</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-2 col-span-2">
-          <p className="text-green-600">Income/Hour</p>
-          <p className="font-bold text-green-700">
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-2 col-span-2">
+          <p className="text-green-600 dark:text-green-400">Income/Hour</p>
+          <p className="font-bold text-green-700 dark:text-green-300">
             +{formatCurrency(parseFloat(property.currentIncomeHour))}
           </p>
-          <p className="text-xs text-green-500 mt-1">
+          <p className="text-xs text-green-500 dark:text-green-400 mt-1">
             ≈ {formatCurrency(parseFloat(property.currentIncomeHour) / 3600)}/sec
           </p>
         </div>
@@ -246,7 +246,7 @@ function OwnedPropertyCard({
 
       {/* Manager Status */}
       {property.managerHired ? (
-        <div className="flex items-center space-x-2 mb-4 text-sm bg-blue-50 text-blue-700 rounded-lg p-2">
+        <div className="flex items-center space-x-2 mb-4 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg p-2">
           <span>👔</span>
           <span>
             {property.propertyType.managerName} is managing (earns offline)
@@ -259,7 +259,7 @@ function OwnedPropertyCard({
           className={`w-full mb-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
             canHireManager
               ? 'bg-blue-500 hover:bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
           }`}
         >
           {isLoading ? 'Hiring...' : `Hire ${property.propertyType.managerName} - ${formatCurrency(managerCost)}`}
@@ -274,7 +274,7 @@ function OwnedPropertyCard({
           className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
             canUpgrade
               ? 'bg-mint-500 hover:bg-mint-600 text-white'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
           }`}
         >
           {isLoading && !isSelling ? 'Upgrading...' : `Upgrade - ${formatCurrency(upgradeCost)}`}
@@ -285,7 +285,7 @@ function OwnedPropertyCard({
       <button
         onClick={onSell}
         disabled={isLoading}
-        className="w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors bg-red-100 hover:bg-red-200 text-red-700 border border-red-200"
+        className="w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700"
       >
         {isSelling ? 'Selling...' : `Sell 1 - +${formatCurrency(sellValue)}`}
       </button>
@@ -308,22 +308,22 @@ function ShopPropertyCard({ type, owned, cost, cash, onBuy, isLoading }: ShopPro
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-lg p-5 ${
+      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 ${
         isLocked ? 'opacity-60' : ''
       }`}
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-bold text-gray-900">{type.name}</h3>
-          <p className="text-sm text-gray-500 capitalize">{type.category}</p>
+          <h3 className="font-bold text-gray-900 dark:text-white">{type.name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{type.category}</p>
         </div>
-        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-full">
           Tier {type.tier}
         </span>
       </div>
 
       {isLocked ? (
-        <div className="text-center py-4 text-gray-500">
+        <div className="text-center py-4 text-gray-500 dark:text-gray-400">
           <span className="text-2xl">🔒</span>
           <p className="text-sm mt-2">Unlock at higher level</p>
         </div>
@@ -331,21 +331,21 @@ function ShopPropertyCard({ type, owned, cost, cash, onBuy, isLoading }: ShopPro
         <>
           <div className="space-y-2 mb-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Base Income</span>
-              <span className="font-medium text-green-600">
+              <span className="text-gray-500 dark:text-gray-400">Base Income</span>
+              <span className="font-medium text-green-600 dark:text-green-400">
                 +{formatCurrency(parseFloat(type.baseIncomeHour))}/hr
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Per Second</span>
-              <span className="font-medium text-green-500 text-xs">
+              <span className="text-gray-500 dark:text-gray-400">Per Second</span>
+              <span className="font-medium text-green-500 dark:text-green-400 text-xs">
                 ≈ {formatCurrency(parseFloat(type.baseIncomeHour) / 3600)}/sec
               </span>
             </div>
             {owned && (
               <div className="flex justify-between">
-                <span className="text-gray-500">You own</span>
-                <span className="font-medium">{owned.quantity}</span>
+                <span className="text-gray-500 dark:text-gray-400">You own</span>
+                <span className="font-medium dark:text-white">{owned.quantity}</span>
               </div>
             )}
           </div>
@@ -356,7 +356,7 @@ function ShopPropertyCard({ type, owned, cost, cash, onBuy, isLoading }: ShopPro
             className={`w-full py-2 px-3 rounded-lg font-medium transition-colors ${
               canAfford
                 ? 'bg-mint-500 hover:bg-mint-600 text-white'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
             }`}
           >
             {isLoading ? 'Buying...' : `Buy - ${formatCurrency(cost)}`}
