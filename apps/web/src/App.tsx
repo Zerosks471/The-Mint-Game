@@ -9,8 +9,9 @@ import { StocksPage } from './pages/StocksPage';
 import { PrestigePage } from './pages/PrestigePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { AchievementsPage } from './pages/AchievementsPage';
-import { FriendsPage } from './pages/FriendsPage';
-import { ClubsPage } from './pages/ClubsPage';
+// TODO: Friends and Clubs will be separate microservices - re-enable when ready
+// import { FriendsPage } from './pages/FriendsPage';
+// import { ClubsPage } from './pages/ClubsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 
@@ -205,7 +206,8 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* TODO: Friends and Clubs will be separate microservices - re-enable when ready */}
+      {/* <Route
         path="/friends"
         element={
           <ProtectedRoute>
@@ -224,7 +226,7 @@ function App() {
             </Layout>
           </ProtectedRoute>
         }
-      />
+      /> */}
     </Routes>
   );
 }
