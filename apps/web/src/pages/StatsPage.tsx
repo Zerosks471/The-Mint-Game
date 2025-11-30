@@ -9,7 +9,8 @@ type TimeRange = '1H' | '24H' | '7D' | '30D' | 'ALL';
 export function StatsPage() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const seriesRef = useRef<ISeriesApi<any> | null>(null);
 
   const [history, setHistory] = useState<EarningsSnapshot[]>([]);
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
@@ -28,9 +29,27 @@ export function StatsPage() {
         ]);
 
         if (historyRes.success && historyRes.data) {
-          setHistory(historyRes.data);
-        }
-        if (summaryRes.success && summaryRes.data) {
+          // If no history exists, create initial snapshot
+          if (historyRes.data.length === 0) {
+            await gameApi.createSnapshot('hourly');
+            // Refetch after creating
+            const [refetchRes, refetchSummary] = await Promise.all([
+              gameApi.getEarningsHistory({ type: 'hourly', limit: 500 }),
+              gameApi.getEarningsSummary(),
+            ]);
+            if (refetchRes.success && refetchRes.data) {
+              setHistory(refetchRes.data);
+            }
+            if (refetchSummary.success && refetchSummary.data) {
+              setSummary(refetchSummary.data);
+            }
+          } else {
+            setHistory(historyRes.data);
+            if (summaryRes.success && summaryRes.data) {
+              setSummary(summaryRes.data);
+            }
+          }
+        } else if (summaryRes.success && summaryRes.data) {
           setSummary(summaryRes.data);
         }
       } catch (error) {

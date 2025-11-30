@@ -961,6 +961,92 @@ export class GameService {
       businessesOwned: playerStats.totalBusinessesOwned,
     };
   }
+
+  // Record an earnings snapshot (called periodically)
+  async recordSnapshot(userId: string, type: 'hourly' | 'daily' = 'hourly'): Promise<void> {
+    const playerStats = await prisma.playerStats.findUnique({
+      where: { userId },
+    });
+
+    if (!playerStats) return;
+
+    // Check if we already have a recent snapshot (within 30 mins for hourly, 12 hours for daily)
+    const minInterval = type === 'hourly' ? 30 * 60 * 1000 : 12 * 60 * 60 * 1000;
+    const lastSnapshot = await prisma.earningsSnapshot.findFirst({
+      where: { userId, snapshotType: type },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    if (lastSnapshot && Date.now() - lastSnapshot.timestamp.getTime() < minInterval) {
+      return; // Too soon for another snapshot
+    }
+
+    await this.createSnapshot(userId, type);
+  }
+
+  // Force create a snapshot (bypasses time check) - useful for testing
+  async recordSnapshotForce(userId: string): Promise<void> {
+    await this.createSnapshot(userId, 'hourly');
+  }
+
+  // Internal method to create a snapshot
+  private async createSnapshot(userId: string, type: 'hourly' | 'daily'): Promise<void> {
+    const playerStats = await prisma.playerStats.findUnique({
+      where: { userId },
+    });
+
+    if (!playerStats) return;
+
+    // Calculate net worth
+    const properties = await prisma.playerProperty.findMany({
+      where: { userId },
+      include: { propertyType: true },
+    });
+
+    const businesses = await prisma.playerBusiness.findMany({
+      where: { userId },
+      include: { businessType: true },
+    });
+
+    let assetsValue = new Prisma.Decimal(0);
+    for (const prop of properties) {
+      assetsValue = assetsValue.add(prop.totalSpent);
+    }
+    for (const biz of businesses) {
+      assetsValue = assetsValue.add(biz.totalInvested);
+    }
+
+    const netWorth = playerStats.cash.add(assetsValue);
+
+    // Get last snapshot to calculate earnings
+    const lastSnapshot = await prisma.earningsSnapshot.findFirst({
+      where: { userId },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    // Calculate earnings since last snapshot
+    let cashEarned = new Prisma.Decimal(0);
+    if (lastSnapshot) {
+      const cashDiff = playerStats.cash.sub(lastSnapshot.totalCash);
+      if (cashDiff.greaterThan(0)) {
+        cashEarned = cashDiff;
+      }
+    }
+
+    await prisma.earningsSnapshot.create({
+      data: {
+        userId,
+        snapshotType: type,
+        totalCash: playerStats.cash,
+        incomePerHour: playerStats.effectiveIncomeHour,
+        propertiesOwned: playerStats.totalPropertiesOwned,
+        businessesOwned: playerStats.totalBusinessesOwned,
+        netWorth,
+        cashEarned,
+        cashSpent: 0,
+      },
+    });
+  }
 }
 
 export const gameService = new GameService();

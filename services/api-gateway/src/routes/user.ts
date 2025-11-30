@@ -2,6 +2,7 @@ import { Router, Response, NextFunction } from 'express';
 import { prisma } from '@mint/database';
 import { ErrorCodes } from '@mint/types';
 import { authenticate, AuthenticatedRequest, AppError } from '../middleware';
+import { gameService } from '../services/game.service';
 
 const router = Router();
 
@@ -59,9 +60,32 @@ router.get(
         throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
       }
 
+      // Record a snapshot (will skip if too soon since last one)
+      gameService.recordSnapshot(req.user!.id, 'hourly').catch(() => {
+        // Silently ignore snapshot errors
+      });
+
       res.json({
         success: true,
         data: serializeBigInt(stats),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// POST /api/v1/user/snapshot - Force create a snapshot (bypasses time check)
+router.post(
+  '/snapshot',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      await gameService.recordSnapshotForce(req.user!.id);
+
+      res.json({
+        success: true,
+        message: 'Snapshot created',
       });
     } catch (error) {
       next(error);

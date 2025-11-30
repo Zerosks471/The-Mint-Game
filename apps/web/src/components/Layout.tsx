@@ -85,9 +85,10 @@ export function Layout({ children }: LayoutProps) {
     { path: '/properties', label: 'Properties', icon: '🏢' },
     { path: '/businesses', label: 'Businesses', icon: '💼' },
     { path: '/stats', label: 'Stats', icon: '📊' },
-    { path: '/achievements', label: 'Achievements', icon: '🎖️' },
-    { path: '/leaderboards', label: 'Rankings', icon: '🏆' },
     { path: '/prestige', label: 'Go Public', icon: '🚀' },
+    { path: '/stocks', label: 'Stocks', icon: '📈' },
+    { path: '/leaderboards', label: 'Rankings', icon: '🏆' },
+    { path: '/achievements', label: 'Achievements', icon: '🎖️' },
   ];
 
   return (

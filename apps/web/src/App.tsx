@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { BusinessesPage } from './pages/BusinessesPage';
 import { StatsPage } from './pages/StatsPage';
+import { StocksPage } from './pages/StocksPage';
 import { PrestigePage } from './pages/PrestigePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { AchievementsPage } from './pages/AchievementsPage';
@@ -158,6 +159,16 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <StatsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stocks"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <StocksPage />
             </Layout>
           </ProtectedRoute>
         }
