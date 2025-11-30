@@ -548,6 +548,7 @@ model LeaderboardEntry {
   username       String?
   displayName    String?   @map("display_name")
   avatarId       String?   @map("avatar_id")
+  isPremium      Boolean   @default(false) @map("is_premium")
   updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
 
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -8,6 +8,7 @@ export interface LeaderboardEntry {
   username: string | null;
   displayName: string | null;
   avatarId: string | null;
+  isPremium: boolean;
   score: string;
   isCurrentUser: boolean;
 }
@@ -93,6 +94,7 @@ export class LeaderboardService {
         username: e.username,
         displayName: e.displayName,
         avatarId: e.avatarId,
+        isPremium: e.isPremium,
         score: e.score.toString(),
         isCurrentUser: e.userId === userId,
       })),
@@ -160,6 +162,7 @@ export class LeaderboardService {
       username: string | null;
       displayName: string | null;
       avatarId: string | null;
+      isPremium: boolean;
       score: Decimal;
     }>;
 
@@ -211,6 +214,7 @@ export class LeaderboardService {
           username: player.username,
           displayName: player.displayName,
           avatarId: player.avatarId,
+          isPremium: player.isPremium,
           updatedAt: now,
         },
         update: {
@@ -220,6 +224,7 @@ export class LeaderboardService {
           username: player.username,
           displayName: player.displayName,
           avatarId: player.avatarId,
+          isPremium: player.isPremium,
           updatedAt: now,
         },
       });
@@ -261,6 +266,7 @@ export class LeaderboardService {
           username: user.username,
           displayName: user.displayName,
           avatarId: user.avatarId,
+          isPremium: user.isPremium,
           score: netWorth,
         };
       });
@@ -282,6 +288,7 @@ export class LeaderboardService {
         username: user.username,
         displayName: user.displayName,
         avatarId: user.avatarId,
+        isPremium: user.isPremium,
         score: new Decimal(user.playerStats!.effectiveIncomeHour),
       }));
   }
@@ -308,6 +315,7 @@ export class LeaderboardService {
           username: user.username,
           displayName: user.displayName,
           avatarId: user.avatarId,
+          isPremium: user.isPremium,
           score,
         };
       });

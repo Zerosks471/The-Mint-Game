@@ -595,9 +595,20 @@ export class GameService {
 
   // ==================== OFFLINE EARNINGS ====================
 
+  // Premium multiplier constant
+  private static readonly PREMIUM_INCOME_MULTIPLIER = 1.1;
+  private static readonly PREMIUM_OFFLINE_CAP_HOURS = 24;
+  private static readonly FREE_OFFLINE_CAP_HOURS = 8;
+
   // Collect earnings from ALL properties (called while playing)
   async collectEarnings(userId: string) {
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Fetch user to check premium status
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { isPremium: true },
+      });
+
       const playerStats = await tx.playerStats.findUnique({
         where: { userId },
       });
@@ -630,7 +641,12 @@ export class GameService {
         totalIncomePerHour = totalIncomePerHour.add(prop.currentIncomeHour);
       }
 
-      const earnings = totalIncomePerHour.mul(elapsedHours).mul(playerStats.currentMultiplier);
+      // Apply premium income multiplier if user is premium
+      const premiumMultiplier = user?.isPremium ? GameService.PREMIUM_INCOME_MULTIPLIER : 1.0;
+      const earnings = totalIncomePerHour
+        .mul(elapsedHours)
+        .mul(playerStats.currentMultiplier)
+        .mul(premiumMultiplier);
 
       const updated = await tx.playerStats.update({
         where: { userId },
@@ -645,7 +661,7 @@ export class GameService {
         collected: earnings,
         newCash: updated.cash,
         elapsedSeconds: Math.floor(elapsedMs / 1000),
-        incomePerHour: totalIncomePerHour.mul(playerStats.currentMultiplier),
+        incomePerHour: totalIncomePerHour.mul(playerStats.currentMultiplier).mul(premiumMultiplier),
       };
     });
   }
@@ -653,6 +669,12 @@ export class GameService {
   // Collect OFFLINE earnings (only managed properties - shown on login)
   async collectOfflineEarnings(userId: string) {
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Fetch user to check premium status
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { isPremium: true },
+      });
+
       const playerStats = await tx.playerStats.findUnique({
         where: { userId },
       });
@@ -666,8 +688,13 @@ export class GameService {
       const elapsedMs = now.getTime() - lastCollection.getTime();
       const elapsedHours = elapsedMs / (1000 * 60 * 60);
 
+      // Dynamic offline cap based on premium status
+      const offlineCapHours = user?.isPremium
+        ? GameService.PREMIUM_OFFLINE_CAP_HOURS
+        : GameService.FREE_OFFLINE_CAP_HOURS;
+
       // Cap at offline limit
-      const cappedHours = Math.min(elapsedHours, playerStats.offlineCapHours);
+      const cappedHours = Math.min(elapsedHours, offlineCapHours);
 
       if (cappedHours < 0.01) {
         // Less than ~36 seconds
@@ -675,6 +702,7 @@ export class GameService {
           collected: new Prisma.Decimal(0),
           hours: 0,
           capped: false,
+          capHours: offlineCapHours,
         };
       }
 
@@ -688,7 +716,9 @@ export class GameService {
         totalIncome = totalIncome.add(prop.currentIncomeHour);
       }
 
-      const earnings = totalIncome.mul(cappedHours).mul(playerStats.currentMultiplier);
+      // Apply premium income multiplier if user is premium
+      const premiumMultiplier = user?.isPremium ? GameService.PREMIUM_INCOME_MULTIPLIER : 1.0;
+      const earnings = totalIncome.mul(cappedHours).mul(playerStats.currentMultiplier).mul(premiumMultiplier);
 
       await tx.playerStats.update({
         where: { userId },
@@ -702,13 +732,20 @@ export class GameService {
       return {
         collected: earnings,
         hours: cappedHours,
-        capped: elapsedHours > playerStats.offlineCapHours,
-        incomePerHour: totalIncome.mul(playerStats.currentMultiplier),
+        capped: elapsedHours > offlineCapHours,
+        capHours: offlineCapHours,
+        incomePerHour: totalIncome.mul(playerStats.currentMultiplier).mul(premiumMultiplier),
       };
     });
   }
 
   async getOfflineStatus(userId: string) {
+    // Fetch user to check premium status
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isPremium: true },
+    });
+
     const playerStats = await prisma.playerStats.findUnique({
       where: { userId },
     });
@@ -726,20 +763,27 @@ export class GameService {
       managedIncome = managedIncome.add(prop.currentIncomeHour);
     }
 
+    // Dynamic offline cap based on premium status
+    const offlineCapHours = user?.isPremium
+      ? GameService.PREMIUM_OFFLINE_CAP_HOURS
+      : GameService.FREE_OFFLINE_CAP_HOURS;
+
     const now = new Date();
     const lastCollection = new Date(playerStats.lastCollectionAt);
     const elapsedMs = now.getTime() - lastCollection.getTime();
     const elapsedHours = elapsedMs / (1000 * 60 * 60);
-    const cappedHours = Math.min(elapsedHours, playerStats.offlineCapHours);
+    const cappedHours = Math.min(elapsedHours, offlineCapHours);
 
-    const pendingEarnings = managedIncome.mul(cappedHours).mul(playerStats.currentMultiplier);
+    // Apply premium income multiplier if user is premium
+    const premiumMultiplier = user?.isPremium ? GameService.PREMIUM_INCOME_MULTIPLIER : 1.0;
+    const pendingEarnings = managedIncome.mul(cappedHours).mul(playerStats.currentMultiplier).mul(premiumMultiplier);
 
     return {
       pendingEarnings,
       elapsedHours: cappedHours,
-      capped: elapsedHours > playerStats.offlineCapHours,
-      capHours: playerStats.offlineCapHours,
-      managedIncomePerHour: managedIncome.mul(playerStats.currentMultiplier),
+      capped: elapsedHours > offlineCapHours,
+      capHours: offlineCapHours,
+      managedIncomePerHour: managedIncome.mul(playerStats.currentMultiplier).mul(premiumMultiplier),
       lastCollectionAt: playerStats.lastCollectionAt,
     };
   }

@@ -6,6 +6,7 @@ import {
   PlayerRankResponse,
 } from '../api/game';
 import { formatCurrency } from '@mint/utils';
+import { PremiumBadge } from '../components/PremiumBadge';
 
 export function LeaderboardPage() {
   const [types, setTypes] = useState<LeaderboardType[]>([]);
@@ -226,10 +227,11 @@ export function LeaderboardPage() {
                       {(entry.displayName || entry.username || '?')[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className={`font-medium ${entry.isCurrentUser ? 'text-mint-700' : 'text-gray-900'}`}>
+                      <p className={`font-medium flex items-center gap-1.5 ${entry.isCurrentUser ? 'text-mint-700' : 'text-gray-900'}`}>
                         {entry.displayName || entry.username || 'Anonymous'}
+                        {entry.isPremium && <PremiumBadge size="sm" />}
                         {entry.isCurrentUser && (
-                          <span className="ml-2 text-xs bg-mint-100 text-mint-700 px-2 py-0.5 rounded-full">
+                          <span className="ml-1 text-xs bg-mint-100 text-mint-700 px-2 py-0.5 rounded-full">
                             You
                           </span>
                         )}

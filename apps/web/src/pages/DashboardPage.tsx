@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
 import { PlayerStats, PlayerBusiness } from '../api/game';
+import { UpgradeButton } from '../components/UpgradeButton';
+import { useAuthStore } from '../stores/authStore';
 
 // Donut progress circle component - shows progress toward earning a cent
 function EarningDonut({ progress }: { progress: number }) {
@@ -262,6 +264,7 @@ export function DashboardPage() {
     collectOfflineEarnings,
   } = useGameStore();
 
+  const { user } = useAuthStore();
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [collectedAmount, setCollectedAmount] = useState<string | null>(null);
 
@@ -340,10 +343,16 @@ export function DashboardPage() {
                 <p className="text-4xl font-bold text-mint-600 mb-2">
                   {formatCurrency(parseFloat(offlineStatus.pendingEarnings))}
                 </p>
-                {offlineStatus.capped && (
-                  <p className="text-sm text-amber-600 mb-4">
-                    (Capped at {offlineStatus.capHours} hours - Go Premium for 24h!)
-                  </p>
+                {offlineStatus.capped && !user?.isPremium && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-amber-800 mb-2">
+                      Your earnings were capped at {offlineStatus.capHours} hours.
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-amber-600">Get 24hr cap with Premium</p>
+                      <UpgradeButton size="sm" />
+                    </div>
+                  </div>
                 )}
                 <button
                   onClick={handleCollectOffline}

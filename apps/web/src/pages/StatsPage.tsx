@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, LineData, Time, AreaSeries } from 'lightweight-charts';
 import { gameApi, EarningsSnapshot, EarningsSummary } from '../api/game';
 import { formatCurrency } from '@mint/utils';
+import { useAuthStore } from '../stores/authStore';
+import { PremiumBadge } from '../components/PremiumBadge';
+import { UpgradeButton } from '../components/UpgradeButton';
 
 type ChartType = 'netWorth' | 'cash' | 'income';
 type TimeRange = '1H' | '24H' | '7D' | '30D' | 'ALL';
@@ -12,6 +15,7 @@ export function StatsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
 
+  const { user } = useAuthStore();
   const [history, setHistory] = useState<EarningsSnapshot[]>([]);
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -348,6 +352,66 @@ export function StatsPage() {
                 <span className="text-gray-600">Data Points</span>
                 <span className="font-bold text-gray-600">{summary.snapshotCount}</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Status Section */}
+      {user?.isPremium ? (
+        <div className="bg-gradient-to-r from-gold-50 to-amber-50 border-2 border-gold-200 rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <PremiumBadge size="md" />
+            <h2 className="text-lg font-bold text-gray-900">Premium Benefits Active</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+              <span className="text-2xl">💰</span>
+              <div>
+                <p className="font-semibold text-gray-900">+10% Income Bonus</p>
+                <p className="text-sm text-gray-600">Applied to all earnings</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+              <span className="text-2xl">🌙</span>
+              <div>
+                <p className="font-semibold text-gray-900">24hr Offline Cap</p>
+                <p className="text-sm text-gray-600">Earn while you sleep</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+              <span className="text-2xl">⭐</span>
+              <div>
+                <p className="font-semibold text-gray-900">Premium Badge</p>
+                <p className="text-sm text-gray-600">Show off your status</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
+              <span className="text-2xl">🪙</span>
+              <div>
+                <p className="font-semibold text-gray-900">500 Mint Coins/Month</p>
+                <p className="text-sm text-gray-600">Premium currency</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Upgrade to Premium</h2>
+              <p className="text-gray-600 mb-4">
+                Get +10% income, 24hr offline cap, 500 Mint Coins monthly, and an exclusive badge.
+              </p>
+              <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                <span className="flex items-center gap-1"><span>💰</span> +10% Income</span>
+                <span className="flex items-center gap-1"><span>🌙</span> 24hr Offline</span>
+                <span className="flex items-center gap-1"><span>⭐</span> Premium Badge</span>
+                <span className="flex items-center gap-1"><span>🪙</span> 500 Coins/mo</span>
+              </div>
+            </div>
+            <div className="flex-shrink-0 ml-4">
+              <UpgradeButton size="md" />
             </div>
           </div>
         </div>

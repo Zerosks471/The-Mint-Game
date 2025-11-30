@@ -196,6 +196,7 @@ export interface LeaderboardEntry {
   username: string | null;
   displayName: string | null;
   avatarId: string | null;
+  isPremium: boolean;
   score: string;
   isCurrentUser: boolean;
 }
