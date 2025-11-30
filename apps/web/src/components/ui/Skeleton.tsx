@@ -1,0 +1,107 @@
+interface SkeletonProps {
+  className?: string;
+  variant?: 'text' | 'circular' | 'rectangular';
+  width?: string | number;
+  height?: string | number;
+}
+
+export function Skeleton({
+  className = '',
+  variant = 'text',
+  width,
+  height,
+}: SkeletonProps) {
+  const baseClasses = 'bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer';
+
+  const variantClasses = {
+    text: 'h-4 rounded',
+    circular: 'rounded-full',
+    rectangular: 'rounded-lg',
+  };
+
+  const style: React.CSSProperties = {};
+  if (width) style.width = typeof width === 'number' ? `${width}px` : width;
+  if (height) style.height = typeof height === 'number' ? `${height}px` : height;
+
+  return (
+    <div
+      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+      style={style}
+    />
+  );
+}
+
+// Pre-built skeleton patterns for common use cases
+export function CardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
+      <div className="flex items-center gap-4">
+        <Skeleton variant="circular" width={48} height={48} />
+        <div className="flex-1 space-y-2">
+          <Skeleton width="60%" height={20} />
+          <Skeleton width="40%" height={16} />
+        </div>
+      </div>
+      <Skeleton height={40} />
+      <div className="flex gap-2">
+        <Skeleton height={36} className="flex-1" />
+        <Skeleton height={36} className="flex-1" />
+      </div>
+    </div>
+  );
+}
+
+export function StatsSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="bg-white rounded-xl p-4 space-y-2">
+          <Skeleton width="50%" height={12} />
+          <Skeleton width="80%" height={28} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+          <Skeleton variant="circular" width={40} height={40} />
+          <div className="flex-1 space-y-2">
+            <Skeleton width="70%" height={16} />
+            <Skeleton width="40%" height={14} />
+          </div>
+          <Skeleton width={80} height={32} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function TableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="space-y-2">
+      {/* Header */}
+      <div className="flex gap-4 p-3 bg-gray-100 rounded-lg">
+        <Skeleton width="5%" height={16} />
+        <Skeleton width="30%" height={16} />
+        <Skeleton width="25%" height={16} />
+        <Skeleton width="20%" height={16} />
+        <Skeleton width="20%" height={16} />
+      </div>
+      {/* Rows */}
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex gap-4 p-3 border-b border-gray-100">
+          <Skeleton width="5%" height={14} />
+          <Skeleton width="30%" height={14} />
+          <Skeleton width="25%" height={14} />
+          <Skeleton width="20%" height={14} />
+          <Skeleton width="20%" height={14} />
+        </div>
+      ))}
+    </div>
+  );
+}

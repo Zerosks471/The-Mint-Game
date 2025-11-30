@@ -2,9 +2,9 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
-import { formatCurrency } from '@mint/utils';
 import { gameApi, DailyStatus, IPOStatus } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
+import { AnimatedCounter, ToastContainer, useToast } from './ui';
 
 interface LayoutProps {
   children: ReactNode;
@@ -110,15 +110,18 @@ export function Layout({ children }: LayoutProps) {
               <div className="hidden md:flex items-center space-x-6">
                 <div className="text-center">
                   <p className="text-xs text-gray-500 uppercase tracking-wide">Cash</p>
-                  <p className="text-lg font-bold text-mint-600">
-                    {formatCurrency(parseFloat(stats.cash))}
-                  </p>
+                  <AnimatedCounter
+                    value={parseFloat(stats.cash)}
+                    className="text-lg font-bold text-mint-600"
+                  />
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-500 uppercase tracking-wide">Income/hr</p>
-                  <p className="text-lg font-bold text-green-600">
-                    +{formatCurrency(parseFloat(stats.effectiveIncomeHour))}
-                  </p>
+                  <AnimatedCounter
+                    value={parseFloat(stats.effectiveIncomeHour)}
+                    prefix="+"
+                    className="text-lg font-bold text-green-600"
+                  />
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-500 uppercase tracking-wide">Level</p>
@@ -214,12 +217,16 @@ export function Layout({ children }: LayoutProps) {
       {stats && (
         <div className="md:hidden bg-mint-50 border-b border-mint-100 px-4 py-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-bold text-mint-700">
-              {formatCurrency(parseFloat(stats.cash))}
-            </span>
-            <span className="text-green-600">
-              +{formatCurrency(parseFloat(stats.effectiveIncomeHour))}/hr
-            </span>
+            <AnimatedCounter
+              value={parseFloat(stats.cash)}
+              className="font-bold text-mint-700"
+            />
+            <AnimatedCounter
+              value={parseFloat(stats.effectiveIncomeHour)}
+              prefix="+"
+              suffix="/hr"
+              className="text-green-600"
+            />
             <span className="text-purple-600">Lv. {stats.playerLevel}</span>
           </div>
         </div>
@@ -234,6 +241,15 @@ export function Layout({ children }: LayoutProps) {
         onClose={() => setShowDailyModal(false)}
         onClaim={handleDailyClaim}
       />
+
+      {/* Toast Notifications */}
+      <ToastNotifications />
     </div>
   );
+}
+
+// Toast wrapper component
+function ToastNotifications() {
+  const { toasts, removeToast } = useToast();
+  return <ToastContainer toasts={toasts} onClose={removeToast} />;
 }
