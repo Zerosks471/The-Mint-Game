@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, LineData, Time, AreaSeries } from 'lightweight-charts';
 import { gameApi, EarningsSnapshot, EarningsSummary } from '../api/game';
+import { createPortalSession } from '../api/subscriptions';
 import { formatCurrency } from '@mint/utils';
 import { useAuthStore } from '../stores/authStore';
 import { PremiumBadge } from '../components/PremiumBadge';
@@ -360,9 +361,24 @@ export function StatsPage() {
       {/* Premium Status Section */}
       {user?.isPremium ? (
         <div className="bg-gradient-to-r from-gold-50 to-amber-50 dark:from-gold-900/20 dark:to-amber-900/20 border-2 border-gold-200 dark:border-gold-700 rounded-xl shadow-lg p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <PremiumBadge size="md" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Premium Benefits Active</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <PremiumBadge size="md" />
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Premium Benefits Active</h2>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  const { portalUrl } = await createPortalSession();
+                  window.location.href = portalUrl;
+                } catch {
+                  alert('Failed to open billing portal');
+                }
+              }}
+              className="px-4 py-2 text-sm font-medium text-gold-700 dark:text-gold-300 bg-white dark:bg-gray-800 border border-gold-300 dark:border-gold-600 rounded-lg hover:bg-gold-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              Manage Subscription
+            </button>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex items-center gap-3 bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">

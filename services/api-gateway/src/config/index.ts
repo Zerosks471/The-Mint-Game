@@ -22,6 +22,12 @@ const envSchema = z.object({
   // Rate limiting
   RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('60000'),
   RATE_LIMIT_MAX: z.string().transform(Number).default('100'),
+
+  // Stripe (optional - feature disabled if not set)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_MONTHLY: z.string().optional(),
+  STRIPE_PRICE_ANNUAL: z.string().optional(),
 });
 
 function loadConfig() {

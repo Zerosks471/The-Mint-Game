@@ -11,6 +11,7 @@ import ipoRouter from './ipo';
 import friendsRouter from './friends';
 import clubsRouter from './clubs';
 import giftsRouter from './gifts';
+import subscriptionsRouter from './subscriptions';
 
 const router: Router = Router();
 
@@ -57,6 +58,9 @@ v1Router.use('/clubs', clubsRouter);
 
 // Gifts routes
 v1Router.use('/gifts', giftsRouter);
+
+// Subscriptions routes (Stripe)
+v1Router.use('/subscriptions', subscriptionsRouter);
 
 router.use('/v1', v1Router);
 

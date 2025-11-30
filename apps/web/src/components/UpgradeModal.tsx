@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { createCheckoutSession } from '../api/subscriptions';
+
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,7 +30,23 @@ const benefits = [
 ];
 
 export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
+  const [loading, setLoading] = useState<'monthly' | 'annual' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   if (!isOpen) return null;
+
+  const handleSubscribe = async (plan: 'monthly' | 'annual') => {
+    setLoading(plan);
+    setError(null);
+
+    try {
+      const { checkoutUrl } = await createCheckoutSession(plan);
+      window.location.href = checkoutUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start checkout');
+      setLoading(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -61,36 +80,89 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           ))}
         </div>
 
-        {/* Pricing */}
-        <div className="px-6 pb-4">
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 dark:text-gray-400">Monthly</span>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">$4.99/mo</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Annual</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
-                  Save 33%
-                </span>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">$39.99/yr</span>
-              </div>
-            </div>
+        {/* Error message */}
+        {error && (
+          <div className="px-6 pb-2">
+            <p className="text-red-600 dark:text-red-400 text-sm text-center">{error}</p>
           </div>
+        )}
+
+        {/* Pricing buttons */}
+        <div className="px-6 pb-4 space-y-3">
+          <button
+            onClick={() => handleSubscribe('monthly')}
+            disabled={loading !== null}
+            className="w-full py-3 px-4 bg-gradient-to-r from-gold-400 to-amber-400 text-white font-semibold rounded-xl hover:from-gold-500 hover:to-amber-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading === 'monthly' ? (
+              <>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Processing...
+              </>
+            ) : (
+              <>
+                <span>Subscribe Monthly</span>
+                <span className="font-bold">$4.99/mo</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => handleSubscribe('annual')}
+            disabled={loading !== null}
+            className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading === 'annual' ? (
+              <>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Processing...
+              </>
+            ) : (
+              <>
+                <span>Subscribe Yearly</span>
+                <span className="font-bold">$39.99/yr</span>
+                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Save 33%</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Actions */}
-        <div className="px-6 pb-6 space-y-3">
-          <button
-            disabled
-            className="w-full py-3 px-4 bg-gradient-to-r from-gold-400 to-amber-400 text-white font-semibold rounded-xl opacity-60 cursor-not-allowed"
-          >
-            Coming Soon
-          </button>
+        {/* Close button */}
+        <div className="px-6 pb-6">
           <button
             onClick={onClose}
-            className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            disabled={loading !== null}
+            className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-60"
           >
             Maybe Later
           </button>

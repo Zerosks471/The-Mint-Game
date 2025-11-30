@@ -10,6 +10,8 @@ import { PrestigePage } from './pages/PrestigePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { SubscriptionSuccessPage } from './pages/SubscriptionSuccessPage';
+import { SubscriptionCancelPage } from './pages/SubscriptionCancelPage';
 // TODO: Friends and Clubs will be separate microservices - re-enable when ready
 // import { FriendsPage } from './pages/FriendsPage';
 // import { ClubsPage } from './pages/ClubsPage';
@@ -218,6 +220,22 @@ function App() {
             <Layout>
               <SettingsPage />
             </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/subscription/success"
+        element={
+          <ProtectedRoute>
+            <SubscriptionSuccessPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/subscription/cancel"
+        element={
+          <ProtectedRoute>
+            <SubscriptionCancelPage />
           </ProtectedRoute>
         }
       />
