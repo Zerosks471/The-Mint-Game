@@ -49,6 +49,7 @@ export default {
         'confetti': 'confetti 1s ease-out forwards',
         'shimmer': 'shimmer 2s linear infinite',
         'count-up': 'countUp 500ms ease-out',
+        'roll-in': 'rollIn 150ms ease-out forwards',
       },
       keyframes: {
         glowPulse: {
@@ -85,6 +86,10 @@ export default {
         },
         countUp: {
           from: { transform: 'translateY(10px)', opacity: '0' },
+          to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        rollIn: {
+          from: { transform: 'translateY(100%)', opacity: '0' },
           to: { transform: 'translateY(0)', opacity: '1' },
         },
       },
