@@ -18,19 +18,19 @@ const TABS: { key: TabType; label: string }[] = [
 ];
 
 const RARITY_COLORS: Record<string, string> = {
-  common: 'text-gray-400 border-gray-400',
-  uncommon: 'text-green-500 border-green-500',
-  rare: 'text-blue-500 border-blue-500',
-  epic: 'text-purple-500 border-purple-500',
-  legendary: 'text-amber-500 border-amber-500',
+  common: 'text-zinc-400 border-zinc-400',
+  uncommon: 'text-mint border-mint',
+  rare: 'text-blue border-blue',
+  epic: 'text-purple border-purple',
+  legendary: 'text-amber border-amber',
 };
 
 const RARITY_BG: Record<string, string> = {
-  common: 'bg-gray-100 dark:bg-gray-700',
-  uncommon: 'bg-green-50 dark:bg-green-900/20',
-  rare: 'bg-blue-50 dark:bg-blue-900/20',
-  epic: 'bg-purple-50 dark:bg-purple-900/20',
-  legendary: 'bg-amber-50 dark:bg-amber-900/20',
+  common: 'bg-dark-elevated',
+  uncommon: 'bg-green-900/20',
+  rare: 'bg-blue-900/20',
+  epic: 'bg-purple-900/20',
+  legendary: 'bg-amber-900/20',
 };
 
 // Emoji placeholders for cosmetics until actual assets exist
@@ -173,19 +173,19 @@ export function ShopPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-zinc-100">
             Cosmetics Shop
           </h1>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-900/30 rounded-full">
               <span className="text-xl">🪙</span>
-              <span className="font-bold text-amber-700 dark:text-amber-400">
+              <span className="font-bold text-amber-400">
                 {balance.toLocaleString()}
               </span>
             </div>
             <button
               onClick={() => setShowCoinsModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-white font-semibold rounded-lg hover:from-amber-500 hover:to-yellow-500 transition-all shadow-md"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-yellow-500 transition-all"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -201,10 +201,10 @@ export function ShopPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
                 activeTab === tab.key
                   ? 'bg-mint-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  : 'bg-dark-elevated text-zinc-400 hover:bg-dark-card'
               }`}
             >
               {tab.label}
@@ -213,8 +213,8 @@ export function ShopPage() {
         </div>
 
         {/* Currently Equipped */}
-        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+        <div className="mb-6 p-4 bg-dark-elevated rounded-2xl">
+          <h3 className="text-sm font-medium text-zinc-500 mb-2">
             Currently Equipped
           </h3>
           <div className="flex gap-4">
@@ -224,7 +224,7 @@ export function ShopPage() {
                   ? COSMETIC_EMOJIS[equipped.avatar] || '👤'
                   : '👤'}
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Avatar</span>
+              <span className="text-xs text-zinc-500">Avatar</span>
             </div>
             <div className="text-center">
               <div className="text-2xl mb-1">
@@ -232,7 +232,7 @@ export function ShopPage() {
                   ? COSMETIC_EMOJIS[equipped.avatarFrame] || '⬜'
                   : '⬜'}
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Frame</span>
+              <span className="text-xs text-zinc-500">Frame</span>
             </div>
             <div className="text-center">
               <div className="text-2xl mb-1">
@@ -240,7 +240,7 @@ export function ShopPage() {
                   ? COSMETIC_EMOJIS[equipped.badge] || '🌱'
                   : '—'}
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Badge</span>
+              <span className="text-xs text-zinc-500">Badge</span>
             </div>
           </div>
         </div>
@@ -261,7 +261,7 @@ export function ShopPage() {
         </div>
 
         {filteredCosmetics.length === 0 && (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-zinc-500">
             No cosmetics available in this category.
           </div>
         )}
@@ -298,9 +298,9 @@ function CosmeticCard({
 
   return (
     <div
-      className={`relative p-4 rounded-xl border-2 ${
+      className={`relative p-4 rounded-2xl border-2 ${
         cosmetic.equipped
-          ? 'border-mint-500 bg-mint-50 dark:bg-mint-900/20'
+          ? 'border-mint-500 bg-mint-900/20'
           : `border-transparent ${RARITY_BG[cosmetic.rarity]}`
       }`}
     >
@@ -317,12 +317,12 @@ function CosmeticCard({
       </div>
 
       {/* Name & Rarity */}
-      <h3 className="font-semibold text-gray-900 dark:text-white text-center truncate">
+      <h3 className="font-semibold text-zinc-100 text-center truncate">
         {cosmetic.name}
       </h3>
       <p
         className={`text-xs text-center font-medium capitalize ${
-          RARITY_COLORS[cosmetic.rarity]?.split(' ')[0] || 'text-gray-400'
+          RARITY_COLORS[cosmetic.rarity]?.split(' ')[0] || 'text-zinc-400'
         }`}
       >
         {cosmetic.rarity}
@@ -330,7 +330,7 @@ function CosmeticCard({
 
       {/* Description */}
       {cosmetic.description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1 line-clamp-2">
+        <p className="text-xs text-zinc-500 text-center mt-1 line-clamp-2">
           {cosmetic.description}
         </p>
       )}
@@ -341,9 +341,9 @@ function CosmeticCard({
           <button
             onClick={cosmetic.equipped ? onUnequip : onEquip}
             disabled={isLoading}
-            className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
+            className={`w-full py-2 px-3 rounded-xl font-medium text-sm transition-colors ${
               cosmetic.equipped
-                ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
+                ? 'bg-dark-elevated text-zinc-400 hover:bg-dark-card'
                 : 'bg-mint-500 text-white hover:bg-mint-600'
             } disabled:opacity-50`}
           >
@@ -359,10 +359,10 @@ function CosmeticCard({
           <button
             onClick={onPurchase}
             disabled={isLoading || !canAfford}
-            className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
+            className={`w-full py-2 px-3 rounded-xl font-medium text-sm transition-colors ${
               canAfford
                 ? 'bg-amber-500 text-white hover:bg-amber-600'
-                : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-dark-elevated text-zinc-500 cursor-not-allowed'
             } disabled:opacity-50`}
           >
             {isLoading ? (

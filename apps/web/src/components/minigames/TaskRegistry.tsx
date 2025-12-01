@@ -6,22 +6,22 @@ import { OrderRushGame } from './business/OrderRushGame';
 const PlaceholderGame: ComponentType<MiniGameProps> = ({ difficulty, onComplete }) => {
   return (
     <div className="text-center py-8">
-      <p className="text-gray-600 mb-4">
+      <p className="text-zinc-400 mb-4">
         Mini-game for this type coming soon!
       </p>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-zinc-500 mb-6">
         Items: {difficulty.itemCount} | Time: {difficulty.timeLimit}s
       </p>
       <div className="flex gap-4 justify-center">
         <button
           onClick={() => onComplete(true, 100)}
-          className="px-4 py-2 bg-emerald-500 text-white rounded-lg"
+          className="px-4 py-2 bg-mint text-white rounded-xl"
         >
           Simulate Success
         </button>
         <button
           onClick={() => onComplete(false, 0)}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg"
+          className="px-4 py-2 bg-red-500 text-white rounded-xl"
         >
           Simulate Fail
         </button>

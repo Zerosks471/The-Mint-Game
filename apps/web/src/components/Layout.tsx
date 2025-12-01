@@ -23,7 +23,7 @@ export function Layout({ children }: LayoutProps) {
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [ipoStatus, setIpoStatus] = useState<IPOStatus | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed] = useState(false);
 
   // Fetch daily reward status and IPO status on mount
   useEffect(() => {

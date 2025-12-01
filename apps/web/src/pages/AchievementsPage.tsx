@@ -160,13 +160,13 @@ export function AchievementsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Achievements</h1>
-          <p className="text-gray-500 dark:text-gray-400">Track your progress and unlock rewards</p>
+          <h1 className="text-2xl font-bold text-zinc-100">Achievements</h1>
+          <p className="text-zinc-500">Track your progress and unlock rewards</p>
         </div>
         <button
           onClick={handleCheckAchievements}
           disabled={isChecking}
-          className="px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+          className="px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
         >
           {isChecking ? 'Checking...' : 'Check Achievements'}
         </button>
@@ -174,7 +174,7 @@ export function AchievementsPage() {
 
       {/* Summary Card */}
       {summary && (
-        <div className="bg-gradient-to-r from-mint-500 to-emerald-500 rounded-xl p-6 text-white">
+        <div className="bg-gradient-to-r from-mint-500 to-emerald-500 rounded-2xl p-6 text-white">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <p className="text-mint-100 text-sm">Unlocked</p>
@@ -216,11 +216,11 @@ export function AchievementsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category:</label>
+          <label className="text-sm font-medium text-zinc-400">Category:</label>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-mint-500 focus:border-mint-500"
+            className="border border-dark-border rounded-xl px-3 py-2 text-sm bg-dark-card text-zinc-100 focus:ring-2 focus:ring-mint-500 focus:border-mint-500"
           >
             <option value="all">All Categories</option>
             {categories.map((cat) => (
@@ -235,15 +235,15 @@ export function AchievementsPage() {
             type="checkbox"
             checked={showUnlockedOnly}
             onChange={(e) => setShowUnlockedOnly(e.target.checked)}
-            className="w-4 h-4 text-mint-500 border-gray-300 dark:border-gray-600 rounded focus:ring-mint-500 bg-white dark:bg-gray-800"
+            className="w-4 h-4 text-mint-500 border-dark-border rounded focus:ring-mint-500 bg-dark-card"
           />
-          <span className="text-sm text-gray-700 dark:text-gray-300">Show unlocked only</span>
+          <span className="text-sm text-zinc-400">Show unlocked only</span>
         </label>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-600 dark:text-red-400">
+        <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 text-red-400">
           {error}
         </div>
       )}
@@ -254,17 +254,17 @@ export function AchievementsPage() {
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-mint-500"></div>
         </div>
       ) : filteredAchievements.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center text-gray-500 dark:text-gray-400">
+        <div className="bg-dark-card border border-dark-border rounded-2xl p-12 text-center text-zinc-500">
           No achievements found matching your filters.
         </div>
       ) : (
         <div className="space-y-8">
           {Object.entries(groupedAchievements).map(([category, categoryAchievements]) => (
             <div key={category}>
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
                 <span className="text-2xl">{getCategoryIcon(category)}</span>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-zinc-500">
                   ({categoryAchievements.filter((a) => a.isUnlocked).length}/{categoryAchievements.length})
                 </span>
               </h2>
@@ -272,13 +272,13 @@ export function AchievementsPage() {
                 {categoryAchievements.map((achievement) => (
                   <div
                     key={achievement.id}
-                    className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
+                    className={`bg-dark-card border border-dark-border rounded-2xl overflow-hidden transition-all duration-300 ${
                       achievement.isUnlocked
                         ? 'ring-2 ring-mint-500'
                         : 'opacity-75 grayscale-[30%]'
                     } ${
                       newlyUnlocked.includes(achievement.id)
-                        ? 'animate-pulse ring-4 ring-yellow-400'
+                        ? 'animate-pulse ring-4 ring-amber'
                         : ''
                     }`}
                   >
@@ -295,20 +295,20 @@ export function AchievementsPage() {
                     {/* Content */}
                     <div className="p-4">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-bold text-gray-900 dark:text-white">{achievement.name}</h3>
-                        <span className="text-sm text-mint-600 dark:text-mint-400 font-medium">
+                        <h3 className="font-bold text-zinc-100">{achievement.name}</h3>
+                        <span className="text-sm text-mint-400 font-medium">
                           +{achievement.points} pts
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{achievement.description}</p>
+                      <p className="text-sm text-zinc-400 mb-3">{achievement.description}</p>
 
                       {/* Progress bar */}
                       <div className="mb-3">
-                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        <div className="flex justify-between text-xs text-zinc-500 mb-1">
                           <span>Progress</span>
                           <span>{achievement.progressPercent}%</span>
                         </div>
-                        <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div className="bg-dark-elevated rounded-full h-2 overflow-hidden">
                           <div
                             className={`h-full transition-all duration-500 ${
                               achievement.isUnlocked ? 'bg-mint-500' : 'bg-mint-400'
@@ -321,8 +321,8 @@ export function AchievementsPage() {
                       {/* Reward */}
                       {parseFloat(achievement.rewardCash) > 0 && (
                         <div className="flex items-center gap-1 text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Reward:</span>
-                          <span className="font-medium text-green-600 dark:text-green-400">
+                          <span className="text-zinc-500">Reward:</span>
+                          <span className="font-medium text-green-400">
                             {formatCurrency(parseFloat(achievement.rewardCash))}
                           </span>
                         </div>
@@ -330,7 +330,7 @@ export function AchievementsPage() {
 
                       {/* Unlocked date */}
                       {achievement.isUnlocked && achievement.unlockedAt && (
-                        <div className="mt-2 text-xs text-gray-400">
+                        <div className="mt-2 text-xs text-zinc-500">
                           Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
                         </div>
                       )}

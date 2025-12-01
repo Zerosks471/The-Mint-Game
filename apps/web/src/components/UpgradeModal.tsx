@@ -49,8 +49,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-dark-card border border-dark-border rounded-2xl max-w-md w-full overflow-hidden animate-scale-in">
         {/* Header with gradient */}
         <div className="bg-gradient-to-r from-gold-400 to-amber-400 px-6 py-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
@@ -73,8 +73,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div key={index} className="flex items-start gap-3">
               <span className="text-2xl">{benefit.icon}</span>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">{benefit.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{benefit.description}</p>
+                <h3 className="font-semibold text-zinc-100">{benefit.title}</h3>
+                <p className="text-sm text-zinc-400">{benefit.description}</p>
               </div>
             </div>
           ))}
@@ -83,7 +83,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         {/* Error message */}
         {error && (
           <div className="px-6 pb-2">
-            <p className="text-red-600 dark:text-red-400 text-sm text-center">{error}</p>
+            <p className="text-red-400 text-sm text-center">{error}</p>
           </div>
         )}
 
@@ -162,7 +162,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           <button
             onClick={onClose}
             disabled={loading !== null}
-            className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-60"
+            className="w-full py-3 px-4 bg-dark-elevated text-zinc-400 font-medium rounded-xl hover:bg-zinc-700 transition-colors disabled:opacity-60"
           >
             Maybe Later
           </button>

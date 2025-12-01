@@ -60,8 +60,8 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-dark-card border border-dark-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
           <div className="flex items-center justify-between">
@@ -88,10 +88,10 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
             </div>
           ) : error ? (
             <div className="text-center py-8">
-              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+              <p className="text-red-400 mb-4">{error}</p>
               <button
                 onClick={fetchStatus}
-                className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600"
               >
                 Retry
               </button>
@@ -100,31 +100,31 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
             // Claim Success View
             <div className="text-center py-4">
               <div className="text-6xl mb-4">🎁</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-2xl font-bold text-zinc-100 mb-2">
                 Day {claimResult.day} Claimed!
               </h3>
               {claimResult.streakBroken && (
-                <p className="text-orange-500 dark:text-orange-400 text-sm mb-4">
+                <p className="text-orange-400 text-sm mb-4">
                   Your streak was reset. Keep logging in daily!
                 </p>
               )}
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 mb-6">
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">You received:</p>
-                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+              <div className="bg-amber-900/20 rounded-xl p-6 mb-6">
+                <p className="text-zinc-400 text-sm mb-2">You received:</p>
+                <p className="text-3xl font-bold text-amber-400">
                   +{formatCurrency(claimResult.rewardData.amount)}
                 </p>
                 {claimResult.rewardData.bonusCoins && (
-                  <p className="text-lg text-yellow-600 dark:text-yellow-400 mt-2">
+                  <p className="text-lg text-yellow-400 mt-2">
                     +{claimResult.rewardData.bonusCoins} Coins
                   </p>
                 )}
                 {claimResult.rewardData.prestigePoints && (
-                  <p className="text-lg text-purple-600 dark:text-purple-400 mt-2">
+                  <p className="text-lg text-purple-400 mt-2">
                     +{claimResult.rewardData.prestigePoints} Prestige Points
                   </p>
                 )}
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+              <p className="text-zinc-400 text-sm mb-4">
                 {claimResult.newStreak} day streak! Come back tomorrow!
               </p>
               <button
@@ -132,7 +132,7 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
                   setClaimResult(null);
                   onClose();
                 }}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors"
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors"
               >
                 Awesome!
               </button>
@@ -146,26 +146,26 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
                   <div
                     className={`rounded-xl p-6 text-center ${
                       status.canClaim
-                        ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-300 dark:border-amber-600'
-                        : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600'
+                        ? 'bg-gradient-to-br from-amber-900/30 to-orange-900/30 border-2 border-amber-600'
+                        : 'bg-dark-elevated border-2 border-dark-border'
                     }`}
                   >
                     <div className="text-5xl mb-3">
                       {status.canClaim ? '🎁' : '⏰'}
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-1">
+                    <p className="text-zinc-400 text-sm mb-1">
                       Day {status.currentDay}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    <p className="text-2xl font-bold text-zinc-100 mb-2">
                       {formatCurrency(status.nextReward.rewardData.amount)}
                     </p>
                     {status.nextReward.rewardData.bonusCoins && (
-                      <p className="text-yellow-600 dark:text-yellow-400 text-sm">
+                      <p className="text-yellow-400 text-sm">
                         +{status.nextReward.rewardData.bonusCoins} Coins
                       </p>
                     )}
                     {status.nextReward.rewardData.prestigePoints && (
-                      <p className="text-purple-600 dark:text-purple-400 text-sm">
+                      <p className="text-purple-400 text-sm">
                         +{status.nextReward.rewardData.prestigePoints} PP
                       </p>
                     )}
@@ -173,10 +173,10 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
                     <button
                       onClick={handleClaim}
                       disabled={!status.canClaim || isClaiming}
-                      className={`mt-4 w-full py-3 rounded-lg font-bold text-lg transition-all ${
+                      className={`mt-4 w-full py-3 rounded-xl font-bold text-lg transition-all ${
                         status.canClaim
-                          ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl'
-                          : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                          : 'bg-dark-elevated text-zinc-500 cursor-not-allowed'
                       }`}
                     >
                       {isClaiming
@@ -191,28 +191,28 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
 
               {/* Upcoming Rewards */}
               <div>
-                <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-3">Upcoming Rewards</h3>
+                <h3 className="font-bold text-zinc-100 mb-3">Upcoming Rewards</h3>
                 <div className="grid grid-cols-7 gap-2">
                   {status?.upcomingRewards.map((reward, index) => (
                     <div
                       key={reward.day}
-                      className={`rounded-lg p-2 text-center ${
+                      className={`rounded-xl p-2 text-center ${
                         index === 0
-                          ? 'bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-400 dark:border-amber-600'
+                          ? 'bg-amber-900/30 border-2 border-amber-600'
                           : reward.isMilestone
-                            ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700'
-                            : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                            ? 'bg-purple-900/20 border border-purple-700'
+                            : 'bg-dark-elevated border border-dark-border'
                       }`}
                     >
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Day</p>
+                      <p className="text-xs text-zinc-500">Day</p>
                       <p
                         className={`font-bold ${
-                          reward.isMilestone ? 'text-purple-600 dark:text-purple-400' : 'text-gray-700 dark:text-gray-200'
+                          reward.isMilestone ? 'text-purple-400' : 'text-zinc-100'
                         }`}
                       >
                         {reward.day}
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 truncate">
+                      <p className="text-xs text-green-400 truncate">
                         {reward.rewardData.amount >= 1000
                           ? `${(reward.rewardData.amount / 1000).toFixed(0)}K`
                           : reward.rewardData.amount}
@@ -226,16 +226,16 @@ export function DailyRewardModal({ isOpen, onClose, onClaim }: DailyRewardModalP
               </div>
 
               {/* Stats */}
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-4 border-t border-dark-border">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Current Streak</span>
-                  <span className="font-bold text-amber-600 dark:text-amber-400">
+                  <span className="text-zinc-400">Current Streak</span>
+                  <span className="font-bold text-amber-400">
                     {status?.currentStreak || 0} days
                   </span>
                 </div>
                 <div className="flex justify-between text-sm mt-2">
-                  <span className="text-gray-500 dark:text-gray-400">Longest Streak</span>
-                  <span className="font-bold text-gray-700 dark:text-gray-200">
+                  <span className="text-zinc-400">Longest Streak</span>
+                  <span className="font-bold text-zinc-100">
                     {status?.longestStreak || 0} days
                   </span>
                 </div>

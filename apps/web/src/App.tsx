@@ -59,10 +59,10 @@ function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-mint-50 to-white">
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-dark-base">
       <div className="text-center max-w-2xl">
         <h1 className="text-6xl font-display font-bold text-mint-600 mb-4">The Mint</h1>
-        <p className="text-xl text-gray-600 mb-8">Build Your Financial Empire. One Click at a Time.</p>
+        <p className="text-xl text-zinc-300 mb-8">Build Your Financial Empire. One Click at a Time.</p>
 
         <div className="space-x-4 mb-8">
           <button
@@ -80,9 +80,9 @@ function HomePage() {
         </div>
 
         {showInfo && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8 text-left">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">About The Mint</h2>
-            <ul className="space-y-2 text-gray-600">
+          <div className="bg-dark-card border border-dark-border rounded-xl shadow-lg p-6 mb-8 text-left">
+            <h2 className="text-xl font-bold text-zinc-100 mb-4">About The Mint</h2>
+            <ul className="space-y-2 text-zinc-300">
               <li>📈 Buy properties and collect passive income</li>
               <li>🏢 Build and manage businesses</li>
               <li>💰 Earn money even while offline</li>
@@ -93,36 +93,36 @@ function HomePage() {
         )}
 
         {/* API Status Card */}
-        <div className="bg-white rounded-xl shadow-lg p-6 inline-block">
-          <h3 className="text-sm font-semibold text-gray-500 mb-3">System Status</h3>
+        <div className="bg-dark-card border border-dark-border rounded-xl shadow-lg p-6 inline-block">
+          <h3 className="text-sm font-semibold text-zinc-400 mb-3">System Status</h3>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span
-                className={`w-3 h-3 rounded-full ${apiStatus?.status === 'ready' ? 'bg-green-500' : apiStatus?.status === 'error' ? 'bg-red-500' : 'bg-yellow-500'}`}
+                className={`w-3 h-3 rounded-full ${apiStatus?.status === 'ready' ? 'bg-mint' : apiStatus?.status === 'error' ? 'bg-red-500' : 'bg-amber'}`}
               ></span>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-zinc-300">
                 API: {loading ? 'Checking...' : apiStatus?.status || 'Unknown'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className={`w-3 h-3 rounded-full ${apiStatus?.database ? 'bg-green-500' : 'bg-red-500'}`}
+                className={`w-3 h-3 rounded-full ${apiStatus?.database ? 'bg-mint' : 'bg-red-500'}`}
               ></span>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-zinc-300">
                 Database: {apiStatus?.database ? 'Connected' : 'Disconnected'}
               </span>
             </div>
             <button
               onClick={checkApiHealth}
               disabled={loading}
-              className="text-sm text-mint-600 hover:text-mint-700 font-medium"
+              className="text-sm text-mint hover:text-mint/80 font-medium"
             >
               Refresh
             </button>
           </div>
         </div>
 
-        <p className="mt-8 text-sm text-gray-400">Phase 1 Complete - Core Game MVP Ready</p>
+        <p className="mt-8 text-sm text-zinc-500">Phase 1 Complete - Core Game MVP Ready</p>
       </div>
     </div>
   );

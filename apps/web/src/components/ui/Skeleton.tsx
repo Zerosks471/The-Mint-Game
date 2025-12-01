@@ -11,7 +11,7 @@ export function Skeleton({
   width,
   height,
 }: SkeletonProps) {
-  const baseClasses = 'bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer';
+  const baseClasses = 'bg-gradient-to-r from-dark-elevated via-dark-border to-dark-elevated bg-[length:200%_100%] animate-shimmer';
 
   const variantClasses = {
     text: 'h-4 rounded',
@@ -34,7 +34,7 @@ export function Skeleton({
 // Pre-built skeleton patterns for common use cases
 export function CardSkeleton() {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
+    <div className="bg-dark-card rounded-xl shadow-lg p-6 space-y-4">
       <div className="flex items-center gap-4">
         <Skeleton variant="circular" width={48} height={48} />
         <div className="flex-1 space-y-2">
@@ -55,7 +55,7 @@ export function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white rounded-xl p-4 space-y-2">
+        <div key={i} className="bg-dark-card rounded-xl p-4 space-y-2">
           <Skeleton width="50%" height={12} />
           <Skeleton width="80%" height={28} />
         </div>
@@ -68,7 +68,7 @@ export function ListSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+        <div key={i} className="flex items-center gap-4 p-4 bg-dark-elevated rounded-lg">
           <Skeleton variant="circular" width={40} height={40} />
           <div className="flex-1 space-y-2">
             <Skeleton width="70%" height={16} />
@@ -85,7 +85,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-2">
       {/* Header */}
-      <div className="flex gap-4 p-3 bg-gray-100 rounded-lg">
+      <div className="flex gap-4 p-3 bg-dark-elevated rounded-lg">
         <Skeleton width="5%" height={16} />
         <Skeleton width="30%" height={16} />
         <Skeleton width="25%" height={16} />
@@ -94,7 +94,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex gap-4 p-3 border-b border-gray-100">
+        <div key={i} className="flex gap-4 p-3 border-b border-dark-border">
           <Skeleton width="5%" height={14} />
           <Skeleton width="30%" height={14} />
           <Skeleton width="25%" height={14} />

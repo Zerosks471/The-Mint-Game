@@ -121,8 +121,8 @@ export function OrderRushGame({ difficulty, onComplete }: MiniGameProps) {
 
       {/* Current Order */}
       {currentOrder && (
-        <div className="bg-amber-100 dark:bg-amber-900/30 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
+        <div className="bg-amber-900/30 rounded-xl p-4 border border-dark-border">
+          <h3 className="text-sm font-semibold text-amber-200 mb-2">
             Order #{currentOrderIndex + 1}
           </h3>
           <div className="flex gap-2 flex-wrap">
@@ -135,7 +135,7 @@ export function OrderRushGame({ difficulty, onComplete }: MiniGameProps) {
                   className={`px-3 py-1 rounded-full text-sm ${
                     isSelected
                       ? 'bg-emerald-500 text-white'
-                      : 'bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-100'
+                      : 'bg-amber-800 text-amber-100'
                   }`}
                 >
                   {ing?.emoji} {ing?.name}
@@ -157,7 +157,7 @@ export function OrderRushGame({ difficulty, onComplete }: MiniGameProps) {
               p-4 rounded-xl text-center transition-all
               ${selectedIngredients.includes(ing.id)
                 ? 'bg-emerald-500 text-white scale-95'
-                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'bg-dark-elevated hover:bg-dark-border'
               }
               ${isComplete ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
             `}
@@ -175,7 +175,7 @@ export function OrderRushGame({ difficulty, onComplete }: MiniGameProps) {
           return (
             <div
               key={`${ingId}-${idx}`}
-              className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-700 dark:text-emerald-300"
+              className="px-3 py-1 bg-emerald-900/30 rounded-full text-emerald-300"
             >
               {ing?.emoji}
             </div>

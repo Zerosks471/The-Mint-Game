@@ -184,7 +184,7 @@ export function FriendsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-2">
+      <div className="flex gap-2 border-b border-dark-border pb-2">
         {[
           { key: 'friends' as Tab, label: 'Friends', count: friends.length },
           { key: 'requests' as Tab, label: 'Requests', count: requests.length },
@@ -194,10 +194,10 @@ export function FriendsPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl font-medium transition-colors ${
               activeTab === tab.key
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-dark-elevated text-zinc-400 hover:bg-dark-card'
             }`}
           >
             {tab.label}
@@ -211,42 +211,42 @@ export function FriendsPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-dark-card border border-dark-border rounded-2xl p-6">
         {/* Friends List */}
         {activeTab === 'friends' && (
           <div className="space-y-4">
             {friends.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-zinc-500 text-center py-8">
                 No friends yet. Add some friends to share the journey!
               </p>
             ) : (
               friends.map((friend) => (
                 <div
                   key={friend.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-4 bg-dark-elevated rounded-xl"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl">
                       👤
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900">
+                      <p className="font-bold text-zinc-100">
                         {friend.friend.displayName || friend.friend.username}
                       </p>
-                      <p className="text-sm text-gray-500">@{friend.friend.username}</p>
+                      <p className="text-sm text-zinc-500">@{friend.friend.username}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleSendGift(friend.friend.id)}
-                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium transition-colors"
                       disabled={giftCounts.sentToday >= giftCounts.maxPerDay}
                     >
                       🎁 Gift
                     </button>
                     <button
                       onClick={() => handleRemoveFriend(friend.id)}
-                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-lg text-sm font-medium transition-colors"
+                      className="px-4 py-2 bg-dark-elevated hover:bg-dark-card border border-dark-border text-zinc-400 rounded-xl text-sm font-medium transition-colors"
                     >
                       Remove
                     </button>
@@ -262,37 +262,37 @@ export function FriendsPage() {
           <div className="space-y-6">
             {/* Received */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Received Requests</h3>
+              <h3 className="font-bold text-zinc-100 mb-3">Received Requests</h3>
               {requests.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No pending requests</p>
+                <p className="text-zinc-500 text-center py-4">No pending requests</p>
               ) : (
                 <div className="space-y-3">
                   {requests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex items-center justify-between p-4 bg-blue-50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-dark-elevated rounded-xl"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           👤
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-zinc-100">
                             {req.requester.displayName || req.requester.username}
                           </p>
-                          <p className="text-sm text-gray-500">@{req.requester.username}</p>
+                          <p className="text-sm text-zinc-500">@{req.requester.username}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAcceptRequest(req.id)}
-                          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium"
+                          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => handleRejectRequest(req.id)}
-                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-lg text-sm font-medium"
+                          className="px-4 py-2 bg-dark-elevated hover:bg-dark-card border border-dark-border text-zinc-400 rounded-xl text-sm font-medium"
                         >
                           Decline
                         </button>
@@ -305,28 +305,28 @@ export function FriendsPage() {
 
             {/* Sent */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Sent Requests</h3>
+              <h3 className="font-bold text-zinc-100 mb-3">Sent Requests</h3>
               {sentRequests.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No pending sent requests</p>
+                <p className="text-zinc-500 text-center py-4">No pending sent requests</p>
               ) : (
                 <div className="space-y-3">
                   {sentRequests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-dark-elevated rounded-xl"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           👤
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-zinc-100">
                             {req.requester.displayName || req.requester.username}
                           </p>
-                          <p className="text-sm text-gray-500">@{req.requester.username}</p>
+                          <p className="text-sm text-zinc-500">@{req.requester.username}</p>
                         </div>
                       </div>
-                      <span className="text-sm text-gray-400">Pending...</span>
+                      <span className="text-sm text-zinc-400">Pending...</span>
                     </div>
                   ))}
                 </div>
@@ -339,7 +339,7 @@ export function FriendsPage() {
         {activeTab === 'search' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-400 mb-2">
                 Search by username
               </label>
               <input
@@ -347,7 +347,7 @@ export function FriendsPage() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Enter username..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-xl text-zinc-100 placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -356,17 +356,17 @@ export function FriendsPage() {
                 {searchResults.map((user) => (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-dark-elevated rounded-xl"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         👤
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-zinc-100">
                           {user.displayName || user.username}
                         </p>
-                        <p className="text-sm text-gray-500">@{user.username}</p>
+                        <p className="text-sm text-zinc-500">@{user.username}</p>
                       </div>
                     </div>
                     {user.isFriend ? (
@@ -374,7 +374,7 @@ export function FriendsPage() {
                     ) : (
                       <button
                         onClick={() => handleSendRequest(user.username)}
-                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium"
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium"
                       >
                         Add Friend
                       </button>
@@ -385,7 +385,7 @@ export function FriendsPage() {
             )}
 
             {searchQuery.length >= 2 && searchResults.length === 0 && (
-              <p className="text-gray-500 text-center py-4">No users found</p>
+              <p className="text-zinc-500 text-center py-4">No users found</p>
             )}
           </div>
         )}
@@ -394,40 +394,40 @@ export function FriendsPage() {
         {activeTab === 'gifts' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-gray-900">Pending Gifts</h3>
-              <span className="text-sm text-gray-500">
+              <h3 className="font-bold text-zinc-100">Pending Gifts</h3>
+              <span className="text-sm text-zinc-500">
                 Sent today: {giftCounts.sentToday}/{giftCounts.maxPerDay}
               </span>
             </div>
 
             {pendingGifts.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No pending gifts</p>
+              <p className="text-zinc-500 text-center py-8">No pending gifts</p>
             ) : (
               <div className="space-y-3">
                 {pendingGifts.map((gift) => (
                   <div
                     key={gift.id}
-                    className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-dark-elevated border border-yellow-500/20 rounded-xl"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">🎁</span>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-zinc-100">
                           Gift from {gift.senderUsername}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-zinc-500">
                           {gift.giftData.amount
                             ? formatCurrency(gift.giftData.amount)
                             : 'Mystery gift'}
                         </p>
                         {gift.message && (
-                          <p className="text-sm text-gray-600 italic">"{gift.message}"</p>
+                          <p className="text-sm text-zinc-400 italic">"{gift.message}"</p>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={() => handleClaimGift(gift.id)}
-                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium"
+                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium"
                     >
                       Claim
                     </button>

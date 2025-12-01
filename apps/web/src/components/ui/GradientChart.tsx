@@ -177,7 +177,7 @@ export function GradientChart({
                 <CustomTooltip
                   active={active}
                   payload={payload as Array<{ value: number }>}
-                  label={label}
+                  label={String(label ?? '')}
                   formatValue={formatValue}
                   color={color}
                 />

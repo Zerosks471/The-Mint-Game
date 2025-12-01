@@ -53,8 +53,8 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-in">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-dark-card border border-dark-border rounded-2xl max-w-lg w-full overflow-hidden animate-scale-in">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-400 to-yellow-400 px-6 py-6 text-center relative">
           <button
@@ -98,10 +98,10 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
             </div>
           ) : error && packages.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <p className="text-red-400 mb-4">{error}</p>
               <button
                 onClick={loadPackages}
-                className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors"
               >
                 Try Again
               </button>
@@ -110,7 +110,7 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
             <>
               {/* Error message */}
               {error && (
-                <p className="text-red-600 dark:text-red-400 text-sm text-center mb-4">{error}</p>
+                <p className="text-red-400 text-sm text-center mb-4">{error}</p>
               )}
 
               {/* Packages grid */}
@@ -122,10 +122,10 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
                     disabled={purchasing !== null}
                     className={`relative p-4 rounded-xl border-2 transition-all text-left ${
                       pkg.label === 'Best Value'
-                        ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                        ? 'border-amber-400 bg-amber-900/20'
                         : pkg.label === 'Popular'
-                          ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-600'
+                          ? 'border-blue-400 bg-blue-900/20'
+                          : 'border-dark-border hover:border-amber-600'
                     } disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
                     {/* Label badge */}
@@ -143,7 +143,7 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
 
                     {/* Coins amount */}
                     <div className="text-center mb-2 mt-1">
-                      <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      <span className="text-2xl font-bold text-zinc-100">
                         {pkg.coins.toLocaleString()}
                       </span>
                       <span className="text-amber-500 ml-1">🪙</span>
@@ -152,7 +152,7 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
                     {/* Bonus */}
                     {pkg.bonus && (
                       <div className="text-center mb-2">
-                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded-full">
                           +{pkg.bonus}% Bonus
                         </span>
                       </div>
@@ -178,7 +178,7 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
                           />
                         </svg>
                       ) : (
-                        <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                        <span className="text-lg font-bold text-zinc-100">
                           {formatPrice(pkg.price)}
                         </span>
                       )}
@@ -189,7 +189,7 @@ export function BuyCoinsModal({ isOpen, onClose }: BuyCoinsModalProps) {
 
               {/* Footer info */}
               <div className="mt-6 text-center">
-                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1">
+                <p className="text-xs text-zinc-500 flex items-center justify-center gap-1">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"

@@ -100,15 +100,15 @@ export function LeaderboardPage() {
   };
 
   const getRankChange = (current: number, previous: number | null): JSX.Element | null => {
-    if (previous === null) return <span className="text-blue-500 text-xs">NEW</span>;
+    if (previous === null) return <span className="text-blue-400 text-xs">NEW</span>;
 
     const diff = previous - current;
     if (diff > 0) {
-      return <span className="text-green-500 text-xs">+{diff}</span>;
+      return <span className="text-green-400 text-xs">+{diff}</span>;
     } else if (diff < 0) {
-      return <span className="text-red-500 text-xs">{diff}</span>;
+      return <span className="text-red-400 text-xs">{diff}</span>;
     }
-    return <span className="text-gray-400 text-xs">-</span>;
+    return <span className="text-zinc-500 text-xs">-</span>;
   };
 
   const getRankBadge = (rank: number): string => {
@@ -123,13 +123,13 @@ export function LeaderboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Leaderboards</h1>
-          <p className="text-gray-500 dark:text-gray-400">See how you stack up against other players</p>
+          <h1 className="text-2xl font-bold text-zinc-100">Leaderboards</h1>
+          <p className="text-zinc-400">See how you stack up against other players</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+          className="px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
         >
           {isRefreshing ? 'Refreshing...' : 'Refresh Rankings'}
         </button>
@@ -137,7 +137,7 @@ export function LeaderboardPage() {
 
       {/* Your Rank Card */}
       {myRank && (
-        <div className="bg-gradient-to-r from-mint-500 to-emerald-500 rounded-xl p-6 text-white">
+        <div className="bg-gradient-to-r from-mint-500 to-emerald-500 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-mint-100 text-sm">Your Rank</p>
@@ -166,15 +166,15 @@ export function LeaderboardPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex space-x-2 border-b border-dark-border">
         {types.map((type) => (
           <button
             key={type.id}
             onClick={() => setActiveType(type.id)}
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeType === type.id
-                ? 'border-mint-500 text-mint-600 dark:text-mint-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'border-mint-500 text-mint-400'
+                : 'border-transparent text-zinc-400 hover:text-zinc-300'
             }`}
           >
             {type.name}
@@ -184,7 +184,7 @@ export function LeaderboardPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-600 dark:text-red-400">
+        <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 text-red-400">
           {error}
         </div>
       )}
@@ -195,9 +195,9 @@ export function LeaderboardPage() {
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-mint-500"></div>
         </div>
       ) : leaderboard ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-dark-card border border-dark-border rounded-2xl overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600 font-medium text-gray-600 dark:text-gray-300 text-sm">
+          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-dark-elevated border-b border-dark-border font-medium text-zinc-400 text-sm">
             <div className="col-span-1">Rank</div>
             <div className="col-span-1">Change</div>
             <div className="col-span-6">Player</div>
@@ -206,23 +206,23 @@ export function LeaderboardPage() {
 
           {/* Entries */}
           {leaderboard.entries.length === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+            <div className="px-6 py-12 text-center text-zinc-400">
               No players on the leaderboard yet. Be the first!
             </div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            <div className="divide-y divide-dark-border">
               {leaderboard.entries.map((entry) => (
                 <div
                   key={entry.userId}
                   className={`grid grid-cols-12 gap-4 px-6 py-4 items-center ${
-                    entry.isCurrentUser ? 'bg-mint-50 dark:bg-mint-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                    entry.isCurrentUser ? 'bg-mint-900/20' : 'hover:bg-dark-elevated'
                   }`}
                 >
                   <div className="col-span-1 font-bold text-lg">
                     {entry.rank <= 3 ? (
                       <span className="text-2xl">{getRankBadge(entry.rank)}</span>
                     ) : (
-                      <span className="text-gray-600 dark:text-gray-400">#{entry.rank}</span>
+                      <span className="text-zinc-400">#{entry.rank}</span>
                     )}
                   </div>
                   <div className="col-span-1">
@@ -235,7 +235,7 @@ export function LeaderboardPage() {
                       size="md"
                     />
                     <div>
-                      <p className={`font-medium flex items-center gap-1.5 ${entry.isCurrentUser ? 'text-mint-700 dark:text-mint-400' : 'text-gray-900 dark:text-white'}`}>
+                      <p className={`font-medium flex items-center gap-1.5 ${entry.isCurrentUser ? 'text-mint-400' : 'text-zinc-100'}`}>
                         {entry.displayName || entry.username || 'Anonymous'}
                         {entry.badgeId && (
                           <span title={entry.badgeId.replace('badge_', '').replace('_', ' ')}>
@@ -244,18 +244,18 @@ export function LeaderboardPage() {
                         )}
                         {entry.isPremium && <PremiumBadge size="sm" />}
                         {entry.isCurrentUser && (
-                          <span className="ml-1 text-xs bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 px-2 py-0.5 rounded-full">
+                          <span className="ml-1 text-xs bg-mint-900/30 text-mint-400 px-2 py-0.5 rounded-full">
                             You
                           </span>
                         )}
                       </p>
                       {entry.displayName && entry.username && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">@{entry.username}</p>
+                        <p className="text-sm text-zinc-400">@{entry.username}</p>
                       )}
                     </div>
                   </div>
                   <div className="col-span-4 text-right">
-                    <span className="font-bold text-gray-900 dark:text-white">
+                    <span className="font-bold text-zinc-100">
                       {formatScore(entry.score, activeType)}
                     </span>
                   </div>
@@ -266,7 +266,7 @@ export function LeaderboardPage() {
 
           {/* Footer */}
           {leaderboard.lastUpdated && (
-            <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">
+            <div className="px-6 py-3 bg-dark-elevated border-t border-dark-border text-sm text-zinc-400">
               Last updated: {new Date(leaderboard.lastUpdated).toLocaleString()}
             </div>
           )}

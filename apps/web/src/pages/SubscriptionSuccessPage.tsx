@@ -19,7 +19,7 @@ export function SubscriptionSuccessPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gold-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-dark-base flex items-center justify-center p-4">
       {/* Simple confetti effect */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -41,7 +41,7 @@ export function SubscriptionSuccessPage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div className="bg-dark-card border border-dark-border rounded-2xl max-w-md w-full overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-gold-400 to-amber-400 px-8 py-10 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
@@ -65,21 +65,21 @@ export function SubscriptionSuccessPage() {
 
         {/* Benefits activated */}
         <div className="px-8 py-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
             Your benefits are now active:
           </h2>
           <div className="space-y-3">
             {benefits.map((benefit, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
+                className="flex items-center gap-3 p-3 bg-green-900/20 rounded-lg"
               >
                 <span className="text-xl">{benefit.icon}</span>
-                <span className="text-green-800 dark:text-green-300 font-medium">
+                <span className="text-green-300 font-medium">
                   {benefit.text}
                 </span>
                 <svg
-                  className="w-5 h-5 text-green-600 dark:text-green-400 ml-auto"
+                  className="w-5 h-5 text-green-400 ml-auto"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -98,11 +98,11 @@ export function SubscriptionSuccessPage() {
         <div className="px-8 pb-8">
           <button
             onClick={() => navigate('/dashboard')}
-            className="w-full py-4 px-6 bg-gradient-to-r from-mint-500 to-emerald-500 text-white font-bold text-lg rounded-xl hover:from-mint-600 hover:to-emerald-600 transition-all shadow-lg"
+            className="w-full py-4 px-6 bg-gradient-to-r from-mint-500 to-emerald-500 text-white font-bold text-lg rounded-2xl hover:from-mint-600 hover:to-emerald-600 transition-all"
           >
             Start Playing
           </button>
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+          <p className="text-center text-sm text-zinc-400 mt-4">
             Thank you for supporting The Mint!
           </p>
         </div>

@@ -50,23 +50,23 @@ export function IPODashboard({ status, onSell, onCancel, isLoading }: IPODashboa
 
         {/* Price Stats */}
         <div className="grid grid-cols-4 gap-4">
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <p className="text-xs text-slate-400">IPO Price</p>
             <p className="text-lg font-bold font-mono">{formatCurrency(parseFloat(status.ipoPrice))}</p>
           </div>
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <p className="text-xs text-slate-400">Current</p>
             <p className={`text-lg font-bold font-mono ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
               {formatCurrency(parseFloat(status.currentPrice))}
             </p>
           </div>
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <p className="text-xs text-slate-400">Session High</p>
             <p className="text-lg font-bold font-mono text-green-400">
               {formatCurrency(parseFloat(status.highPrice))}
             </p>
           </div>
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <p className="text-xs text-slate-400">Session Low</p>
             <p className="text-lg font-bold font-mono text-red-400">
               {formatCurrency(parseFloat(status.lowPrice))}
@@ -150,18 +150,18 @@ export function IPODashboard({ status, onSell, onCancel, isLoading }: IPODashboa
       {/* Cancel Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full">
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-md w-full">
             <div className="text-center">
               <div className="text-6xl mb-4">🛑</div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Cancel IPO?</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
+              <h2 className="text-2xl font-bold text-zinc-100 mb-2">Cancel IPO?</h2>
+              <p className="text-zinc-400 mb-6">
                 This will end your IPO early and give you {status.basePoints} base prestige points
                 (no multiplier).
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
-                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-lg"
+                  className="flex-1 py-3 bg-dark-elevated hover:bg-zinc-700 text-zinc-100 font-bold rounded-xl"
                   disabled={isLoading}
                 >
                   Keep Trading
@@ -171,7 +171,7 @@ export function IPODashboard({ status, onSell, onCancel, isLoading }: IPODashboa
                     await onCancel();
                     setShowCancelConfirm(false);
                   }}
-                  className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg disabled:opacity-50"
+                  className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl disabled:opacity-50"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Processing...' : 'Cancel IPO'}
@@ -185,21 +185,21 @@ export function IPODashboard({ status, onSell, onCancel, isLoading }: IPODashboa
       {/* Sell Confirmation Modal */}
       {showSellConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full">
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-md w-full">
             <div className="text-center">
               <div className="text-6xl mb-4">{isPositive ? '🎉' : '💼'}</div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Sell Shares?</h2>
-              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-600 dark:text-gray-300">You will earn:</p>
-                <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">+{status.potentialPoints} PP</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+              <h2 className="text-2xl font-bold text-zinc-100 mb-2">Sell Shares?</h2>
+              <div className="bg-purple-900/30 rounded-xl p-4 mb-6">
+                <p className="text-sm text-zinc-400">You will earn:</p>
+                <p className="text-4xl font-bold text-purple-400">+{status.potentialPoints} PP</p>
+                <p className="text-sm text-zinc-500">
                   {status.currentMultiplier}x multiplier applied
                 </p>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowSellConfirm(false)}
-                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-lg"
+                  className="flex-1 py-3 bg-dark-elevated hover:bg-zinc-700 text-zinc-100 font-bold rounded-xl"
                   disabled={isLoading}
                 >
                   Keep Trading
@@ -209,7 +209,7 @@ export function IPODashboard({ status, onSell, onCancel, isLoading }: IPODashboa
                     await onSell();
                     setShowSellConfirm(false);
                   }}
-                  className="flex-1 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg disabled:opacity-50"
+                  className="flex-1 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl disabled:opacity-50"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Selling...' : 'Sell Now'}

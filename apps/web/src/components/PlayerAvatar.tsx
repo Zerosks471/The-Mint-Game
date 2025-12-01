@@ -18,7 +18,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
 const FRAME_STYLES: Record<string, string> = {
   frame_none: 'border-transparent',
   frame_bronze: 'border-amber-600 ring-2 ring-amber-600/30',
-  frame_silver: 'border-gray-400 ring-2 ring-gray-400/30',
+  frame_silver: 'border-zinc-400 ring-2 ring-zinc-400/30',
   frame_gold: 'border-yellow-400 ring-2 ring-yellow-400/30',
   frame_diamond: 'border-cyan-400 ring-2 ring-cyan-400/30 animate-pulse',
 };
@@ -44,10 +44,10 @@ export function PlayerAvatar({
       className={`
         ${SIZE_CLASSES[size]}
         rounded-full
-        bg-gray-100 dark:bg-gray-700
+        bg-dark-elevated
         flex items-center justify-center
         border-2
-        ${frameStyle || 'border-gray-200 dark:border-gray-600'}
+        ${frameStyle || 'border-dark-border'}
         ${className}
       `}
     >

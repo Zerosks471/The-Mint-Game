@@ -102,25 +102,25 @@ export function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-mint-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-dark-base flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-mint-600 dark:text-mint-400 mb-2">The Mint</h1>
-          <p className="text-gray-600 dark:text-gray-400">Build your financial empire</p>
+          <h1 className="text-4xl font-bold text-mint mb-2">The Mint</h1>
+          <p className="text-zinc-400">Build your financial empire</p>
         </div>
 
         {/* Auth Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="bg-dark-card border border-dark-border rounded-2xl p-8">
           {/* Mode Toggle */}
-          <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          <div className="flex mb-6 bg-dark-elevated rounded-xl p-1">
             <button
               type="button"
               onClick={() => switchMode('login')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                 mode === 'login'
-                  ? 'bg-white dark:bg-gray-600 text-mint-600 dark:text-mint-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-dark-input text-mint'
+                  : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
               Sign In
@@ -128,10 +128,10 @@ export function AuthPage() {
             <button
               type="button"
               onClick={() => switchMode('register')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                 mode === 'register'
-                  ? 'bg-white dark:bg-gray-600 text-mint-600 dark:text-mint-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-dark-input text-mint'
+                  : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
               Sign Up
@@ -140,7 +140,7 @@ export function AuthPage() {
 
           {/* Error Display */}
           {(error || validationError) && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-400 text-sm">
+            <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded-xl text-red-400 text-sm">
               {validationError || error}
             </div>
           )}
@@ -148,7 +148,7 @@ export function AuthPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-zinc-100 mb-1">
                 Email
               </label>
               <input
@@ -156,7 +156,7 @@ export function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-mint-500 focus:border-transparent outline-none transition-shadow"
+                className="w-full px-4 py-2 border border-dark-border rounded-xl bg-dark-input text-zinc-100 focus:ring-2 focus:ring-mint/50 focus:border-mint outline-none transition-shadow"
                 placeholder="you@example.com"
                 disabled={isLoading}
               />
@@ -164,7 +164,7 @@ export function AuthPage() {
 
             {mode === 'register' && (
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="username" className="block text-sm font-medium text-zinc-100 mb-1">
                   Username
                 </label>
                 <input
@@ -172,7 +172,7 @@ export function AuthPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-mint-500 focus:border-transparent outline-none transition-shadow"
+                  className="w-full px-4 py-2 border border-dark-border rounded-xl bg-dark-input text-zinc-100 focus:ring-2 focus:ring-mint/50 focus:border-mint outline-none transition-shadow"
                   placeholder="coolplayer123"
                   disabled={isLoading}
                 />
@@ -180,7 +180,7 @@ export function AuthPage() {
             )}
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-100 mb-1">
                 Password
               </label>
               <input
@@ -188,7 +188,7 @@ export function AuthPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-mint-500 focus:border-transparent outline-none transition-shadow"
+                className="w-full px-4 py-2 border border-dark-border rounded-xl bg-dark-input text-zinc-100 focus:ring-2 focus:ring-mint/50 focus:border-mint outline-none transition-shadow"
                 placeholder="••••••••"
                 disabled={isLoading}
               />
@@ -198,7 +198,7 @@ export function AuthPage() {
               <div>
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-zinc-100 mb-1"
                 >
                   Confirm Password
                 </label>
@@ -207,7 +207,7 @@ export function AuthPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-mint-500 focus:border-transparent outline-none transition-shadow"
+                  className="w-full px-4 py-2 border border-dark-border rounded-xl bg-dark-input text-zinc-100 focus:ring-2 focus:ring-mint/50 focus:border-mint outline-none transition-shadow"
                   placeholder="••••••••"
                   disabled={isLoading}
                 />
@@ -217,7 +217,7 @@ export function AuthPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-mint-500 hover:bg-mint-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-mint hover:bg-mint/90 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -251,17 +251,17 @@ export function AuthPage() {
           </form>
 
           {mode === 'register' && (
-            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
+            <p className="mt-4 text-xs text-zinc-500 text-center">
               Password must be 8+ characters with uppercase, lowercase, and number
             </p>
           )}
         </div>
 
         {/* Back to Home */}
-        <p className="mt-6 text-center text-gray-600 dark:text-gray-400">
+        <p className="mt-6 text-center text-zinc-400">
           <button
             onClick={() => navigate('/')}
-            className="text-mint-600 hover:text-mint-700 dark:text-mint-400 dark:hover:text-mint-300 font-medium"
+            className="text-mint hover:text-mint/80 font-medium"
           >
             &larr; Back to Home
           </button>

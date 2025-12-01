@@ -65,8 +65,8 @@ export function MiniGameModal({
   const canRetry = result && !result.success && attemptsRemaining > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-dark-card border border-dark-border rounded-2xl max-w-2xl w-full mx-4 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4 text-white">
           <h2 className="text-xl font-bold">{title}</h2>
@@ -84,15 +84,15 @@ export function MiniGameModal({
           {!isPlaying && !result && (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🎮</div>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
+              <p className="text-zinc-400 mb-6">
                 Complete the task to collect your revenue!
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-sm text-zinc-500 mb-6">
                 {difficulty.itemCount} items • {difficulty.timeLimit} seconds
               </p>
               <button
                 onClick={handleStart}
-                className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors"
+                className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors"
               >
                 Start Task
               </button>
@@ -114,7 +114,7 @@ export function MiniGameModal({
               <h3 className="text-2xl font-bold mb-2">
                 {result.success ? 'Task Complete!' : 'Task Failed'}
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-2">
+              <p className="text-zinc-400 mb-2">
                 Score: {result.score}
               </p>
               {result.success ? (
@@ -134,7 +134,7 @@ export function MiniGameModal({
                   <button
                     onClick={handleRetry}
                     disabled={isSubmitting}
-                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50"
                   >
                     Retry ({attemptsRemaining} left)
                   </button>
@@ -142,7 +142,7 @@ export function MiniGameModal({
                 <button
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-dark-elevated hover:bg-zinc-700 text-zinc-100 font-semibold rounded-xl transition-colors disabled:opacity-50"
                 >
                   {result.success || !canRetry ? 'Done' : 'Give Up'}
                 </button>

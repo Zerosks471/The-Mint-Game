@@ -5,7 +5,7 @@ import { formatCurrency } from '@mint/utils';
 import { PlayerStats, PlayerBusiness } from '../api/game';
 import { UpgradeButton } from '../components/UpgradeButton';
 import { useAuthStore } from '../stores/authStore';
-import { StatCard, StatRow, Sparkline, ProgressRing } from '../components/ui';
+import { StatCard, StatRow, ProgressRing } from '../components/ui';
 
 // Smooth cash ticker component with real-time updates
 function CashTicker() {
