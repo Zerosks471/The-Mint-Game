@@ -168,8 +168,24 @@ export class CoinsService {
     const coins = parseInt(session.metadata?.coins || '0', 10);
 
     if (!userId || !coins) {
+      // Log failed purchase for admin review instead of silently failing
       console.error('Invalid coin purchase metadata:', session.metadata);
-      return;
+      await prisma.failedPurchase.create({
+        data: {
+          stripeSessionId: session.id,
+          userId: session.metadata?.userId || null,
+          packageId: session.metadata?.packageId || null,
+          coins: coins || null,
+          errorReason: !userId ? 'Missing userId' : 'Missing coins amount',
+          metadata: session.metadata as any,
+        },
+      });
+      // Throw error to trigger Stripe retry
+      throw new AppError(
+        ErrorCodes.VALIDATION_ERROR,
+        'Invalid coin purchase metadata - logged for admin review',
+        400
+      );
     }
 
     // Check if already fulfilled (idempotency)

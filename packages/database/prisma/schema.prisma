@@ -643,6 +643,22 @@ model CoinPurchase {
   @@map("coin_purchases")
 }
 
+model FailedPurchase {
+  id              String    @id @default(cuid())
+  stripeSessionId String    @unique @map("stripe_session_id")
+  userId          String?   @map("user_id")
+  packageId       String?   @map("package_id")
+  coins           Int?
+  errorReason     String    @map("error_reason")
+  metadata        Json?
+  resolved        Boolean   @default(false)
+  resolvedAt      DateTime? @map("resolved_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([resolved, createdAt])
+  @@map("failed_purchases")
+}
+
 // ============================================================================
 // EARNINGS HISTORY (for charts/analytics)
 // ============================================================================
