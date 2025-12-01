@@ -14,6 +14,7 @@ import giftsRouter from './gifts';
 import subscriptionsRouter from './subscriptions';
 import cosmeticsRouter from './cosmetics';
 import coinsRouter from './coins';
+import minigamesRouter from './minigames';
 
 const router: Router = Router();
 
@@ -69,6 +70,9 @@ v1Router.use('/cosmetics', cosmeticsRouter);
 
 // Coins routes (IAP)
 v1Router.use('/coins', coinsRouter);
+
+// Minigames routes
+v1Router.use('/minigames', minigamesRouter);
 
 router.use('/v1', v1Router);
 
