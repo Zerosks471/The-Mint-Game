@@ -190,7 +190,7 @@ export function StocksPage() {
           await Promise.all([fetchMarketStocks(), fetchPortfolio(), fetchOrders()]);
           refreshStats();
           setTradingModal(null);
-        } else {
+          } else {
           throw new Error(res.error?.message || 'Failed to buy shares');
         }
       } else {
@@ -348,11 +348,11 @@ export function StocksPage() {
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Live Market</span>
-          </div>
+        </div>
           <span className="text-xs text-zinc-500 font-mono">
             {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-          </span>
-        </div>
+                </span>
+              </div>
         <StockTicker stocks={stocks} speed={60} />
       </div>
 
@@ -455,28 +455,28 @@ export function StocksPage() {
                   <p className="text-lg font-bold text-zinc-100 font-mono">
                     ${parseFloat(selectedStock.highPrice24h).toFixed(2)}
                   </p>
-                </div>
+            </div>
                 <div className="bg-[#0f0f15] border border-[#1a1a24] rounded-lg p-4">
                   <p className="text-xs text-zinc-500 uppercase mb-1">Low 24h</p>
                   <p className="text-lg font-bold text-zinc-100 font-mono">
                     ${parseFloat(selectedStock.lowPrice24h).toFixed(2)}
                   </p>
-                </div>
+            </div>
                 <div className="bg-[#0f0f15] border border-[#1a1a24] rounded-lg p-4">
                   <p className="text-xs text-zinc-500 uppercase mb-1">Volume</p>
                   <p className="text-lg font-bold text-zinc-100 font-mono">
                     {selectedStock.volume24h.toLocaleString()}
                   </p>
-                </div>
+            </div>
                 {selectedStock.marketCap && (
                   <div className="bg-[#0f0f15] border border-[#1a1a24] rounded-lg p-4">
                     <p className="text-xs text-zinc-500 uppercase mb-1">Market Cap</p>
                     <p className="text-lg font-bold text-zinc-100">
                       {formatCurrency(parseFloat(selectedStock.marketCap))}
                     </p>
-                  </div>
+            </div>
                 )}
-              </div>
+          </div>
 
               {/* Company Info */}
               <div className="bg-[#0f0f15] border border-[#1a1a24] rounded-lg p-4">
@@ -490,7 +490,7 @@ export function StocksPage() {
                     <span className="text-xs bg-mint/20 text-mint px-2 py-1 rounded uppercase">
                       {selectedStock.sector}
                     </span>
-                  </div>
+            </div>
                 )}
               </div>
             </div>
@@ -560,11 +560,11 @@ export function StocksPage() {
                       onView={handleViewStock}
                     />
                   ))}
-                </div>
+            </div>
                 {stocks.length === 0 && (
                   <div className="text-center py-12 text-zinc-500">
                     <p>No stocks available</p>
-                  </div>
+          </div>
                 )}
               </div>
             </>
@@ -574,116 +574,292 @@ export function StocksPage() {
 
       {/* Portfolio Tab */}
       {activeTab === 'portfolio' && (
-        <div className="space-y-4">
-          {/* Portfolio Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-dark-card border border-dark-border rounded-xl p-4">
-              <p className="text-xs text-zinc-500 uppercase mb-1">Total Value</p>
-              <p className="text-2xl font-bold text-zinc-100">
+            <div className="space-y-6">
+          {/* Portfolio Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
+              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Total Portfolio Value</p>
+              <p className="text-3xl font-bold text-zinc-100 mb-1">
                 {formatCurrency(totalPortfolioValue)}
               </p>
-            </div>
-            <div className="bg-dark-card border border-dark-border rounded-xl p-4">
-              <p className="text-xs text-zinc-500 uppercase mb-1">Total Invested</p>
-              <p className="text-2xl font-bold text-zinc-100">
+              <p className="text-xs text-zinc-500">Current market value</p>
+                  </div>
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
+              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Total Invested</p>
+              <p className="text-3xl font-bold text-zinc-100 mb-1">
                 {formatCurrency(
                   portfolio.reduce((sum, h) => sum + parseFloat(h.totalInvested), 0)
                 )}
               </p>
+              <p className="text-xs text-zinc-500">Your initial investment</p>
             </div>
-            <div className="bg-dark-card border border-dark-border rounded-xl p-4">
-              <p className="text-xs text-zinc-500 uppercase mb-1">Profit/Loss</p>
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
+              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Total Profit/Loss</p>
               <p
-                className={`text-2xl font-bold ${
+                className={`text-3xl font-bold mb-1 ${
                   totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}
               >
                 {totalProfitLoss >= 0 ? '+' : ''}
-                {formatCurrency(totalProfitLoss)} ({totalProfitLossPercent >= 0 ? '+' : ''}
-                {totalProfitLossPercent.toFixed(2)}%)
+                {formatCurrency(totalProfitLoss)}
+              </p>
+              <p className={`text-xs ${totalProfitLossPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {totalProfitLossPercent >= 0 ? '+' : ''}
+                {totalProfitLossPercent.toFixed(2)}% return
               </p>
             </div>
-          </div>
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
+              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Holdings</p>
+              <p className="text-3xl font-bold text-zinc-100 mb-1">
+                {portfolio.length}
+              </p>
+              <p className="text-xs text-zinc-500">
+                {portfolio.reduce((sum, h) => sum + h.shares, 0).toLocaleString()} total shares
+              </p>
+                  </div>
+                </div>
 
-          {/* Holdings */}
-          {portfolio.length > 0 ? (
-            <div className="space-y-4">
-              {portfolio.map((holding) => {
-                const stock = stocks.find((s) => s.tickerSymbol === holding.tickerSymbol);
-                if (!stock) return null;
-                return (
-                  <div
-                    key={holding.id}
-                    className="bg-dark-card border border-dark-border rounded-xl p-4"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-zinc-100 text-lg">{holding.tickerSymbol}</h3>
-                          <span className="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded uppercase">
-                            {holding.stockType}
-                          </span>
-                        </div>
-                        <p className="text-sm text-zinc-400">{holding.companyName}</p>
-            </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-zinc-100 font-mono">
-                          {formatCurrency(parseFloat(holding.currentValue))}
-                        </p>
-                        <p
-                          className={`text-sm ${
-                            parseFloat(holding.profitLoss) >= 0 ? 'text-green-400' : 'text-red-400'
-                          }`}
-                        >
-                          {parseFloat(holding.profitLoss) >= 0 ? '+' : ''}
-                          {formatCurrency(parseFloat(holding.profitLoss))} (
+          {/* Portfolio Performance Breakdown */}
+          {portfolio.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Top Performers */}
+              <div className="bg-dark-card border border-dark-border rounded-xl p-4">
+                <h3 className="text-sm font-bold text-zinc-300 mb-3 uppercase tracking-wider">Top Performers</h3>
+                <div className="space-y-2">
+                  {[...portfolio]
+                    .sort((a, b) => parseFloat(b.profitLossPercent) - parseFloat(a.profitLossPercent))
+                    .slice(0, 3)
+                    .map((holding) => (
+                      <div key={holding.id} className="flex items-center justify-between py-2 px-3 bg-dark-elevated rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-zinc-100 text-sm">{holding.tickerSymbol}</span>
+                  </div>
+                        <span className={`text-sm font-medium ${
+                          parseFloat(holding.profitLoss) >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
                           {holding.profitLossPercent >= 0 ? '+' : ''}
-                          {holding.profitLossPercent.toFixed(2)}%)
-                        </p>
-                      </div>
-                    </div>
+                          {holding.profitLossPercent.toFixed(2)}%
+                        </span>
+                  </div>
+                    ))}
+                  </div>
+              </div>
 
-                    <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
-                      <div>
-                        <p className="text-zinc-500 mb-1">Shares</p>
-                        <p className="text-zinc-100 font-medium">{holding.shares.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-zinc-500 mb-1">Avg Buy Price</p>
-                        <p className="text-zinc-100 font-medium font-mono">
-                          ${parseFloat(holding.avgBuyPrice).toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-zinc-500 mb-1">Current Price</p>
-                        <p className="text-zinc-100 font-medium font-mono">
-                          ${parseFloat(holding.currentPrice).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
+              {/* Portfolio Allocation */}
+              <div className="bg-dark-card border border-dark-border rounded-xl p-4">
+                <h3 className="text-sm font-bold text-zinc-300 mb-3 uppercase tracking-wider">Allocation</h3>
+                <div className="space-y-2">
+                  {[...portfolio]
+                    .sort((a, b) => parseFloat(b.currentValue) - parseFloat(a.currentValue))
+                    .slice(0, 5)
+                    .map((holding) => {
+                      const percentage = (parseFloat(holding.currentValue) / totalPortfolioValue) * 100;
+                      return (
+                        <div key={holding.id} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-zinc-400">{holding.tickerSymbol}</span>
+                            <span className="text-zinc-300 font-medium">{percentage.toFixed(1)}%</span>
+                          </div>
+                          <div className="h-1.5 bg-dark-elevated rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-mint to-cyan-400 transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleSell(holding.tickerSymbol)}
-                        className="flex-1 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        Sell
-                      </button>
-                      <button
-                        onClick={() => handleViewStock(holding.tickerSymbol)}
-                        className="flex-1 py-2 bg-dark-elevated hover:bg-dark-border text-zinc-300 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        View Details
-                      </button>
+              {/* Quick Stats */}
+              <div className="bg-dark-card border border-dark-border rounded-xl p-4">
+                <h3 className="text-sm font-bold text-zinc-300 mb-3 uppercase tracking-wider">Quick Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">Winning Positions</span>
+                    <span className="text-sm font-bold text-green-400">
+                      {portfolio.filter((h) => parseFloat(h.profitLoss) > 0).length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">Losing Positions</span>
+                    <span className="text-sm font-bold text-red-400">
+                      {portfolio.filter((h) => parseFloat(h.profitLoss) < 0).length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">Avg Return</span>
+                    <span className={`text-sm font-bold ${
+                      totalProfitLossPercent >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {totalProfitLossPercent >= 0 ? '+' : ''}
+                      {totalProfitLossPercent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">Largest Position</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      {portfolio.length > 0
+                        ? [...portfolio].sort((a, b) => parseFloat(b.currentValue) - parseFloat(a.currentValue))[0].tickerSymbol
+                        : 'N/A'}
+                    </span>
+                </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Holdings List */}
+          {portfolio.length > 0 ? (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-zinc-100">Your Holdings</h2>
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <span>Sort by:</span>
+                  <select
+                    onChange={(e) => {
+                      // Simple client-side sorting
+                      const sorted = [...portfolio].sort((a, b) => {
+                        switch (e.target.value) {
+                          case 'value':
+                            return parseFloat(b.currentValue) - parseFloat(a.currentValue);
+                          case 'profit':
+                            return parseFloat(b.profitLoss) - parseFloat(a.profitLoss);
+                          case 'ticker':
+                            return a.tickerSymbol.localeCompare(b.tickerSymbol);
+                          default:
+                            return 0;
+                        }
+                      });
+                      setPortfolio(sorted);
+                    }}
+                    className="bg-dark-elevated border border-dark-border rounded px-2 py-1 text-zinc-300"
+                  >
+                    <option value="value">Value</option>
+                    <option value="profit">Profit/Loss</option>
+                    <option value="ticker">Ticker</option>
+                  </select>
+              </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {portfolio.map((holding) => {
+                  const stock = stocks.find((s) => s.tickerSymbol === holding.tickerSymbol);
+                  if (!stock) return null;
+                  const profitLoss = parseFloat(holding.profitLoss);
+                  const profitLossPercent = holding.profitLossPercent;
+                  const isProfit = profitLoss >= 0;
+                  
+                  return (
+                    <div
+                      key={holding.id}
+                      className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5 hover:border-mint/30 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-bold text-zinc-100 text-xl">{holding.tickerSymbol}</h3>
+                            <span className={`text-xs px-2 py-1 rounded font-medium ${
+                              holding.stockType === 'bot' 
+                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                                : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                            } uppercase`}>
+                              {holding.stockType}
+                            </span>
+                    </div>
+                          <p className="text-sm text-zinc-400 mb-3">{holding.companyName}</p>
+                          
+                          {/* Profit/Loss Badge */}
+                          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                            isProfit 
+                              ? 'bg-green-500/10 border border-green-500/20' 
+                              : 'bg-red-500/10 border border-red-500/20'
+                          }`}>
+                            <span className={`text-lg font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                              {isProfit ? '↑' : '↓'}
+                            </span>
+                            <div>
+                              <p className={`text-sm font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                                {isProfit ? '+' : ''}
+                                {formatCurrency(profitLoss)}
+                              </p>
+                              <p className={`text-xs ${isProfit ? 'text-green-400/80' : 'text-red-400/80'}`}>
+                                {isProfit ? '+' : ''}
+                                {profitLossPercent.toFixed(2)}%
+                              </p>
+                  </div>
                     </div>
                   </div>
-                );
-              })}
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-zinc-100 font-mono mb-1">
+                            {formatCurrency(parseFloat(holding.currentValue))}
+                          </p>
+                          <p className="text-xs text-zinc-500">Current Value</p>
+                    </div>
+                  </div>
+
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-dark-base/50 rounded-lg">
+                        <div>
+                          <p className="text-xs text-zinc-500 mb-1">Shares</p>
+                          <p className="text-sm font-bold text-zinc-100">{holding.shares.toLocaleString()}</p>
+                    </div>
+                        <div>
+                          <p className="text-xs text-zinc-500 mb-1">Avg Buy Price</p>
+                          <p className="text-sm font-bold text-zinc-100 font-mono">
+                            ${parseFloat(holding.avgBuyPrice).toFixed(2)}
+                          </p>
+                  </div>
+                        <div>
+                          <p className="text-xs text-zinc-500 mb-1">Current Price</p>
+                          <p className="text-sm font-bold text-zinc-100 font-mono">
+                            ${parseFloat(holding.currentPrice).toFixed(2)}
+                          </p>
+                </div>
+                        <div>
+                          <p className="text-xs text-zinc-500 mb-1">Total Invested</p>
+                          <p className="text-sm font-bold text-zinc-100 font-mono">
+                            {formatCurrency(parseFloat(holding.totalInvested))}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewStock(holding.tickerSymbol)}
+                          className="flex-1 py-2.5 bg-dark-elevated hover:bg-dark-border text-zinc-300 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          View Chart
+                        </button>
+                        <button
+                          onClick={() => handleSell(holding.tickerSymbol)}
+                          className="flex-1 py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Sell Shares
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-zinc-500">
-              <p>No holdings yet. Start investing in the Market tab!</p>
-          </div>
+            <div className="bg-dark-card border border-dark-border rounded-xl p-12 text-center">
+              <div className="max-w-md mx-auto">
+                <div className="text-6xl mb-4">📈</div>
+                <h3 className="text-xl font-bold text-zinc-100 mb-2">No Holdings Yet</h3>
+                <p className="text-zinc-400 mb-6">
+                  Start building your portfolio by investing in stocks from the Market tab.
+                </p>
+                <button
+                  onClick={() => setActiveTab('market')}
+                  className="px-6 py-3 bg-mint hover:bg-mint/80 text-white rounded-lg font-medium transition-colors"
+                >
+                  Browse Market
+                </button>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -694,20 +870,20 @@ export function StocksPage() {
           {playerStock ? (
             <div className="bg-dark-card border border-dark-border rounded-xl p-6">
               <div className="flex items-start justify-between mb-4">
-                  <div>
+              <div>
                   <div className="flex items-center gap-2 mb-2">
                     <h2 className="text-2xl font-bold text-zinc-100">{playerStock.tickerSymbol}</h2>
                     <span className="text-xs bg-mint/20 text-mint px-2 py-1 rounded">Listed</span>
-                  </div>
+              </div>
                   <p className="text-zinc-400">{playerStock.companyName}</p>
-                </div>
+            </div>
                 <button
                   onClick={handleDelist}
                   className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors"
                 >
                   Delist
                 </button>
-              </div>
+          </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div>
@@ -772,7 +948,7 @@ export function StocksPage() {
       {activeTab === 'orders' && (
         <div className="space-y-4">
           {orders.length > 0 ? (
-            <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+          <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-dark-border">
                 <h2 className="font-bold text-zinc-100">Order History</h2>
               </div>
@@ -813,7 +989,7 @@ export function StocksPage() {
                           >
                             {order.orderType.toUpperCase()}
                           </span>
-                        </td>
+                      </td>
                         <td className="px-4 py-3 text-right font-mono text-zinc-100">
                           {order.shares.toLocaleString()}
                         </td>
@@ -871,7 +1047,7 @@ export function StocksPage() {
               >
                 ✕
               </button>
-            </div>
+                  </div>
 
             <div className="space-y-6">
               {/* Basic Info */}
@@ -952,7 +1128,7 @@ export function StocksPage() {
                             {preset.label}
                           </button>
                         ))}
-                      </div>
+            </div>
                       {marketCapPreset === 'custom' && (
                         <input
                           type="number"
