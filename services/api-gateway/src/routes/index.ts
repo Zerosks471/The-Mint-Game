@@ -17,6 +17,7 @@ import coinsRouter from './coins';
 import minigamesRouter from './minigames';
 import progressionRouter from './progression';
 import stocksRouter from './stocks';
+import notificationsRouter from './notifications';
 
 const router: Router = Router();
 
@@ -81,6 +82,9 @@ v1Router.use('/progression', progressionRouter);
 
 // Stocks routes (market, portfolio, trading)
 v1Router.use('/stocks', stocksRouter);
+
+// Notifications routes
+v1Router.use('/notifications', notificationsRouter);
 
 router.use('/v1', v1Router);
 

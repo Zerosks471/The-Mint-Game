@@ -9,6 +9,7 @@ import { PremiumBadge } from './PremiumBadge';
 import { UpgradeButton } from './UpgradeButton';
 import { PlayerAvatar } from './PlayerAvatar';
 import { Sidebar } from './Sidebar';
+import { NotificationBell } from './NotificationBell';
 import { AnimatedCounter, ToastContainer, useToast } from './ui';
 
 interface LayoutProps {
@@ -233,6 +234,9 @@ export function Layout({ children }: LayoutProps) {
 
               {/* Right Side Actions */}
               <div className="flex items-center gap-4">
+                {/* Notifications */}
+                <NotificationBell />
+
                 {/* IPO Status Indicator */}
                 {ipoStatus && (
                   <Link
