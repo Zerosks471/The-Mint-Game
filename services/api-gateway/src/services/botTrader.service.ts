@@ -804,12 +804,26 @@ export class BotTraderService {
         await stockService.buyShares(botUserId, decision.ticker, decision.shares);
         return true;
       } else if (decision.action === 'sell' && decision.shares > 0) {
-        await stockService.sellShares(botUserId, decision.ticker, decision.shares);
+        // Pre-validate holdings before attempting sell to reduce exception overhead
+        const portfolio = await stockService.getPortfolio(botUserId);
+        const holding = portfolio.find(h => h.tickerSymbol === decision.ticker);
+        if (!holding || holding.shares <= 0) {
+          return false; // Don't have shares to sell
+        }
+        // Adjust shares if trying to sell more than we have
+        const sharesToSell = Math.min(decision.shares, holding.shares);
+        if (sharesToSell <= 0) {
+          return false;
+        }
+        await stockService.sellShares(botUserId, decision.ticker, sharesToSell);
         return true;
       }
       return false;
     } catch (error) {
-      console.error(`Bot trade failed for ${decision.ticker}:`, error);
+      // Only log unexpected errors, not validation errors
+      if (error instanceof Error && !error.message.includes('Not enough shares')) {
+        console.error(`Bot trade failed for ${decision.ticker}:`, error);
+      }
       return false;
     }
   }
