@@ -129,7 +129,7 @@ model PlayerStats {
   premiumCurrency     Int       @default(0) @map("premium_currency")
   lifetimeCashEarned  Decimal   @default(0) @map("lifetime_cash_earned") @db.Decimal(28, 2)
   playerLevel         Int       @default(1) @map("player_level")
-  experiencePoints    Int       @default(0) @map("experience_points")
+  experiencePoints    Float     @default(0) @map("experience_points")
   currentPhase        Int       @default(1) @map("current_phase") // 1-5 based on net worth
   // Legacy prestige fields (kept for backwards compatibility)
   prestigeLevel       Int       @default(0) @map("prestige_level")

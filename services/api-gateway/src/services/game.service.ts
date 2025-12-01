@@ -581,7 +581,9 @@ export class GameService {
     const stats = await tx.playerStats.findUnique({ where: { userId } });
     if (!stats) return;
 
-    const newXp = Number(stats.experiencePoints) + Math.floor(xp);
+    // Store XP as a floating value so small income ticks can accumulate
+    const currentXp = Number(stats.experiencePoints) || 0;
+    const newXp = currentXp + xp;
 
     let newLevel = stats.playerLevel;
     let remainingXp = newXp;
