@@ -96,6 +96,9 @@ export class StockService {
    * Update bot stock prices with mean reversion and volatility
    */
   async updateBotStockPrices(): Promise<void> {
+    // Check if we need to reset daily volume
+    await this.resetDailyVolumeIfNeeded();
+
     const botStocks = await prisma.botStock.findMany({
       where: { isActive: true },
     });
