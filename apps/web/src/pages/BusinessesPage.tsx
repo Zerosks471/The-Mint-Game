@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
 import type { BusinessType, PlayerBusiness } from '../api/game';
+import { MiniGameModal, getBusinessTask } from '../components/minigames';
+import { minigameApi, StartTaskResponse } from '../api/minigames';
 
 type Tab = 'owned' | 'shop';
 
@@ -23,6 +25,10 @@ export function BusinessesPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>('owned');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [activeTask, setActiveTask] = useState<{
+    business: PlayerBusiness;
+    session: StartTaskResponse;
+  } | null>(null);
 
   useEffect(() => {
     fetchBusinessTypes();
@@ -50,10 +56,52 @@ export function BusinessesPage() {
     setActionLoading(null);
   };
 
-  const handleCollect = async (businessId: string) => {
-    setActionLoading(`collect-${businessId}`);
-    await collectBusinessRevenue(businessId);
+  const handleCollectClick = async (business: PlayerBusiness) => {
+    setActionLoading(`collect-${business.id}`);
+    // Start the mini-game task
+    const response = await minigameApi.startBusinessTask(business.id);
+    if (response.success && response.data) {
+      setActiveTask({ business, session: response.data });
+    } else {
+      // Set error in store for display
+      useGameStore.setState({
+        error: response.error?.message || 'Failed to start task'
+      });
+    }
     setActionLoading(null);
+  };
+
+  const handleTaskComplete = async (success: boolean, score: number) => {
+    if (!activeTask) return;
+
+    const result = await minigameApi.completeBusinessTask(
+      activeTask.session.sessionId,
+      success,
+      score
+    );
+
+    if (result.success && result.data) {
+      if (result.data.success || (result.data.revenueMultiplier > 0)) {
+        // Actually collect the revenue with multiplier
+        const collected = await collectBusinessRevenue(activeTask.business.id);
+        if (collected) {
+          // Success - revenue collected
+          console.log(
+            `Revenue Collected: $${parseFloat(collected).toLocaleString()} (${Math.round(result.data.revenueMultiplier * 100)}%)`
+          );
+        }
+      } else if (!result.data.canRetry) {
+        // Failed all attempts - no collection
+        useGameStore.setState({
+          error: 'Task failed - better luck next cycle!'
+        });
+      }
+    }
+  };
+
+  const handleCloseTask = () => {
+    setActiveTask(null);
+    fetchPlayerBusinesses(); // Refresh
   };
 
   const cash = parseFloat(stats?.cash || '0');
@@ -140,7 +188,7 @@ export function BusinessesPage() {
                   business={business}
                   cash={cash}
                   onLevelUp={() => handleLevelUp(business.id)}
-                  onCollect={() => handleCollect(business.id)}
+                  onCollect={() => handleCollectClick(business)}
                   isLoading={
                     actionLoading === `level-${business.id}` ||
                     actionLoading === `collect-${business.id}`
@@ -166,6 +214,21 @@ export function BusinessesPage() {
             />
           ))}
         </div>
+      )}
+
+      {/* Mini-Game Modal */}
+      {activeTask && (
+        <MiniGameModal
+          isOpen={true}
+          onClose={handleCloseTask}
+          title={getBusinessTask(activeTask.business.businessType.slug).name}
+          taskType={activeTask.session.taskType}
+          difficulty={activeTask.session.difficulty}
+          attemptsUsed={activeTask.session.attemptsUsed}
+          maxAttempts={3}
+          GameComponent={getBusinessTask(activeTask.business.businessType.slug).component}
+          onTaskComplete={handleTaskComplete}
+        />
       )}
     </div>
   );
