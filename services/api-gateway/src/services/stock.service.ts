@@ -1073,7 +1073,7 @@ export class StockService {
 
     return prisma.$transaction(async (tx) => {
       // Add cash
-      await tx.playerStats.update({
+      const updatedStats = await tx.playerStats.update({
         where: { userId },
         data: {
           cash: { increment: totalRevenue },
@@ -1183,6 +1183,36 @@ export class StockService {
             profitLoss: new Decimal(0).toString(),
             profitLossPercent: 0,
           };
+        }
+      }
+
+      // Grant a small amount of XP based on realized stock sale revenue.
+      // Use a conservative rate so trading is a slower XP source than core gameplay.
+      if (!totalRevenue.isZero()) {
+        // 1 XP per $400 of sale revenue
+        const xpFromStocks = Number(totalRevenue) / 400;
+        const stats = await tx.playerStats.findUnique({ where: { userId } });
+        if (stats) {
+          const currentXp = Number(stats.experiencePoints) || 0;
+          const newXp = currentXp + xpFromStocks;
+
+          // We reuse the same level curve as GameService.xpForLevel (100 * 1.5^(level-1))
+          let newLevel = stats.playerLevel;
+          let remainingXp = newXp;
+          const xpForLevel = (lvl: number) => Math.floor(100 * Math.pow(1.5, lvl - 1));
+
+          while (remainingXp >= xpForLevel(newLevel)) {
+            remainingXp -= xpForLevel(newLevel);
+            newLevel++;
+          }
+
+          await tx.playerStats.update({
+            where: { userId },
+            data: {
+              experiencePoints: remainingXp,
+              playerLevel: newLevel,
+            },
+          });
         }
       }
 

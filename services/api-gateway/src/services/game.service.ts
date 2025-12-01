@@ -317,7 +317,7 @@ export class GameService {
 
       const newTotalIncome = await this.calculateTotalIncome(tx, userId);
 
-      await tx.playerStats.update({
+      const updatedStats = await tx.playerStats.update({
         where: { userId },
         data: {
           cash: { increment: sellValue },
@@ -326,6 +326,12 @@ export class GameService {
           effectiveIncomeHour: newTotalIncome.mul(playerStats.currentMultiplier),
         },
       });
+
+      // Grant a small amount of XP based on property sale value (slower than active play)
+      if (!sellValue.isZero()) {
+        // Use a gentler rate: 1 XP per $200 from property sales
+        await this.addExperience(tx, userId, Number(sellValue) / 200);
+      }
 
       return {
         soldQuantity: quantity,

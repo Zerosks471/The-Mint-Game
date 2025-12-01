@@ -577,6 +577,30 @@ export class BotTraderService {
           }
         }
       }
+
+      // Fallback: if no trades were executed this cycle, place a small market trade
+      // so the live feed always has fresh activity when there is cash available.
+      if (tradesExecuted === 0) {
+        // Pick a random affordable stock and buy a few shares
+        const affordable = allStocks.filter((s) => {
+          const price = parseFloat(s.currentPrice);
+          return price > 0 && price * 5 <= Number(cash); // can afford at least ~5 shares
+        });
+
+        if (affordable.length > 0) {
+          const pick = affordable[Math.floor(Math.random() * affordable.length)];
+          const price = parseFloat(pick.currentPrice);
+          const maxBudget = Number(cash) * 0.02; // up to 2% of cash as a gentle nudge
+          const shares = Math.max(1, Math.floor(maxBudget / price));
+
+          try {
+            await stockService.buyShares(botUserId, pick.tickerSymbol, shares);
+          } catch (error) {
+            // If fallback trade fails, just skip; don't crash the loop
+            console.error('Fallback bot trade failed:', error);
+          }
+        }
+      }
     } catch (error) {
       // Silently handle errors
     }
