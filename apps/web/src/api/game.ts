@@ -372,6 +372,46 @@ export interface StockSellResult {
   order: StockOrderData;
 }
 
+export interface MarketMover {
+  tickerSymbol: string;
+  companyName: string;
+  currentPrice: string;
+  changePercent: number;
+  stockType: 'bot' | 'player';
+}
+
+export interface VolumeLeader {
+  tickerSymbol: string;
+  companyName: string;
+  volume24h: number;
+  currentPrice: string;
+  changePercent: number;
+  stockType: 'bot' | 'player';
+}
+
+export interface MarketEvent {
+  tickerSymbol: string;
+  type: 'pump' | 'dump' | 'news_positive' | 'news_negative';
+  magnitude: number;
+  startedAt: string;
+  remainingMs: number;
+}
+
+export interface MarketSummaryData {
+  overview: {
+    totalStocks: number;
+    gainersCount: number;
+    losersCount: number;
+    unchangedCount: number;
+    totalVolume: number;
+    avgChange: number;
+  };
+  topGainers: MarketMover[];
+  topLosers: MarketMover[];
+  volumeLeaders: VolumeLeader[];
+  activeEvents: MarketEvent[];
+}
+
 // Progression types
 export interface Phase {
   id: number;
@@ -968,5 +1008,9 @@ export const gameApi = {
         traderType: 'player' | 'bot';
       }>
     >(`/stocks/trades${query}`);
+  },
+
+  async getMarketSummary(): Promise<ApiResponse<MarketSummaryData>> {
+    return apiClient.get<MarketSummaryData>('/stocks/market-summary');
   },
 };

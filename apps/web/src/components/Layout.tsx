@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
-import { gameApi, DailyStatus, IPOStatus } from '../api/game';
+import { gameApi, DailyStatus, IPOStatus, StockHoldingData } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
 import { BuyCoinsModal } from './BuyCoinsModal';
 import { PremiumBadge } from './PremiumBadge';
@@ -15,23 +15,40 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+interface PortfolioSummary {
+  totalValue: number;
+  totalInvested: number;
+  profitLoss: number;
+  profitLossPercent: number;
+  holdingsCount: number;
+}
+
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { stats, refreshStats } = useGameStore();
+  const { stats, playerBusinesses, refreshStats, fetchPlayerBusinesses } = useGameStore();
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [ipoStatus, setIpoStatus] = useState<IPOStatus | null>(null);
+  const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary | null>(null);
   const [sidebarCollapsed] = useState(false);
 
-  // Fetch daily reward status and IPO status on mount
+  // Calculate business summary
+  const businessSummary = playerBusinesses.length > 0 ? {
+    count: playerBusinesses.length,
+    pendingRevenue: playerBusinesses.reduce((sum, b) => sum + parseFloat(b.pendingRevenue || '0'), 0),
+    totalIncomeHr: playerBusinesses.reduce((sum, b) => sum + parseFloat(b.incomePerHour || '0'), 0),
+  } : null;
+
+  // Fetch daily reward status, IPO status, and portfolio on mount
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const [dailyRes, ipoRes] = await Promise.all([
+        const [dailyRes, ipoRes, portfolioRes] = await Promise.all([
           gameApi.getDailyStatus(),
           gameApi.getIPOStatus(),
+          gameApi.getPortfolio(),
         ]);
 
         if (dailyRes.success && dailyRes.data) {
@@ -44,30 +61,68 @@ export function Layout({ children }: LayoutProps) {
         if (ipoRes.success && ipoRes.data) {
           setIpoStatus(ipoRes.data);
         }
+
+        if (portfolioRes.success && portfolioRes.data) {
+          const holdings = portfolioRes.data;
+          const totalValue = holdings.reduce((sum, h) => sum + parseFloat(h.currentValue), 0);
+          const totalInvested = holdings.reduce((sum, h) => sum + parseFloat(h.totalInvested), 0);
+          const profitLoss = totalValue - totalInvested;
+          const profitLossPercent = totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
+          setPortfolioSummary({
+            totalValue,
+            totalInvested,
+            profitLoss,
+            profitLossPercent,
+            holdingsCount: holdings.length,
+          });
+        }
+
+        // Also fetch businesses
+        fetchPlayerBusinesses();
       } catch {
         // Silently fail - not critical
       }
     };
     fetchStatuses();
-  }, []);
+  }, [fetchPlayerBusinesses]);
 
-  // Poll for IPO status updates when active
+  // Poll for IPO status, portfolio, and business updates
   useEffect(() => {
-    if (!ipoStatus) return;
-
     const interval = setInterval(async () => {
       try {
-        const res = await gameApi.getIPOStatus();
-        if (res.success) {
-          setIpoStatus(res.data || null);
+        const [ipoRes, portfolioRes] = await Promise.all([
+          gameApi.getIPOStatus(),
+          gameApi.getPortfolio(),
+        ]);
+
+        if (ipoRes.success) {
+          setIpoStatus(ipoRes.data || null);
         }
+
+        if (portfolioRes.success && portfolioRes.data) {
+          const holdings = portfolioRes.data;
+          const totalValue = holdings.reduce((sum, h) => sum + parseFloat(h.currentValue), 0);
+          const totalInvested = holdings.reduce((sum, h) => sum + parseFloat(h.totalInvested), 0);
+          const profitLoss = totalValue - totalInvested;
+          const profitLossPercent = totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
+          setPortfolioSummary({
+            totalValue,
+            totalInvested,
+            profitLoss,
+            profitLossPercent,
+            holdingsCount: holdings.length,
+          });
+        }
+
+        // Also refresh businesses
+        fetchPlayerBusinesses();
       } catch {
         // Silently fail
       }
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [ipoStatus]);
+  }, [fetchPlayerBusinesses]);
 
   const handleLogout = async () => {
     await logout();
@@ -96,13 +151,13 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex items-center justify-between">
               {/* Stats Bar */}
               {stats && (
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-6">
                   {/* Cash */}
                   <div className="flex flex-col">
                     <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Cash</span>
                     <AnimatedCounter
                       value={parseFloat(stats.cash)}
-                      className="text-xl font-bold text-mint font-mono"
+                      className="text-lg font-bold text-mint font-mono"
                     />
                   </div>
 
@@ -112,14 +167,59 @@ export function Layout({ children }: LayoutProps) {
                     <AnimatedCounter
                       value={parseFloat(stats.effectiveIncomeHour)}
                       prefix="+"
-                      className="text-xl font-bold text-cyan font-mono"
+                      className="text-lg font-bold text-cyan font-mono"
                     />
                   </div>
+
+                  {/* Divider */}
+                  <div className="h-10 w-px bg-dark-border" />
+
+                  {/* Portfolio Value */}
+                  {portfolioSummary && portfolioSummary.holdingsCount > 0 && (
+                    <Link to="/stocks" className="flex flex-col hover:opacity-80 transition-opacity">
+                      <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Portfolio</span>
+                      <div className="flex items-center gap-2">
+                        <AnimatedCounter
+                          value={portfolioSummary.totalValue}
+                          className="text-lg font-bold text-purple font-mono"
+                        />
+                        <span className={`text-xs font-bold ${portfolioSummary.profitLoss >= 0 ? 'text-mint' : 'text-red-400'}`}>
+                          {portfolioSummary.profitLoss >= 0 ? '↑' : '↓'}
+                          {Math.abs(portfolioSummary.profitLossPercent).toFixed(1)}%
+                        </span>
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Businesses */}
+                  {businessSummary && (
+                    <Link to="/businesses" className="flex flex-col hover:opacity-80 transition-opacity">
+                      <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
+                        Businesses ({businessSummary.count})
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <AnimatedCounter
+                          value={businessSummary.totalIncomeHr}
+                          prefix="+"
+                          suffix="/hr"
+                          className="text-lg font-bold text-amber font-mono"
+                        />
+                        {businessSummary.pendingRevenue > 0 && (
+                          <span className="text-xs text-amber animate-pulse">
+                            💰 ${businessSummary.pendingRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Divider */}
+                  <div className="h-10 w-px bg-dark-border" />
 
                   {/* Level */}
                   <div className="flex flex-col">
                     <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Level</span>
-                    <span className="text-xl font-bold text-pink font-mono">{stats.playerLevel}</span>
+                    <span className="text-lg font-bold text-pink font-mono">{stats.playerLevel}</span>
                   </div>
                 </div>
               )}

@@ -229,4 +229,95 @@ router.get('/trades', async (req: AuthenticatedRequest, res: Response, next: Nex
   }
 });
 
+// GET /api/v1/stocks/market-summary - Get market summary (top movers, volume leaders, active events)
+router.get('/market-summary', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { botTraderService } = await import('../services/botTrader.service');
+
+    // Get all stocks
+    const stocks = await stockService.getMarketStocks();
+
+    // Get active market events
+    const activeEvents = botTraderService.getActiveEvents();
+
+    // Calculate top gainers (sorted by positive change percentage)
+    const topGainers = [...stocks]
+      .filter(s => parseFloat(s.changePercent) > 0)
+      .sort((a, b) => parseFloat(b.changePercent) - parseFloat(a.changePercent))
+      .slice(0, 5)
+      .map(s => ({
+        tickerSymbol: s.tickerSymbol,
+        companyName: s.companyName,
+        currentPrice: s.currentPrice,
+        changePercent: parseFloat(s.changePercent),
+        stockType: s.stockType,
+      }));
+
+    // Calculate top losers (sorted by negative change percentage)
+    const topLosers = [...stocks]
+      .filter(s => parseFloat(s.changePercent) < 0)
+      .sort((a, b) => parseFloat(a.changePercent) - parseFloat(b.changePercent))
+      .slice(0, 5)
+      .map(s => ({
+        tickerSymbol: s.tickerSymbol,
+        companyName: s.companyName,
+        currentPrice: s.currentPrice,
+        changePercent: parseFloat(s.changePercent),
+        stockType: s.stockType,
+      }));
+
+    // Calculate volume leaders
+    const volumeLeaders = [...stocks]
+      .sort((a, b) => b.volume24h - a.volume24h)
+      .slice(0, 5)
+      .map(s => ({
+        tickerSymbol: s.tickerSymbol,
+        companyName: s.companyName,
+        volume24h: s.volume24h,
+        currentPrice: s.currentPrice,
+        changePercent: parseFloat(s.changePercent),
+        stockType: s.stockType,
+      }));
+
+    // Format active events
+    const formattedEvents = activeEvents.map(e => ({
+      tickerSymbol: e.tickerSymbol,
+      type: e.type,
+      magnitude: e.magnitude,
+      startedAt: e.startedAt,
+      remainingMs: Math.max(0, e.duration - (Date.now() - e.startedAt.getTime())),
+    }));
+
+    // Market overview stats
+    const totalStocks = stocks.length;
+    const gainersCount = stocks.filter(s => parseFloat(s.changePercent) > 0).length;
+    const losersCount = stocks.filter(s => parseFloat(s.changePercent) < 0).length;
+    const unchangedCount = totalStocks - gainersCount - losersCount;
+    const totalVolume = stocks.reduce((sum, s) => sum + s.volume24h, 0);
+    const avgChange = stocks.length > 0
+      ? stocks.reduce((sum, s) => sum + parseFloat(s.changePercent), 0) / stocks.length
+      : 0;
+
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          totalStocks,
+          gainersCount,
+          losersCount,
+          unchangedCount,
+          totalVolume,
+          avgChange,
+        },
+        topGainers,
+        topLosers,
+        volumeLeaders,
+        activeEvents: formattedEvents,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
