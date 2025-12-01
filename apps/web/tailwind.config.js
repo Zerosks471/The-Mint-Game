@@ -8,7 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Gaming Dashboard Base Colors
+        dark: {
+          base: '#0a0a0f',
+          card: '#12121a',
+          elevated: '#1a1a24',
+          input: '#0f0f15',
+          border: '#2a2a3a',
+          'border-subtle': '#1f1f2a',
+        },
+        // Accent Colors
         mint: {
+          DEFAULT: '#10b981',
+          glow: 'rgba(16, 185, 129, 0.4)',
           50: '#ecfdf5',
           100: '#d1fae5',
           200: '#a7f3d0',
@@ -20,6 +32,41 @@ export default {
           800: '#065f46',
           900: '#064e3b',
           950: '#022c22',
+        },
+        cyan: {
+          DEFAULT: '#06b6d4',
+          glow: 'rgba(6, 182, 212, 0.4)',
+          400: '#22d3ee',
+          500: '#06b6d4',
+          600: '#0891b2',
+        },
+        blue: {
+          DEFAULT: '#3b82f6',
+          glow: 'rgba(59, 130, 246, 0.4)',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+        },
+        purple: {
+          DEFAULT: '#a855f7',
+          glow: 'rgba(168, 85, 247, 0.4)',
+          400: '#c084fc',
+          500: '#a855f7',
+          600: '#9333ea',
+        },
+        pink: {
+          DEFAULT: '#ec4899',
+          glow: 'rgba(236, 72, 153, 0.4)',
+          400: '#f472b6',
+          500: '#ec4899',
+          600: '#db2777',
+        },
+        amber: {
+          DEFAULT: '#f59e0b',
+          glow: 'rgba(245, 158, 11, 0.4)',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
         },
         gold: {
           50: '#fffbeb',

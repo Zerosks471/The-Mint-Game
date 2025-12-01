@@ -1,154 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
 import { PlayerStats, PlayerBusiness } from '../api/game';
 import { UpgradeButton } from '../components/UpgradeButton';
 import { useAuthStore } from '../stores/authStore';
-
-// Donut progress circle component - shows progress toward earning a cent
-function EarningDonut({ progress }: { progress: number }) {
-  const size = 16;
-  const strokeWidth = 2.5;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference * (1 - progress);
-
-  return (
-    <svg width={size} height={size} className="transform -rotate-90">
-      {/* Background circle */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        className="opacity-20"
-      />
-      {/* Progress circle */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeDasharray={circumference}
-        strokeDashoffset={strokeDashoffset}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-// Gas pump style rolling cash display - simple version
-function RollingCash({ value }: { value: number }) {
-  const formatted = value.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-  return (
-    <span className="tabular-nums font-mono text-2xl font-bold">
-      ${formatted}
-    </span>
-  );
-}
-
-// Detailed Income card
-function IncomeCard({ stats }: { stats: PlayerStats | null }) {
-  const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
-  const incomePerDay = incomePerHour * 24;
-  const multiplier = parseFloat(stats?.currentMultiplier || '1');
-  const bonusPercent = Math.round((multiplier - 1) * 100);
-
-  return (
-    <div className="rounded-xl border-2 p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-700 dark:text-green-400">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">📈</span>
-        {bonusPercent > 0 && (
-          <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded-full font-medium">
-            +{bonusPercent}% bonus
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-bold">+{formatCurrency(incomePerHour)}</p>
-      <p className="text-sm opacity-75">Per Hour</p>
-      <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-700 text-xs space-y-0.5">
-        <div className="flex justify-between">
-          <span className="opacity-75">Per Day</span>
-          <span className="font-medium">{formatCurrency(incomePerDay)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="opacity-75">Multiplier</span>
-          <span className="font-medium">{multiplier.toFixed(2)}x</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Detailed Properties card
-function PropertiesCard({ total, managed, income }: { total: number; managed: number; income: number }) {
-  const managedPercent = total > 0 ? Math.round((managed / total) * 100) : 0;
-
-  return (
-    <div className="rounded-xl border-2 p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-400">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">🏢</span>
-        {managed > 0 && (
-          <span className="text-xs bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-medium">
-            👔 {managed} managed
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-bold">{total}</p>
-      <p className="text-sm opacity-75">Properties</p>
-      <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700 text-xs space-y-0.5">
-        <div className="flex justify-between">
-          <span className="opacity-75">Income</span>
-          <span className="font-medium text-green-600 dark:text-green-400">+{formatCurrency(income)}/hr</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="opacity-75">Automated</span>
-          <span className="font-medium">{managedPercent}%</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Detailed Businesses card
-function BusinessesCard({ total, businesses }: { total: number; businesses: PlayerBusiness[] }) {
-  const readyCount = businesses.filter((b: PlayerBusiness) => b.cycleComplete).length;
-  const totalRevenue = businesses.reduce((sum: number, b: PlayerBusiness) => sum + parseFloat(b.currentRevenue), 0);
-
-  return (
-    <div className="rounded-xl border-2 p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-400">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">💼</span>
-        {readyCount > 0 && (
-          <span className="text-xs bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded-full font-medium animate-pulse">
-            {readyCount} ready!
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-bold">{total}</p>
-      <p className="text-sm opacity-75">Businesses</p>
-      <div className="mt-2 pt-2 border-t border-purple-200 dark:border-purple-700 text-xs space-y-0.5">
-        <div className="flex justify-between">
-          <span className="opacity-75">Pending</span>
-          <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(totalRevenue)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="opacity-75">Ready</span>
-          <span className="font-medium">{readyCount} / {total}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { StatCard, StatRow, Sparkline, ProgressRing } from '../components/ui';
 
 // Smooth cash ticker component with real-time updates
 function CashTicker() {
@@ -159,10 +16,20 @@ function CashTicker() {
   const lastUpdateRef = useRef<number>(Date.now());
   const minuteStartRef = useRef<number>(Date.now());
 
-  // Calculate income rates
   const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
   const incomePerSec = incomePerHour / 3600;
   const incomePerMin = incomePerSec * 60;
+
+  // Generate fake sparkline data based on income trend
+  const sparklineData = useMemo(() => {
+    const baseValue = localCash;
+    const data: number[] = [];
+    for (let i = 0; i < 12; i++) {
+      const variation = (Math.random() - 0.3) * incomePerMin;
+      data.push(Math.max(0, baseValue - (12 - i) * incomePerMin + variation));
+    }
+    return data;
+  }, [Math.floor(localCash / 100)]); // Update every $100
 
   useEffect(() => {
     if (stats) {
@@ -172,7 +39,6 @@ function CashTicker() {
     return () => stopTicker();
   }, [stats, startTicker, stopTicker]);
 
-  // Smooth animation loop using requestAnimationFrame for buttery updates
   useEffect(() => {
     const animate = () => {
       const now = Date.now();
@@ -181,17 +47,15 @@ function CashTicker() {
 
       if (incomePerSecond > 0) {
         const increment = incomePerSecond * (deltaMs / 1000);
-        setLocalCash(prev => prev + increment);
+        setLocalCash((prev) => prev + increment);
       }
 
-      // Track progress through the current minute (0-100%)
       const elapsedInMinute = (now - minuteStartRef.current) % 60000;
       setMinuteProgress(elapsedInMinute / 60000);
 
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    // Sync with store's displayedCash periodically
     const syncInterval = setInterval(() => {
       if (displayedCash > 0) {
         setLocalCash(displayedCash);
@@ -208,47 +72,127 @@ function CashTicker() {
     };
   }, [displayedCash, incomePerSecond]);
 
-  // Format small amounts with more precision
   const formatSmallCurrency = (amount: number) => {
-    if (amount < 0.01) {
-      return `$${amount.toFixed(4)}`;
-    } else if (amount < 1) {
-      return `$${amount.toFixed(3)}`;
-    }
+    if (amount < 0.01) return `$${amount.toFixed(4)}`;
+    if (amount < 1) return `$${amount.toFixed(3)}`;
     return formatCurrency(amount);
   };
 
+  const formattedCash = localCash.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
-    <div className="rounded-xl border-2 p-4 bg-mint-50 dark:bg-mint-900/20 border-mint-200 dark:border-mint-700 text-mint-700 dark:text-mint-400">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">💵</span>
-        {incomePerHour > 0 && (
-          <span className="flex items-center gap-1 text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded-full font-medium">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-            earning
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-bold tabular-nums">
-        <RollingCash value={localCash} />
-      </p>
-      <p className="text-sm opacity-75">Total Cash</p>
-      {incomePerHour > 0 && (
-        <div className="mt-2 pt-2 border-t border-mint-200 dark:border-mint-700 text-xs space-y-0.5">
-          <div className="flex justify-between">
-            <span className="opacity-75">Per Minute</span>
-            <span className="font-medium text-green-600 dark:text-green-400">+{formatSmallCurrency(incomePerMin)}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="opacity-75">This Minute</span>
-            <div className="flex items-center gap-1">
-              <EarningDonut progress={minuteProgress} />
-              <span className="font-medium">{Math.floor(minuteProgress * 60)}s</span>
+    <StatCard
+      icon="💵"
+      value={formattedCash}
+      label="Total Cash"
+      color="mint"
+      badge={incomePerHour > 0 ? 'earning' : undefined}
+      badgeColor="green"
+      sparklineData={incomePerHour > 0 ? sparklineData : undefined}
+      subtitle={
+        incomePerHour > 0 ? (
+          <div className="space-y-1">
+            <StatRow label="Per Minute" value={`+${formatSmallCurrency(incomePerMin)}`} valueColor="mint" />
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-500">This Minute</span>
+              <div className="flex items-center gap-2">
+                <ProgressRing value={minuteProgress * 100} color="mint" size={16} strokeWidth={2} />
+                <span className="font-mono text-zinc-300">{Math.floor(minuteProgress * 60)}s</span>
+              </div>
             </div>
           </div>
+        ) : undefined
+      }
+    />
+  );
+}
+
+// Income stat card
+function IncomeCard({ stats }: { stats: PlayerStats | null }) {
+  const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
+  const incomePerDay = incomePerHour * 24;
+  const multiplier = parseFloat(stats?.currentMultiplier || '1');
+  const bonusPercent = Math.round((multiplier - 1) * 100);
+
+  return (
+    <StatCard
+      icon="📈"
+      value={`+${formatCurrency(incomePerHour)}`}
+      label="Per Hour"
+      color="cyan"
+      badge={bonusPercent > 0 ? `+${bonusPercent}% bonus` : undefined}
+      badgeColor="green"
+      subtitle={
+        <div className="space-y-1">
+          <StatRow label="Per Day" value={formatCurrency(incomePerDay)} valueColor="cyan" />
+          <StatRow label="Multiplier" value={`${multiplier.toFixed(2)}x`} />
         </div>
-      )}
-    </div>
+      }
+    />
+  );
+}
+
+// Properties stat card
+function PropertiesCard({
+  total,
+  managed,
+  income,
+}: {
+  total: number;
+  managed: number;
+  income: number;
+}) {
+  const managedPercent = total > 0 ? Math.round((managed / total) * 100) : 0;
+
+  return (
+    <StatCard
+      icon="🏢"
+      value={total}
+      label="Properties"
+      color="blue"
+      badge={managed > 0 ? `👔 ${managed} managed` : undefined}
+      badgeColor="blue"
+      subtitle={
+        <div className="space-y-1">
+          <StatRow label="Income" value={`+${formatCurrency(income)}/hr`} valueColor="mint" />
+          <StatRow label="Automated" value={`${managedPercent}%`} />
+        </div>
+      }
+    />
+  );
+}
+
+// Businesses stat card
+function BusinessesCard({
+  total,
+  businesses,
+}: {
+  total: number;
+  businesses: PlayerBusiness[];
+}) {
+  const readyCount = businesses.filter((b) => b.cycleComplete).length;
+  const totalRevenue = businesses.reduce((sum, b) => sum + parseFloat(b.currentRevenue), 0);
+
+  return (
+    <StatCard
+      icon="💼"
+      value={total}
+      label="Businesses"
+      color="purple"
+      badge={readyCount > 0 ? `${readyCount} ready!` : undefined}
+      badgeColor="amber"
+      subtitle={
+        <div className="space-y-1">
+          <StatRow label="Pending" value={formatCurrency(totalRevenue)} valueColor="mint" />
+          <StatRow label="Ready" value={`${readyCount} / ${total}`} />
+        </div>
+      }
+    />
   );
 }
 
@@ -273,11 +217,10 @@ export function DashboardPage() {
   }, [fetchAll]);
 
   useEffect(() => {
-    // Show offline modal only if user was away for meaningful time (>5 min) AND has meaningful earnings (>$1)
     if (offlineStatus) {
       const pendingEarnings = parseFloat(offlineStatus.pendingEarnings);
-      const wasAwayLongEnough = offlineStatus.elapsedHours >= 0.1; // At least 6 minutes
-      const hasMeaningfulEarnings = pendingEarnings >= 1; // At least $1
+      const wasAwayLongEnough = offlineStatus.elapsedHours >= 0.1;
+      const hasMeaningfulEarnings = pendingEarnings >= 1;
 
       if (wasAwayLongEnough && hasMeaningfulEarnings) {
         setShowOfflineModal(true);
@@ -300,8 +243,8 @@ export function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading your empire...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mx-auto mb-4"></div>
+          <p className="text-zinc-400">Loading your empire...</p>
         </div>
       </div>
     );
@@ -309,7 +252,9 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-600 dark:text-red-400">{error}</div>
+      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400">
+        {error}
+      </div>
     );
   }
 
@@ -323,46 +268,46 @@ export function DashboardPage() {
     <div className="space-y-6">
       {/* Offline Earnings Modal */}
       {showOfflineModal && offlineStatus && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-card border border-dark-border rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
             <div className="text-6xl mb-4">💰</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back!</h2>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-2">Welcome Back!</h2>
             {collectedAmount ? (
               <>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">You collected:</p>
-                <p className="text-4xl font-bold text-mint-600 dark:text-mint-400 mb-6">
+                <p className="text-zinc-400 mb-4">You collected:</p>
+                <p className="text-4xl font-bold text-mint font-mono mb-6">
                   {formatCurrency(parseFloat(collectedAmount))}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                <p className="text-zinc-400 mb-4">
                   While you were away for {offlineStatus.elapsedHours.toFixed(1)} hours, your
                   properties earned:
                 </p>
-                <p className="text-4xl font-bold text-mint-600 dark:text-mint-400 mb-2">
+                <p className="text-4xl font-bold text-mint font-mono mb-2">
                   {formatCurrency(parseFloat(offlineStatus.pendingEarnings))}
                 </p>
                 {offlineStatus.capped && !user?.isPremium && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
+                  <div className="bg-amber/10 border border-amber/30 rounded-xl p-3 mb-4">
+                    <p className="text-sm text-amber mb-2">
                       Your earnings were capped at {offlineStatus.capHours} hours.
                     </p>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-amber-600 dark:text-amber-400">Get 24hr cap with Premium</p>
+                      <p className="text-xs text-amber/70">Get 24hr cap with Premium</p>
                       <UpgradeButton size="sm" />
                     </div>
                   </div>
                 )}
                 <button
                   onClick={handleCollectOffline}
-                  className="w-full py-3 bg-mint-500 hover:bg-mint-600 text-white font-bold rounded-lg transition-colors"
+                  className="w-full py-3 bg-mint hover:bg-mint-600 text-dark-base font-bold rounded-xl transition-colors"
                 >
                   Collect Earnings
                 </button>
                 <button
                   onClick={() => setShowOfflineModal(false)}
-                  className="mt-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm"
+                  className="mt-2 text-zinc-500 hover:text-zinc-300 text-sm"
                 >
                   Dismiss
                 </button>
@@ -373,7 +318,7 @@ export function DashboardPage() {
       )}
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <CashTicker />
         <IncomeCard stats={stats} />
         <PropertiesCard
@@ -381,21 +326,18 @@ export function DashboardPage() {
           managed={managedProperties.length}
           income={totalPropertyIncome}
         />
-        <BusinessesCard
-          total={stats?.totalBusinessesOwned || 0}
-          businesses={playerBusinesses}
-        />
+        <BusinessesCard total={stats?.totalBusinessesOwned || 0} businesses={playerBusinesses} />
       </div>
 
       {/* Quick Stats */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Properties Summary */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="bg-dark-card border border-dark-border rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Properties</h2>
+            <h2 className="text-lg font-bold text-zinc-100">Properties</h2>
             <Link
               to="/properties"
-              className="text-sm text-mint-600 hover:text-mint-700 dark:text-mint-400 dark:hover:text-mint-300 font-medium"
+              className="text-sm text-mint hover:text-mint-400 font-medium transition-colors"
             >
               View All &rarr;
             </Link>
@@ -403,25 +345,25 @@ export function DashboardPage() {
 
           {playerProperties.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">No properties yet</p>
+              <p className="text-zinc-500 mb-4">No properties yet</p>
               <Link
                 to="/properties"
-                className="inline-block px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg transition-colors"
+                className="inline-block px-4 py-2 bg-mint hover:bg-mint-600 text-dark-base font-medium rounded-xl transition-colors"
               >
                 Buy Your First Property
               </Link>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 pb-2 border-b dark:border-gray-700">
+              <div className="flex justify-between text-sm text-zinc-500 pb-2 border-b border-dark-border">
                 <span>Total Income</span>
-                <span className="font-medium text-green-600 dark:text-green-400">
+                <span className="font-medium text-mint font-mono">
                   +{formatCurrency(totalPropertyIncome)}/hr
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex justify-between text-sm text-zinc-500">
                 <span>Managed Properties</span>
-                <span className="font-medium">
+                <span className="font-medium text-zinc-300 font-mono">
                   {managedProperties.length} / {playerProperties.length}
                 </span>
               </div>
@@ -429,16 +371,16 @@ export function DashboardPage() {
                 {playerProperties.slice(0, 3).map((prop) => (
                   <div
                     key={prop.id}
-                    className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0"
+                    className="flex items-center justify-between py-2 border-b border-dark-border last:border-0"
                   >
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{prop.propertyType.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="font-medium text-zinc-200">{prop.propertyType.name}</p>
+                      <p className="text-xs text-zinc-500">
                         Qty: {prop.quantity} • Lv. {prop.upgradeLevel}
                         {prop.managerHired && ' • 👔'}
                       </p>
                     </div>
-                    <p className="text-sm text-green-600 dark:text-green-400">
+                    <p className="text-sm text-mint font-mono">
                       +{formatCurrency(parseFloat(prop.currentIncomeHour))}/hr
                     </p>
                   </div>
@@ -449,12 +391,12 @@ export function DashboardPage() {
         </div>
 
         {/* Businesses Summary */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="bg-dark-card border border-dark-border rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Businesses</h2>
+            <h2 className="text-lg font-bold text-zinc-100">Businesses</h2>
             <Link
               to="/businesses"
-              className="text-sm text-mint-600 hover:text-mint-700 dark:text-mint-400 dark:hover:text-mint-300 font-medium"
+              className="text-sm text-mint hover:text-mint-400 font-medium transition-colors"
             >
               View All &rarr;
             </Link>
@@ -462,10 +404,10 @@ export function DashboardPage() {
 
           {playerBusinesses.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">No businesses yet</p>
+              <p className="text-zinc-500 mb-4">No businesses yet</p>
               <Link
                 to="/businesses"
-                className="inline-block px-4 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-lg transition-colors"
+                className="inline-block px-4 py-2 bg-mint hover:bg-mint-600 text-dark-base font-medium rounded-xl transition-colors"
               >
                 Start a Business
               </Link>
@@ -473,22 +415,25 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {playerBusinesses.slice(0, 4).map((biz) => (
-                <div key={biz.id} className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0">
+                <div
+                  key={biz.id}
+                  className="flex items-center justify-between py-2 border-b border-dark-border last:border-0"
+                >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white">{biz.businessType.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Level {biz.level}</p>
+                    <p className="font-medium text-zinc-200">{biz.businessType.name}</p>
+                    <p className="text-xs text-zinc-500">Level {biz.level}</p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-24 bg-dark-border rounded-full h-2 overflow-hidden">
                       <div
-                        className={`h-2 rounded-full ${
-                          biz.cycleComplete ? 'bg-green-500' : 'bg-mint-500'
+                        className={`h-2 rounded-full transition-all ${
+                          biz.cycleComplete ? 'bg-mint' : 'bg-purple'
                         }`}
                         style={{ width: `${biz.cycleProgress * 100}%` }}
                       />
                     </div>
                     {biz.cycleComplete && (
-                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">Ready!</span>
+                      <span className="text-xs text-mint font-medium">Ready!</span>
                     )}
                   </div>
                 </div>
@@ -499,32 +444,31 @@ export function DashboardPage() {
       </div>
 
       {/* Player Progress */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Progress</h2>
+      <div className="bg-dark-card border border-dark-border rounded-2xl p-6">
+        <h2 className="text-lg font-bold text-zinc-100 mb-4">Progress</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats?.playerLevel || 1}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Player Level</p>
+          <div className="p-4 bg-dark-elevated rounded-xl">
+            <p className="text-3xl font-bold text-pink font-mono">{stats?.playerLevel || 1}</p>
+            <p className="text-sm text-zinc-500 mt-1">Player Level</p>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-mint-600 dark:text-mint-400">
+          <div className="p-4 bg-dark-elevated rounded-xl">
+            <p className="text-3xl font-bold text-mint font-mono">
               {formatCurrency(parseFloat(stats?.lifetimeCashEarned || '0'))}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Lifetime Earnings</p>
+            <p className="text-sm text-zinc-500 mt-1">Lifetime Earnings</p>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="p-4 bg-dark-elevated rounded-xl">
+            <p className="text-3xl font-bold text-cyan font-mono">
               {(parseFloat(stats?.currentMultiplier || '1') * 100 - 100).toFixed(0)}%
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Income Bonus</p>
+            <p className="text-sm text-zinc-500 mt-1">Income Bonus</p>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats?.premiumCurrency || 0}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Gold Coins</p>
+          <div className="p-4 bg-dark-elevated rounded-xl">
+            <p className="text-3xl font-bold text-amber font-mono">{stats?.premiumCurrency || 0}</p>
+            <p className="text-sm text-zinc-500 mt-1">Gold Coins</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
