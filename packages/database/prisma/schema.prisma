@@ -93,6 +93,7 @@ model User {
   notifications         Notification[]
   clubActivities        ClubActivity[]
   ipo                   PlayerIPO?
+  coinPurchases         CoinPurchase[]
 
   @@map("users")
 }
@@ -621,6 +622,25 @@ model ClubActivity {
 
   @@index([clubId, createdAt])
   @@map("club_activities")
+}
+
+// ============================================================================
+// COIN PURCHASES (for IAP idempotency)
+// ============================================================================
+
+model CoinPurchase {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  stripeSessionId String    @unique @map("stripe_session_id")
+  packageId       String    @map("package_id")
+  coins           Int
+  amountPaid      Int       @map("amount_paid") // in cents
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("coin_purchases")
 }
 
 // ============================================================================

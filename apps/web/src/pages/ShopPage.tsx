@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
+import { BuyCoinsModal } from '../components/BuyCoinsModal';
 import {
   getCatalog,
   purchaseCosmetic,
@@ -63,6 +64,7 @@ export function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showCoinsModal, setShowCoinsModal] = useState(false);
 
   useEffect(() => {
     loadCatalog();
@@ -174,11 +176,22 @@ export function ShopPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Cosmetics Shop
           </h1>
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-            <span className="text-xl">🪙</span>
-            <span className="font-bold text-amber-700 dark:text-amber-400">
-              {balance.toLocaleString()} Mint Coins
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+              <span className="text-xl">🪙</span>
+              <span className="font-bold text-amber-700 dark:text-amber-400">
+                {balance.toLocaleString()}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowCoinsModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-white font-semibold rounded-lg hover:from-amber-500 hover:to-yellow-500 transition-all shadow-md"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Get Coins
+            </button>
           </div>
         </div>
 
@@ -253,6 +266,12 @@ export function ShopPage() {
           </div>
         )}
       </div>
+
+      {/* Buy Coins Modal */}
+      <BuyCoinsModal
+        isOpen={showCoinsModal}
+        onClose={() => setShowCoinsModal(false)}
+      />
     </Layout>
   );
 }

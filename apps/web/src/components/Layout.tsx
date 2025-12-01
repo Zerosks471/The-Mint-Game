@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 import { gameApi, DailyStatus, IPOStatus } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
+import { BuyCoinsModal } from './BuyCoinsModal';
 import { PremiumBadge } from './PremiumBadge';
 import { UpgradeButton } from './UpgradeButton';
 import { PlayerAvatar } from './PlayerAvatar';
@@ -20,6 +21,7 @@ export function Layout({ children }: LayoutProps) {
   const { stats, refreshStats } = useGameStore();
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [showDailyModal, setShowDailyModal] = useState(false);
+  const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [ipoStatus, setIpoStatus] = useState<IPOStatus | null>(null);
 
   // Fetch daily reward status and IPO status on mount
@@ -160,6 +162,21 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               )}
 
+              {/* Coin Balance Button */}
+              {stats && (
+                <button
+                  onClick={() => setShowCoinsModal(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all"
+                  title="Buy Mint Coins"
+                >
+                  <span>🪙</span>
+                  <span className="font-bold">{stats.premiumCurrency?.toLocaleString() ?? 0}</span>
+                  <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+
               {/* Daily Reward Button */}
               <button
                 onClick={() => setShowDailyModal(true)}
@@ -259,6 +276,12 @@ export function Layout({ children }: LayoutProps) {
         isOpen={showDailyModal}
         onClose={() => setShowDailyModal(false)}
         onClaim={handleDailyClaim}
+      />
+
+      {/* Buy Coins Modal */}
+      <BuyCoinsModal
+        isOpen={showCoinsModal}
+        onClose={() => setShowCoinsModal(false)}
       />
 
       {/* Toast Notifications */}

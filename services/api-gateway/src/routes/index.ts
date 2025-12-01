@@ -13,6 +13,7 @@ import clubsRouter from './clubs';
 import giftsRouter from './gifts';
 import subscriptionsRouter from './subscriptions';
 import cosmeticsRouter from './cosmetics';
+import coinsRouter from './coins';
 
 const router: Router = Router();
 
@@ -65,6 +66,9 @@ v1Router.use('/subscriptions', subscriptionsRouter);
 
 // Cosmetics routes (Shop)
 v1Router.use('/cosmetics', cosmeticsRouter);
+
+// Coins routes (IAP)
+v1Router.use('/coins', coinsRouter);
 
 router.use('/v1', v1Router);
 

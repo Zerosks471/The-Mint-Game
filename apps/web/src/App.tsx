@@ -13,6 +13,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { SubscriptionSuccessPage } from './pages/SubscriptionSuccessPage';
 import { SubscriptionCancelPage } from './pages/SubscriptionCancelPage';
 import { ShopPage } from './pages/ShopPage';
+import { CoinsSuccessPage } from './pages/CoinsSuccessPage';
 // TODO: Friends and Clubs will be separate microservices - re-enable when ready
 // import { FriendsPage } from './pages/FriendsPage';
 // import { ClubsPage } from './pages/ClubsPage';
@@ -245,6 +246,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ShopPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/coins/success"
+        element={
+          <ProtectedRoute>
+            <CoinsSuccessPage />
           </ProtectedRoute>
         }
       />
