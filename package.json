@@ -18,7 +18,10 @@
     "db:push": "pnpm --filter @mint/database push",
     "db:migrate": "pnpm --filter @mint/database migrate",
     "db:studio": "pnpm --filter @mint/database studio",
-    "db:seed": "pnpm --filter @mint/database seed"
+    "db:seed": "pnpm --filter @mint/database seed",
+    "admin:dev": "pnpm --filter @mint/admin-dashboard dev & pnpm --filter @mint/admin dev",
+    "admin:api": "pnpm --filter @mint/admin-dashboard dev",
+    "admin:web": "pnpm --filter @mint/admin dev"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
