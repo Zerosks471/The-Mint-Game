@@ -21,6 +21,7 @@ const secondaryNavItems: NavItem[] = [
   { path: '/leaderboards', label: 'Rankings', icon: '🏆', color: 'amber' },
   { path: '/achievements', label: 'Achievements', icon: '🎖️', color: 'purple' },
   { path: '/shop', label: 'Shop', icon: '🛍️', color: 'pink' },
+  { path: '/wiki', label: 'Wiki', icon: '📖', color: 'blue' },
 ];
 
 const colorClasses = {
