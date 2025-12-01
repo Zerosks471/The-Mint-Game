@@ -247,6 +247,7 @@ export class IPOService {
 
   /**
    * Process ticks that should have happened since last check
+   * Uses timestamp-based determinism for consistent results
    */
   private async processTicksOnDemand(ipo: any): Promise<any> {
     const now = new Date();
@@ -270,19 +271,27 @@ export class IPOService {
     let activeEvent = ipo.activeEvent;
     let eventExpiresAt = ipo.eventExpiresAt;
     let priceHistory = [...(ipo.priceHistory as PricePoint[])];
-    let seed = ipo.tickSeed;
+
+    // Use IPO start time + tick index for deterministic seed (not mutable seed)
+    const baseSeed = new Date(ipo.startsAt).getTime();
 
     // Process each tick
     for (let i = 0; i < ticksToProcess && i < 50; i++) { // Cap at 50 ticks
-      // Seeded random for deterministic results
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      const tickTime = lastTick.getTime() + (i + 1) * avgTickInterval;
+
+      // Deterministic seed based on IPO start + absolute tick time
+      // This ensures same tick always produces same result
+      const tickSeed = Math.floor((baseSeed + tickTime) / 1000);
+
+      // Seeded random using tick-specific seed
+      let seed = tickSeed;
       const random = () => {
         seed = (seed * 1103515245 + 12345) & 0x7fffffff;
         return seed / 0x7fffffff;
       };
 
       // Check if event expired
-      if (eventExpiresAt && new Date(eventExpiresAt) <= new Date(lastTick.getTime() + i * avgTickInterval)) {
+      if (eventExpiresAt && new Date(eventExpiresAt) <= new Date(tickTime)) {
         activeEvent = null;
         eventExpiresAt = null;
       }
@@ -292,7 +301,7 @@ export class IPOService {
         const eventResult = await this.triggerRandomEvent(random);
         if (eventResult) {
           activeEvent = eventResult.slug;
-          eventExpiresAt = new Date(lastTick.getTime() + i * avgTickInterval + eventResult.durationMinutes * 60 * 1000);
+          eventExpiresAt = new Date(tickTime + eventResult.durationMinutes * 60 * 1000);
 
           // Handle instant spike events
           if (eventResult.effectType === 'instant_spike') {
@@ -343,8 +352,10 @@ export class IPOService {
       lowPrice = Math.min(lowPrice, currentPrice);
 
       // Add to history
-      const tickTime = Math.floor((lastTick.getTime() + (i + 1) * avgTickInterval) / 1000);
-      priceHistory.push({ time: tickTime, price: Math.round(currentPrice * 100) / 100 });
+      priceHistory.push({
+        time: Math.floor(tickTime / 1000),
+        price: Math.round(currentPrice * 100) / 100
+      });
     }
 
     // Trim history to max points
@@ -352,7 +363,7 @@ export class IPOService {
       priceHistory = priceHistory.slice(-IPOService.MAX_HISTORY_POINTS);
     }
 
-    // Update database
+    // Update database (no longer storing mutable seed)
     const updated = await prisma.playerIPO.update({
       where: { userId: ipo.userId },
       data: {
@@ -364,7 +375,6 @@ export class IPOService {
         activeEvent,
         eventExpiresAt,
         priceHistory: priceHistory as any,
-        tickSeed: seed,
         lastTickAt: now,
       },
     });
