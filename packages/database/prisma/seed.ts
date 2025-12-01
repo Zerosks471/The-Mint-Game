@@ -644,6 +644,195 @@ const marketEvents: Prisma.MarketEventCreateInput[] = [
   { slug: 'market-holiday', name: 'Market Holiday', description: 'Trading paused for holiday.', effectType: 'trend_bias', effectValue: 0, durationMinutes: 30, isPositive: true, rarity: 1 },
 ];
 
+// Cosmetics - 15 items across 3 types
+const cosmetics: Prisma.CosmeticCreateInput[] = [
+  // ============ AVATARS (5) ============
+  {
+    id: 'avatar_default',
+    name: 'Default',
+    description: 'The classic investor look',
+    type: 'avatar',
+    rarity: 'common',
+    premiumCost: 0,
+    previewUrl: '/cosmetics/avatars/default.png',
+    isAvailable: true,
+    sortOrder: 1,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'avatar_investor',
+    name: 'Investor',
+    description: 'Sharp suit, sharper mind',
+    type: 'avatar',
+    rarity: 'common',
+    premiumCost: 100,
+    previewUrl: '/cosmetics/avatars/investor.png',
+    isAvailable: true,
+    sortOrder: 2,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'avatar_tycoon',
+    name: 'Tycoon',
+    description: 'Money talks, and you speak fluently',
+    type: 'avatar',
+    rarity: 'uncommon',
+    premiumCost: 200,
+    previewUrl: '/cosmetics/avatars/tycoon.png',
+    isAvailable: true,
+    sortOrder: 3,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'avatar_mogul',
+    name: 'Mogul',
+    description: 'Empire builder extraordinaire',
+    type: 'avatar',
+    rarity: 'rare',
+    premiumCost: 300,
+    previewUrl: '/cosmetics/avatars/mogul.png',
+    isAvailable: true,
+    sortOrder: 4,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'avatar_legend',
+    name: 'Legend',
+    description: 'Your name echoes through Wall Street',
+    type: 'avatar',
+    rarity: 'epic',
+    premiumCost: 400,
+    previewUrl: '/cosmetics/avatars/legend.png',
+    isAvailable: true,
+    sortOrder: 5,
+    acquisitionType: 'purchase',
+  },
+
+  // ============ AVATAR FRAMES (5) ============
+  {
+    id: 'frame_none',
+    name: 'None',
+    description: 'Keep it simple',
+    type: 'avatar_frame',
+    rarity: 'common',
+    premiumCost: 0,
+    previewUrl: '/cosmetics/frames/none.png',
+    isAvailable: true,
+    sortOrder: 10,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'frame_bronze',
+    name: 'Bronze',
+    description: 'A modest frame for modest gains',
+    type: 'avatar_frame',
+    rarity: 'common',
+    premiumCost: 100,
+    previewUrl: '/cosmetics/frames/bronze.png',
+    isAvailable: true,
+    sortOrder: 11,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'frame_silver',
+    name: 'Silver',
+    description: 'Second place is still on the podium',
+    type: 'avatar_frame',
+    rarity: 'uncommon',
+    premiumCost: 150,
+    previewUrl: '/cosmetics/frames/silver.png',
+    isAvailable: true,
+    sortOrder: 12,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'frame_gold',
+    name: 'Gold',
+    description: 'Nothing but the best',
+    type: 'avatar_frame',
+    rarity: 'rare',
+    premiumCost: 200,
+    previewUrl: '/cosmetics/frames/gold.png',
+    isAvailable: true,
+    sortOrder: 13,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'frame_diamond',
+    name: 'Diamond',
+    description: 'Unbreakable, like your portfolio',
+    type: 'avatar_frame',
+    rarity: 'epic',
+    premiumCost: 300,
+    previewUrl: '/cosmetics/frames/diamond.png',
+    isAvailable: true,
+    sortOrder: 14,
+    acquisitionType: 'purchase',
+  },
+
+  // ============ BADGES (5) ============
+  {
+    id: 'badge_newbie',
+    name: 'Newbie',
+    description: 'Everyone starts somewhere',
+    type: 'badge',
+    rarity: 'common',
+    premiumCost: 0,
+    previewUrl: '/cosmetics/badges/newbie.png',
+    isAvailable: true,
+    sortOrder: 20,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'badge_trader',
+    name: 'Trader',
+    description: 'You know the markets',
+    type: 'badge',
+    rarity: 'uncommon',
+    premiumCost: 150,
+    previewUrl: '/cosmetics/badges/trader.png',
+    isAvailable: true,
+    sortOrder: 21,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'badge_whale',
+    name: 'Whale',
+    description: 'Your trades move markets',
+    type: 'badge',
+    rarity: 'rare',
+    premiumCost: 250,
+    previewUrl: '/cosmetics/badges/whale.png',
+    isAvailable: true,
+    sortOrder: 22,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'badge_vip',
+    name: 'VIP',
+    description: 'Very Important Player',
+    type: 'badge',
+    rarity: 'epic',
+    premiumCost: 400,
+    previewUrl: '/cosmetics/badges/vip.png',
+    isAvailable: true,
+    sortOrder: 23,
+    acquisitionType: 'purchase',
+  },
+  {
+    id: 'badge_founder',
+    name: 'Founder',
+    description: 'A true pioneer of The Mint',
+    type: 'badge',
+    rarity: 'legendary',
+    premiumCost: 500,
+    previewUrl: '/cosmetics/badges/founder.png',
+    isAvailable: true,
+    sortOrder: 24,
+    acquisitionType: 'purchase',
+  },
+];
+
 const businessTypes: Prisma.BusinessTypeCreateInput[] = [
   // Tier 1 - Small Business
   {
@@ -811,6 +1000,16 @@ async function main() {
     });
   }
   console.log(`✅ Seeded ${achievements.length} achievements`);
+
+  // Upsert cosmetics
+  for (const cosmetic of cosmetics) {
+    await prisma.cosmetic.upsert({
+      where: { id: cosmetic.id },
+      update: cosmetic,
+      create: cosmetic,
+    });
+  }
+  console.log(`✅ Seeded ${cosmetics.length} cosmetics`);
 
   console.log('🎉 Seeding complete!');
 }

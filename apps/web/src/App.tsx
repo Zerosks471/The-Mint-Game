@@ -12,6 +12,7 @@ import { AchievementsPage } from './pages/AchievementsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SubscriptionSuccessPage } from './pages/SubscriptionSuccessPage';
 import { SubscriptionCancelPage } from './pages/SubscriptionCancelPage';
+import { ShopPage } from './pages/ShopPage';
 // TODO: Friends and Clubs will be separate microservices - re-enable when ready
 // import { FriendsPage } from './pages/FriendsPage';
 // import { ClubsPage } from './pages/ClubsPage';
@@ -236,6 +237,14 @@ function App() {
         element={
           <ProtectedRoute>
             <SubscriptionCancelPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/shop"
+        element={
+          <ProtectedRoute>
+            <ShopPage />
           </ProtectedRoute>
         }
       />

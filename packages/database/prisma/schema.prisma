@@ -19,7 +19,9 @@ model User {
 
   // Profile
   displayName           String?   @map("display_name")
-  avatarId              String    @default("default_avatar") @map("avatar_id")
+  avatarId              String    @default("avatar_default") @map("avatar_id")
+  avatarFrameId         String?   @map("avatar_frame_id")
+  badgeId               String?   @map("badge_id")
   bio                   String?
   countryCode           String?   @map("country_code")
   timezone              String    @default("UTC")

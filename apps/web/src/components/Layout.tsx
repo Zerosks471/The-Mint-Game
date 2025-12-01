@@ -94,6 +94,7 @@ export function Layout({ children }: LayoutProps) {
     // { path: '/clubs', label: 'Clubs', icon: '🏛️' },
     { path: '/leaderboards', label: 'Rankings', icon: '🏆' },
     { path: '/achievements', label: 'Achievements', icon: '🎖️' },
+    { path: '/shop', label: 'Shop', icon: '🛍️' },
   ];
 
   return (
