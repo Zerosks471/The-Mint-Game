@@ -31,7 +31,9 @@ function CashTicker() {
   // Start/stop the store's ticker
   useEffect(() => {
     if (stats) {
-      startTicker();
+      // startTicker is async but we don't need to await it here
+      // as it handles its own state updates
+      void startTicker();
     }
     return () => stopTicker();
   }, [stats, startTicker, stopTicker]);
