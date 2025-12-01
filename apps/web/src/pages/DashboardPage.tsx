@@ -7,60 +7,43 @@ import { UpgradeButton } from '../components/UpgradeButton';
 import { useAuthStore } from '../stores/authStore';
 import { StatCard, StatRow, ProgressRing } from '../components/ui';
 
-// Smooth cash ticker component with real-time updates
+// Smooth cash ticker component - uses store's displayedCash directly
 function CashTicker() {
-  const { stats, displayedCash, incomePerSecond, startTicker, stopTicker } = useGameStore();
-  const [localCash, setLocalCash] = useState(0);
+  const { stats, displayedCash, startTicker, stopTicker } = useGameStore();
   const [minuteProgress, setMinuteProgress] = useState(0);
-  const animationRef = useRef<number | null>(null);
-  const lastUpdateRef = useRef<number>(Date.now());
   const minuteStartRef = useRef<number>(Date.now());
+  const animationRef = useRef<number | null>(null);
 
   const incomePerHour = parseFloat(stats?.effectiveIncomeHour || '0');
-  const incomePerSec = incomePerHour / 3600;
-  const incomePerMin = incomePerSec * 60;
+  const incomePerMin = incomePerHour / 60;
 
-  // Generate fake sparkline data based on income trend
+  // Generate sparkline data based on income trend
   const sparklineData = useMemo(() => {
-    const baseValue = localCash;
+    const baseValue = displayedCash;
     const data: number[] = [];
     for (let i = 0; i < 12; i++) {
       const variation = (Math.random() - 0.3) * incomePerMin;
       data.push(Math.max(0, baseValue - (12 - i) * incomePerMin + variation));
     }
     return data;
-  }, [Math.floor(localCash / 100)]); // Update every $100
+  }, [Math.floor(displayedCash / 100), incomePerMin]);
 
+  // Start/stop the store's ticker
   useEffect(() => {
     if (stats) {
       startTicker();
-      setLocalCash(displayedCash || parseFloat(stats.cash));
     }
     return () => stopTicker();
   }, [stats, startTicker, stopTicker]);
 
+  // Animate only the minute progress ring (not the cash value)
   useEffect(() => {
     const animate = () => {
       const now = Date.now();
-      const deltaMs = now - lastUpdateRef.current;
-      lastUpdateRef.current = now;
-
-      if (incomePerSecond > 0) {
-        const increment = incomePerSecond * (deltaMs / 1000);
-        setLocalCash((prev) => prev + increment);
-      }
-
       const elapsedInMinute = (now - minuteStartRef.current) % 60000;
       setMinuteProgress(elapsedInMinute / 60000);
-
       animationRef.current = requestAnimationFrame(animate);
     };
-
-    const syncInterval = setInterval(() => {
-      if (displayedCash > 0) {
-        setLocalCash(displayedCash);
-      }
-    }, 1000);
 
     animationRef.current = requestAnimationFrame(animate);
 
@@ -68,9 +51,8 @@ function CashTicker() {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
-      clearInterval(syncInterval);
     };
-  }, [displayedCash, incomePerSecond]);
+  }, []);
 
   const formatSmallCurrency = (amount: number) => {
     if (amount < 0.01) return `$${amount.toFixed(4)}`;
@@ -78,7 +60,7 @@ function CashTicker() {
     return formatCurrency(amount);
   };
 
-  const formattedCash = localCash.toLocaleString('en-US', {
+  const formattedCash = displayedCash.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
