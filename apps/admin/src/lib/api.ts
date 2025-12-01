@@ -74,6 +74,22 @@ class AdminApi {
   }
 
   // Auth
+  async login(username: string, password: string) {
+    const result = await this.request<{
+      token: string;
+      user: { id: string; username: string; email: string };
+    }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (result.success && result.data) {
+      this.setToken(result.data.token);
+    }
+
+    return result;
+  }
+
   async getMe() {
     return this.request<{ id: string; username: string; email: string }>('/me');
   }

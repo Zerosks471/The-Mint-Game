@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 export function LoginPage() {
-  const [token, setToken] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,11 +16,11 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(token.trim());
-      if (success) {
+      const result = await login(username.trim(), password);
+      if (result.success) {
         navigate('/');
       } else {
-        setError('Invalid token or insufficient permissions. Admin access required.');
+        setError(result.error || 'Login failed');
       }
     } catch {
       setError('Authentication failed. Please try again.');
@@ -40,21 +41,35 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="token" className="block text-sm font-medium text-zinc-400 mb-2">
-                Access Token
+              <label htmlFor="username" className="block text-sm font-medium text-zinc-400 mb-2">
+                Username or Email
               </label>
               <input
-                id="token"
-                type="password"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="Paste your JWT token here"
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
                 className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 required
+                autoComplete="username"
               />
-              <p className="text-xs text-zinc-500 mt-2">
-                Use your admin account's access token from the main app
-              </p>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-400 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                required
+                autoComplete="current-password"
+              />
             </div>
 
             {error && (
@@ -65,10 +80,10 @@ export function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading || !token.trim()}
+              disabled={isLoading || !username.trim() || !password}
               className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
             >
-              {isLoading ? 'Authenticating...' : 'Login'}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
@@ -79,7 +94,7 @@ export function LoginPage() {
             </p>
             <p className="text-amber-400/80 text-xs mt-2">
               This admin panel should only be accessible via VPN or internal network.
-              Never expose this service publicly.
+              Admin privileges are required to access this dashboard.
             </p>
           </div>
         </div>

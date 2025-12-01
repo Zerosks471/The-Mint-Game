@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { adminAuth, auditLog } from '../middleware';
+import authRouter from './auth';
 import usersRouter from './users';
 import economyRouter from './economy';
 import logsRouter from './logs';
@@ -11,6 +12,9 @@ const router: ReturnType<typeof Router> = Router();
 router.get('/ping', (req, res) => {
   res.json({ status: 'ok', service: 'admin-dashboard' });
 });
+
+// Auth routes (public - no token required)
+router.use('/auth', authRouter);
 
 // All routes below require admin authentication
 router.use(adminAuth);

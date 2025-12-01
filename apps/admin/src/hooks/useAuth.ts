@@ -11,7 +11,7 @@ interface AuthState {
   user: AdminUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (token: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -21,22 +21,23 @@ export const useAuth = create<AuthState>((set) => ({
   isLoading: true,
   isAuthenticated: false,
 
-  login: async (token: string) => {
-    api.setToken(token);
-    const result = await api.getMe();
+  login: async (username: string, password: string) => {
+    const result = await api.login(username, password);
 
     if (result.success && result.data) {
       set({
-        user: result.data,
+        user: result.data.user,
         isAuthenticated: true,
         isLoading: false,
       });
-      return true;
+      return { success: true };
     }
 
-    api.clearToken();
     set({ isLoading: false });
-    return false;
+    return {
+      success: false,
+      error: result.error?.message || 'Login failed',
+    };
   },
 
   logout: () => {
