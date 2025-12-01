@@ -132,6 +132,16 @@ export function BusinessesPage() {
     );
 
     if (result.success && result.data) {
+      // Update the local session state with new attempt count
+      const newAttemptsUsed = 3 - result.data.attemptsRemaining;
+      setActiveTask({
+        ...activeTask,
+        session: {
+          ...activeTask.session,
+          attemptsUsed: newAttemptsUsed,
+        },
+      });
+
       if (result.data.success || (result.data.revenueMultiplier > 0)) {
         // Actually collect the revenue with multiplier
         const collected = await collectBusinessRevenue(activeTask.business.id);
