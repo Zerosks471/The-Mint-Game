@@ -263,9 +263,10 @@ export class GameService {
         );
       }
 
-      // Return 50% of base cost per unit sold (not upgrade costs or scaled costs)
-      const sellValue = new Prisma.Decimal(playerProperty.propertyType.baseCost)
+      // Return 50% of total investment (base cost + upgrades + manager)
+      const sellValue = new Prisma.Decimal(playerProperty.totalSpent)
         .mul(quantity)
+        .div(playerProperty.quantity)
         .mul(0.5);
 
       const remainingQuantity = playerProperty.quantity - quantity;
