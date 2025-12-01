@@ -1504,16 +1504,16 @@ const cosmetics: Prisma.CosmeticCreateInput[] = [
 ];
 
 const businessTypes: Prisma.BusinessTypeCreateInput[] = [
-  // Tier 1 - Small Business
+  // Tier 1 - Small Business (Quick cycles, low payout - $200-600/hr base)
   {
     slug: 'food-truck',
     name: 'Food Truck',
     category: 'food',
     tier: 1,
-    baseCost: 5000,
-    baseRevenue: 1000,
-    cycleSeconds: 60,
-    employeeBaseCost: 500,
+    baseCost: 500,           // Cheap entry point
+    baseRevenue: 25,         // $25 per 5 min = $300/hr base
+    cycleSeconds: 300,       // 5 minutes
+    employeeBaseCost: 100,
     sortOrder: 1,
   },
   {
@@ -1521,24 +1521,24 @@ const businessTypes: Prisma.BusinessTypeCreateInput[] = [
     name: 'Coffee Shop',
     category: 'food',
     tier: 1,
-    baseCost: 25000,
-    baseRevenue: 5000,
-    cycleSeconds: 120,
-    employeeBaseCost: 2500,
+    baseCost: 2500,
+    baseRevenue: 100,        // $100 per 10 min = $600/hr base
+    cycleSeconds: 600,       // 10 minutes
+    employeeBaseCost: 500,
     sortOrder: 2,
     unlockRequirement: { level: 5 },
   },
 
-  // Tier 2 - Medium Business
+  // Tier 2 - Medium Business (Moderate cycles - $1,000-2,000/hr base)
   {
     slug: 'restaurant',
     name: 'Restaurant',
     category: 'food',
     tier: 2,
-    baseCost: 100000,
-    baseRevenue: 20000,
-    cycleSeconds: 300,
-    employeeBaseCost: 10000,
+    baseCost: 15000,
+    baseRevenue: 500,        // $500 per 30 min = $1,000/hr base
+    cycleSeconds: 1800,      // 30 minutes
+    employeeBaseCost: 3000,
     sortOrder: 3,
     unlockRequirement: { level: 10 },
   },
@@ -1547,24 +1547,24 @@ const businessTypes: Prisma.BusinessTypeCreateInput[] = [
     name: 'Fitness Gym',
     category: 'service',
     tier: 2,
-    baseCost: 250000,
-    baseRevenue: 50000,
-    cycleSeconds: 600,
-    employeeBaseCost: 25000,
+    baseCost: 50000,
+    baseRevenue: 2000,       // $2,000 per 1 hr = $2,000/hr base
+    cycleSeconds: 3600,      // 1 hour
+    employeeBaseCost: 10000,
     sortOrder: 4,
     unlockRequirement: { level: 15 },
   },
 
-  // Tier 3 - Large Business
+  // Tier 3 - Large Business (Long cycles, bigger payouts - $4,000-8,000/hr base)
   {
     slug: 'tech-startup',
     name: 'Tech Startup',
     category: 'tech',
     tier: 3,
-    baseCost: 1000000,
-    baseRevenue: 200000,
-    cycleSeconds: 1800,
-    employeeBaseCost: 100000,
+    baseCost: 250000,
+    baseRevenue: 8000,       // $8,000 per 2 hr = $4,000/hr base
+    cycleSeconds: 7200,      // 2 hours
+    employeeBaseCost: 50000,
     sortOrder: 5,
     unlockRequirement: { level: 20 },
   },
@@ -1573,24 +1573,24 @@ const businessTypes: Prisma.BusinessTypeCreateInput[] = [
     name: 'Factory',
     category: 'manufacturing',
     tier: 3,
-    baseCost: 5000000,
-    baseRevenue: 1000000,
-    cycleSeconds: 3600,
-    employeeBaseCost: 500000,
+    baseCost: 1000000,
+    baseRevenue: 32000,      // $32,000 per 4 hr = $8,000/hr base
+    cycleSeconds: 14400,     // 4 hours
+    employeeBaseCost: 200000,
     sortOrder: 6,
     unlockRequirement: { level: 25 },
   },
 
-  // Tier 4 - Enterprise
+  // Tier 4 - Enterprise (Very long cycles, major payouts - $15,000-25,000/hr base)
   {
     slug: 'bank',
     name: 'Private Bank',
     category: 'finance',
     tier: 4,
-    baseCost: 25000000,
-    baseRevenue: 5000000,
-    cycleSeconds: 7200,
-    employeeBaseCost: 2500000,
+    baseCost: 5000000,
+    baseRevenue: 120000,     // $120,000 per 8 hr = $15,000/hr base
+    cycleSeconds: 28800,     // 8 hours
+    employeeBaseCost: 1000000,
     sortOrder: 7,
     unlockRequirement: { level: 30 },
   },
@@ -1599,10 +1599,10 @@ const businessTypes: Prisma.BusinessTypeCreateInput[] = [
     name: 'Space Company',
     category: 'tech',
     tier: 4,
-    baseCost: 100000000,
-    baseRevenue: 20000000,
-    cycleSeconds: 14400,
-    employeeBaseCost: 10000000,
+    baseCost: 25000000,
+    baseRevenue: 600000,     // $600,000 per 24 hr = $25,000/hr base
+    cycleSeconds: 86400,     // 24 hours
+    employeeBaseCost: 5000000,
     sortOrder: 8,
     unlockRequirement: { level: 35 },
   },

@@ -503,7 +503,15 @@ export class GameService {
     });
   }
 
-  async collectBusinessRevenue(userId: string, businessId: string) {
+  /**
+   * Collect business revenue with different collection methods
+   * @param collectionType 'minigame' = 100% profit, 'instant' = 25% profit (management fee)
+   */
+  async collectBusinessRevenue(
+    userId: string,
+    businessId: string,
+    collectionType: 'minigame' | 'instant' = 'minigame'
+  ) {
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const business = await tx.playerBusiness.findUnique({
         where: { id: businessId },
@@ -518,14 +526,23 @@ export class GameService {
         throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Cycle not complete', 400);
       }
 
-      const revenue = business.currentRevenue;
+      const fullRevenue = business.currentRevenue;
+
+      // Apply collection type multiplier
+      // minigame = 100% profit (player earned it)
+      // instant = 25% profit (manager takes 75% as operating fee)
+      const profitMultiplier = collectionType === 'instant' ? 0.25 : 1.0;
+      const actualRevenue = new Prisma.Decimal(fullRevenue).mul(profitMultiplier);
+      const managementFee = collectionType === 'instant'
+        ? new Prisma.Decimal(fullRevenue).mul(0.75)
+        : new Prisma.Decimal(0);
 
       const updated = await tx.playerBusiness.update({
         where: { id: businessId },
         data: {
           currentCycleStart: new Date(),
           cyclesCompleted: { increment: 1 },
-          totalRevenue: { increment: revenue },
+          totalRevenue: { increment: actualRevenue },
         },
         include: { businessType: true },
       });
@@ -533,15 +550,24 @@ export class GameService {
       await tx.playerStats.update({
         where: { userId },
         data: {
-          cash: { increment: revenue },
-          lifetimeCashEarned: { increment: revenue },
+          cash: { increment: actualRevenue },
+          lifetimeCashEarned: { increment: actualRevenue },
         },
       });
 
-      // Add XP and check level up
-      await this.addExperience(tx, userId, Number(revenue) / 100);
+      // Add XP based on actual revenue collected (incentivize mini-game)
+      await this.addExperience(tx, userId, Number(actualRevenue) / 100);
 
-      return { business: this.formatBusiness(updated), collected: revenue };
+      return {
+        business: this.formatBusiness(updated),
+        collected: actualRevenue,
+        fullRevenue: fullRevenue,
+        collectionType,
+        managementFee: collectionType === 'instant' ? managementFee : undefined,
+        message: collectionType === 'instant'
+          ? `Your manager collected the revenue and handled restocking. Management fee: $${Number(managementFee).toLocaleString()}`
+          : undefined,
+      };
     });
   }
 

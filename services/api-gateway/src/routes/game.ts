@@ -152,12 +152,20 @@ router.post(
 );
 
 // POST /api/v1/game/businesses/:id/collect
+// Body: { collectionType: 'minigame' | 'instant' }
+// - minigame: Player completes mini-game, gets 100% profit
+// - instant: Quick collect, gets 25% profit (manager fee)
 router.post(
   '/businesses/:id/collect',
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const result = await gameService.collectBusinessRevenue(req.user!.id, req.params.id as string);
+      const collectionType = req.body.collectionType === 'instant' ? 'instant' : 'minigame';
+      const result = await gameService.collectBusinessRevenue(
+        req.user!.id,
+        req.params.id as string,
+        collectionType
+      );
       res.json({ success: true, data: result });
     } catch (error) {
       next(error);

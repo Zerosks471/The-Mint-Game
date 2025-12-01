@@ -49,7 +49,10 @@ interface GameState {
   sellProperty: (propertyId: string, quantity?: number) => Promise<boolean>;
   buyBusiness: (typeId: number) => Promise<boolean>;
   levelUpBusiness: (businessId: string) => Promise<boolean>;
-  collectBusinessRevenue: (businessId: string) => Promise<string | null>;
+  collectBusinessRevenue: (businessId: string, collectionType?: 'minigame' | 'instant') => Promise<{
+    collected: string;
+    message?: string;
+  } | null>;
   collectOfflineEarnings: () => Promise<string | null>;
 
   // Ticker
@@ -231,13 +234,16 @@ export const useGameStore = create<GameState>()((set, get) => ({
     return false;
   },
 
-  collectBusinessRevenue: async (businessId: string) => {
+  collectBusinessRevenue: async (businessId: string, collectionType: 'minigame' | 'instant' = 'minigame') => {
     set({ error: null });
-    const response = await gameApi.collectBusinessRevenue(businessId);
+    const response = await gameApi.collectBusinessRevenue(businessId, collectionType);
     if (response.success && response.data) {
       await Promise.all([get().fetchStats(), get().fetchPlayerBusinesses()]);
       get().syncDisplayedCashFromStats();
-      return response.data.collected;
+      return {
+        collected: response.data.collected,
+        message: response.data.message,
+      };
     }
     set({ error: response.error?.message || 'Failed to collect revenue' });
     return null;

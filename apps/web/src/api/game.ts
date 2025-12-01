@@ -633,10 +633,26 @@ export const gameApi = {
   },
 
   async collectBusinessRevenue(
-    businessId: string
-  ): Promise<ApiResponse<{ business: PlayerBusiness; collected: string }>> {
-    return apiClient.post<{ business: PlayerBusiness; collected: string }>(
-      `/game/businesses/${businessId}/collect`
+    businessId: string,
+    collectionType: 'minigame' | 'instant' = 'minigame'
+  ): Promise<ApiResponse<{
+    business: PlayerBusiness;
+    collected: string;
+    fullRevenue: string;
+    collectionType: 'minigame' | 'instant';
+    managementFee?: string;
+    message?: string;
+  }>> {
+    return apiClient.post<{
+      business: PlayerBusiness;
+      collected: string;
+      fullRevenue: string;
+      collectionType: 'minigame' | 'instant';
+      managementFee?: string;
+      message?: string;
+    }>(
+      `/game/businesses/${businessId}/collect`,
+      { collectionType }
     );
   },
 

@@ -17,7 +17,8 @@
     "db:generate": "pnpm --filter @mint/database generate",
     "db:push": "pnpm --filter @mint/database push",
     "db:migrate": "pnpm --filter @mint/database migrate",
-    "db:studio": "pnpm --filter @mint/database studio"
+    "db:studio": "pnpm --filter @mint/database studio",
+    "db:seed": "pnpm --filter @mint/database seed"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

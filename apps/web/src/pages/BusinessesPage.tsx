@@ -76,6 +76,7 @@ export function BusinessesPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>('owned');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [instantCollectLoading, setInstantCollectLoading] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<{
     business: PlayerBusiness;
     session: StartTaskResponse;
@@ -122,6 +123,20 @@ export function BusinessesPage() {
     setActionLoading(null);
   };
 
+  const handleInstantCollect = async (business: PlayerBusiness) => {
+    setInstantCollectLoading(business.id);
+    const result = await collectBusinessRevenue(business.id, 'instant');
+    if (result) {
+      // Show success message with management fee info
+      console.log(`Instant Collection: $${parseFloat(result.collected).toLocaleString()}`);
+      if (result.message) {
+        // You could show a toast here with result.message
+        console.log(result.message);
+      }
+    }
+    setInstantCollectLoading(null);
+  };
+
   const handleTaskComplete = async (success: boolean, score: number) => {
     if (!activeTask) return;
 
@@ -143,12 +158,12 @@ export function BusinessesPage() {
       });
 
       if (result.data.success || (result.data.revenueMultiplier > 0)) {
-        // Actually collect the revenue with multiplier
-        const collected = await collectBusinessRevenue(activeTask.business.id);
-        if (collected) {
+        // Actually collect the revenue with full profit (minigame = 100%)
+        const collectionResult = await collectBusinessRevenue(activeTask.business.id, 'minigame');
+        if (collectionResult) {
           // Success - revenue collected
           console.log(
-            `Revenue Collected: $${parseFloat(collected).toLocaleString()} (${Math.round(result.data.revenueMultiplier * 100)}%)`
+            `Revenue Collected: $${parseFloat(collectionResult.collected).toLocaleString()} (${Math.round(result.data.revenueMultiplier * 100)}%)`
           );
         }
       } else if (!result.data.canRetry) {
@@ -250,10 +265,12 @@ export function BusinessesPage() {
                   cash={cash}
                   onLevelUp={() => handleLevelUp(business.id)}
                   onCollect={() => handleCollectClick(business)}
+                  onInstantCollect={() => handleInstantCollect(business)}
                   isLoading={
                     actionLoading === `level-${business.id}` ||
                     actionLoading === `collect-${business.id}`
                   }
+                  instantCollectLoading={instantCollectLoading === business.id}
                 />
               ))}
             </div>
@@ -300,7 +317,9 @@ interface OwnedBusinessCardProps {
   cash: number;
   onLevelUp: () => void;
   onCollect: () => void;
+  onInstantCollect: () => void;
   isLoading: boolean;
+  instantCollectLoading: boolean;
 }
 
 function OwnedBusinessCard({
@@ -308,7 +327,9 @@ function OwnedBusinessCard({
   cash,
   onLevelUp,
   onCollect,
+  onInstantCollect,
   isLoading,
+  instantCollectLoading,
 }: OwnedBusinessCardProps) {
   const levelCost = business.nextLevelCost ? parseFloat(business.nextLevelCost) : null;
   const canLevelUp = levelCost !== null && cash >= levelCost;
@@ -364,13 +385,52 @@ function OwnedBusinessCard({
       {/* Action Buttons */}
       <div className="space-y-2">
         {business.cycleComplete && (
-          <button
-            onClick={onCollect}
-            disabled={isLoading}
-            className="w-full py-2 px-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
-          >
-            {isLoading ? 'Collecting...' : `Collect ${formatCurrency(parseFloat(business.currentRevenue))}`}
-          </button>
+          <>
+            {/* Mini-Game Collection - 100% Profit */}
+            <button
+              onClick={onCollect}
+              disabled={isLoading || instantCollectLoading}
+              className="w-full py-2.5 px-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+            >
+              {isLoading ? (
+                'Starting...'
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span>🎮</span>
+                    <span>Play to Collect</span>
+                  </span>
+                  <span className="text-green-200 font-bold">
+                    {formatCurrency(parseFloat(business.currentRevenue))}
+                  </span>
+                </div>
+              )}
+            </button>
+
+            {/* Instant Collection - 25% Profit */}
+            <button
+              onClick={onInstantCollect}
+              disabled={isLoading || instantCollectLoading}
+              className="w-full py-2 px-3 bg-amber-600/80 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {instantCollectLoading ? (
+                'Collecting...'
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span>⚡</span>
+                    <span>Instant Collect (25%)</span>
+                  </span>
+                  <span className="text-amber-200">
+                    {formatCurrency(parseFloat(business.currentRevenue) * 0.25)}
+                  </span>
+                </div>
+              )}
+            </button>
+            <p className="text-xs text-zinc-500 text-center">
+              Manager handles restocking - takes 75% fee
+            </p>
+          </>
         )}
 
         {levelCost !== null && (
