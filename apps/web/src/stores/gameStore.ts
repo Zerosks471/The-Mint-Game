@@ -54,7 +54,7 @@ interface GameState {
 
   // Ticker
   collectEarnings: () => Promise<void>;
-  startTicker: () => void;
+  startTicker: () => Promise<void>;
   stopTicker: () => void;
 
   // Helpers
@@ -270,7 +270,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   },
 
   // Start real-time cash ticker (updates displayed cash every 100ms)
-  startTicker: () => {
+  startTicker: async () => {
     // Clear any existing intervals
     const existingTicker = get().tickerInterval;
     const existingSync = get().syncInterval;
@@ -290,8 +290,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
       });
     }
 
-    // Collect from server immediately to sync
-    get().collectEarnings();
+    // Collect from server immediately to sync - AWAIT this
+    await get().collectEarnings();
 
     // Update displayed cash locally every 100ms
     const tickerInterval = setInterval(() => {
