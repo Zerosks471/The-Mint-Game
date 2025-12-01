@@ -22,7 +22,7 @@ const wikiNavItems: WikiNavItem[] = [
   { id: 'businesses', label: 'Businesses', icon: '💼' },
   { id: 'mini-games', label: 'Mini-Games', icon: '🎯' },
   { id: 'stocks', label: 'Stocks & IPO', icon: '📈' },
-  { id: 'prestige', label: 'Prestige System', icon: '🚀' },
+  { id: 'prestige', label: 'Phases & Projects', icon: '🚀' },
   { id: 'progression', label: 'Progression & Tiers', icon: '⭐' },
   { id: 'tips', label: 'Pro Tips', icon: '💡' },
 ];
@@ -445,13 +445,23 @@ function StocksSection() {
         </ul>
       </SubSection>
 
-      <SubSection title="Going Public (IPO)">
+      <SubSection title="Your Company IPO">
         <p>
-          Once you've built a substantial empire, you can take your company public
-          through an IPO (Initial Public Offering). This is part of the prestige system
-          and allows you to reset your progress for permanent bonuses.
+          As your empire grows, your company becomes eligible for an IPO (Initial Public Offering).
+          This allows you to sell shares of your own company for cash.
         </p>
+        <ul className="list-disc list-inside space-y-2 mt-2">
+          <li><strong>Net Worth Based</strong> - Your IPO share price is based on your total net worth</li>
+          <li><strong>100 Shares</strong> - You can sell up to 100 shares of your company</li>
+          <li><strong>Cash Out</strong> - Selling shares converts your net worth into liquid cash</li>
+          <li><strong>No Reset</strong> - Unlike traditional prestige systems, selling IPO shares does NOT reset your progress</li>
+        </ul>
       </SubSection>
+
+      <InfoBox type="info">
+        Your IPO is a way to cash out on your empire's value without losing your properties,
+        businesses, or upgrades. Sell when your share price is high!
+      </InfoBox>
 
       <InfoBox type="warning">
         Stock prices can go down as well as up! Don't invest more than you can
@@ -464,48 +474,80 @@ function StocksSection() {
 function PrestigeSection() {
   return (
     <div>
-      <SectionTitle icon="🚀" title="Prestige System" />
+      <SectionTitle icon="🚀" title="Phases & Projects" />
 
-      <SubSection title="What Is Prestige?">
+      <SubSection title="No-Reset Progression">
         <p>
-          The prestige system allows you to reset your progress in exchange for
-          <strong> permanent multipliers</strong> that boost all future earnings.
-          This is the key to long-term progression in The Mint.
+          Unlike traditional idle games, <strong>The Mint has no resets!</strong> Your empire
+          grows continuously. Instead of prestige resets, you progress through <strong>Phases</strong> by
+          building your net worth, and unlock permanent bonuses through <strong>Projects</strong> and <strong>Upgrades</strong>.
         </p>
       </SubSection>
 
-      <SubSection title="How It Works">
-        <ol className="list-decimal list-inside space-y-2">
-          <li><strong>Build Your Empire</strong> - Accumulate wealth and properties</li>
-          <li><strong>Go Public</strong> - When ready, initiate your IPO</li>
-          <li><strong>Earn Prestige Points</strong> - Points are based on your lifetime earnings</li>
-          <li><strong>Reset Progress</strong> - Start fresh with your prestige bonus</li>
-          <li><strong>Grow Faster</strong> - Your multiplier makes everything faster next time</li>
-        </ol>
+      <SubSection title="The Five Phases">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-dark-border">
+                <th className="text-left py-2 text-zinc-400">Phase</th>
+                <th className="text-left py-2 text-zinc-400">Name</th>
+                <th className="text-right py-2 text-zinc-400">Net Worth Required</th>
+              </tr>
+            </thead>
+            <tbody className="text-zinc-300">
+              <tr className="border-b border-dark-border/50">
+                <td className="py-2">1</td>
+                <td>Hustler</td>
+                <td className="text-right text-mint">$0</td>
+              </tr>
+              <tr className="border-b border-dark-border/50">
+                <td className="py-2">2</td>
+                <td>Landlord</td>
+                <td className="text-right text-mint">$100,000</td>
+              </tr>
+              <tr className="border-b border-dark-border/50">
+                <td className="py-2">3</td>
+                <td>Mogul</td>
+                <td className="text-right text-mint">$10,000,000</td>
+              </tr>
+              <tr className="border-b border-dark-border/50">
+                <td className="py-2">4</td>
+                <td>Investor</td>
+                <td className="text-right text-mint">$1,000,000,000</td>
+              </tr>
+              <tr>
+                <td className="py-2">5</td>
+                <td>Titan</td>
+                <td className="text-right text-mint">$100,000,000,000</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </SubSection>
 
-      <SubSection title="What You Keep">
-        <ul className="list-disc list-inside space-y-2">
-          <li className="text-mint">Prestige Multiplier (permanent)</li>
-          <li className="text-mint">Lifetime Cash Earned statistic</li>
-          <li className="text-mint">Achievements</li>
-          <li className="text-mint">Cosmetics and Unlocks</li>
+      <SubSection title="Projects">
+        <p>
+          Projects are <strong>one-time purchases</strong> that provide permanent bonuses.
+          Each phase unlocks new projects to purchase.
+        </p>
+        <ul className="list-disc list-inside space-y-2 mt-2">
+          <li><strong>Marketing</strong> - Increase income multipliers</li>
+          <li><strong>Operations</strong> - Improve business efficiency</li>
+          <li><strong>Technology</strong> - Automate and optimize</li>
+          <li><strong>Expansion</strong> - Unlock new opportunities</li>
         </ul>
       </SubSection>
 
-      <SubSection title="What You Lose">
-        <ul className="list-disc list-inside space-y-2">
-          <li className="text-red-400">Current Cash</li>
-          <li className="text-red-400">All Properties</li>
-          <li className="text-red-400">All Businesses</li>
-          <li className="text-red-400">Player Level (resets to 1)</li>
-        </ul>
+      <SubSection title="Upgrades">
+        <p>
+          Upgrades are <strong>repeatable purchases</strong> that can be leveled up multiple times.
+          Each level provides incremental bonuses but costs more than the previous level.
+        </p>
       </SubSection>
 
-      <InfoBox type="info">
-        The ideal time to prestige is when your prestige multiplier gain is
-        significant compared to your current one. A 2x multiplier means you'll
-        progress twice as fast!
+      <InfoBox type="tip">
+        Focus on building your net worth to unlock new phases. Each phase brings
+        powerful new projects and upgrades that accelerate your growth!
       </InfoBox>
     </div>
   );
@@ -620,40 +662,42 @@ function TipsSection() {
     <div>
       <SectionTitle icon="💡" title="Pro Tips" />
 
-      <SubSection title="Early Game Strategy">
+      <SubSection title="Early Game Strategy (Hustler Phase)">
         <ul className="list-disc list-inside space-y-2">
           <li>Buy multiple Hot Dog Stands first - they're cheap and stack up quickly</li>
           <li>Get a Restaurant business ASAP for XP generation</li>
           <li>Always hire managers on properties for offline earnings</li>
           <li>Check back every few hours to collect offline earnings</li>
+          <li>Focus on reaching $100K net worth to unlock Landlord phase</li>
         </ul>
       </SubSection>
 
-      <SubSection title="Mid Game Strategy">
+      <SubSection title="Mid Game Strategy (Landlord/Mogul Phases)">
         <ul className="list-disc list-inside space-y-2">
           <li>Focus on leveling up businesses rather than buying new ones</li>
           <li>Balance property purchases with business investments</li>
-          <li>Start upgrading your highest-income properties</li>
-          <li>Consider your first prestige when progress slows significantly</li>
+          <li>Start purchasing Projects to boost your income multipliers</li>
+          <li>Invest in Upgrades for compounding bonus effects</li>
+          <li>Consider selling IPO shares if you need quick cash</li>
         </ul>
       </SubSection>
 
-      <SubSection title="Late Game Strategy">
+      <SubSection title="Late Game Strategy (Investor/Titan Phases)">
         <ul className="list-disc list-inside space-y-2">
-          <li>Prestige when your multiplier gain is at least 50% of current</li>
-          <li>After prestige, rush back to your previous position faster</li>
-          <li>Stack multiple prestige runs for exponential growth</li>
+          <li>Complete all available Projects in each phase</li>
+          <li>Max out Upgrades for massive multiplier bonuses</li>
+          <li>Use the stock market strategically for additional income</li>
           <li>Compete on leaderboards for bragging rights</li>
         </ul>
       </SubSection>
 
       <SubSection title="Common Mistakes to Avoid">
         <ul className="list-disc list-inside space-y-2">
-          <li className="text-red-400">❌ Spending all cash on one expensive property early</li>
-          <li className="text-red-400">❌ Ignoring businesses (they give XP!)</li>
-          <li className="text-red-400">❌ Forgetting to hire managers for offline income</li>
-          <li className="text-red-400">❌ Prestiging too early before building up earnings</li>
-          <li className="text-red-400">❌ Rushing mini-games and failing repeatedly</li>
+          <li className="text-red-400">Spending all cash on one expensive property early</li>
+          <li className="text-red-400">Ignoring businesses (they give XP!)</li>
+          <li className="text-red-400">Forgetting to hire managers for offline income</li>
+          <li className="text-red-400">Skipping Projects that boost income multipliers</li>
+          <li className="text-red-400">Rushing mini-games and failing repeatedly</li>
         </ul>
       </SubSection>
 
@@ -668,7 +712,7 @@ function TipsSection() {
 
       <InfoBox type="info">
         The key to success in The Mint is patience and compound growth.
-        Small gains add up over time, especially with prestige multipliers!
+        Small gains add up over time, especially with Project and Upgrade bonuses!
       </InfoBox>
     </div>
   );

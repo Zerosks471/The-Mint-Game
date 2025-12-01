@@ -195,9 +195,10 @@ export class IPOService {
   }
 
   /**
-   * Sell shares and complete prestige
+   * Sell shares - earns cash based on current stock price (NO RESET)
+   * This is now an investment feature, not prestige
    */
-  async sellShares(userId: string): Promise<{ pointsEarned: number; multiplier: number; newPrestigeLevel: number }> {
+  async sellShares(userId: string): Promise<{ cashEarned: string; multiplier: number }> {
     const ipo = await prisma.playerIPO.findUnique({ where: { userId } });
     if (!ipo) {
       throw new AppError(ErrorCodes.NOT_FOUND, 'No active IPO found', 404);
@@ -209,39 +210,44 @@ export class IPOService {
     const ipoPrice = Number(updatedIPO.ipoPrice);
     const currentPrice = Number(updatedIPO.currentPrice);
     const multiplier = currentPrice / ipoPrice;
-    const pointsEarned = Math.floor(updatedIPO.basePoints * multiplier);
 
-    // Execute prestige with the calculated points
-    const result = await this.executePrestigeWithIPO(userId, pointsEarned);
+    // Calculate cash earned: current price * base value
+    // Base value is ipoPrice * 1000 shares (conceptual)
+    const cashEarned = new Decimal(currentPrice).mul(1000);
+
+    // Complete the sale - just add cash, NO reset
+    await this.completeIPOSale(userId, cashEarned);
 
     // Delete IPO record
     await prisma.playerIPO.delete({ where: { userId } });
 
     return {
-      pointsEarned,
+      cashEarned: cashEarned.toString(),
       multiplier: Math.round(multiplier * 100) / 100,
-      newPrestigeLevel: result.newPrestigeLevel,
     };
   }
 
   /**
-   * Cancel IPO and do instant prestige with base points
+   * Cancel IPO - earns cash at IPO price (NO RESET)
+   * Player gets their initial investment back
    */
-  async cancelIPO(userId: string): Promise<{ pointsEarned: number; newPrestigeLevel: number }> {
+  async cancelIPO(userId: string): Promise<{ cashEarned: string }> {
     const ipo = await prisma.playerIPO.findUnique({ where: { userId } });
     if (!ipo) {
       throw new AppError(ErrorCodes.NOT_FOUND, 'No active IPO found', 404);
     }
 
-    // Execute prestige with base points (no multiplier)
-    const result = await this.executePrestigeWithIPO(userId, ipo.basePoints);
+    // Cash earned at IPO price (1x multiplier)
+    const cashEarned = new Decimal(ipo.ipoPrice).mul(1000);
+
+    // Complete the sale - just add cash, NO reset
+    await this.completeIPOSale(userId, cashEarned);
 
     // Delete IPO record
     await prisma.playerIPO.delete({ where: { userId } });
 
     return {
-      pointsEarned: ipo.basePoints,
-      newPrestigeLevel: result.newPrestigeLevel,
+      cashEarned: cashEarned.toString(),
     };
   }
 
@@ -415,62 +421,27 @@ export class IPOService {
   }
 
   /**
-   * Execute prestige with specified points (reusing existing prestige logic)
+   * Complete IPO sale - NO RESET, just add cash earnings to player
+   * The IPO is now an investment feature, not a prestige reset
    */
-  private async executePrestigeWithIPO(userId: string, pointsEarned: number): Promise<{ newPrestigeLevel: number }> {
+  private async completeIPOSale(userId: string, cashEarned: Decimal): Promise<{ cashEarned: string }> {
     return prisma.$transaction(async (tx) => {
       const stats = await tx.playerStats.findUnique({ where: { userId } });
       if (!stats) {
         throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
       }
 
-      const newPrestigeLevel = stats.prestigeLevel + 1;
-
-      // Calculate new multiplier based on owned perks
-      const playerPerks = await tx.playerPrestigePerk.findMany({
-        where: { userId },
-        include: { perk: true },
-      });
-
-      let prestigeMultiplier = new Decimal(1);
-      for (const pp of playerPerks) {
-        const effect = pp.perk.effect as { type: string; value: number };
-        if (effect.type === 'income_mult') {
-          prestigeMultiplier = prestigeMultiplier.add(effect.value * pp.level);
-        }
-      }
-
-      // Add base prestige bonus: +5% per prestige level
-      prestigeMultiplier = prestigeMultiplier.add(new Decimal(newPrestigeLevel).mul(0.05));
-
-      // Delete all properties
-      await tx.playerProperty.deleteMany({ where: { userId } });
-
-      // Delete all businesses
-      await tx.playerBusiness.deleteMany({ where: { userId } });
-
-      // Reset player stats but keep prestige data
+      // Simply add the cash earned from selling IPO shares
+      // NO reset of properties, businesses, or any other stats
       await tx.playerStats.update({
         where: { userId },
         data: {
-          cash: 1000,
-          lifetimeCashEarned: 0,
-          playerLevel: 1,
-          experiencePoints: 0,
-          baseIncomePerHour: 0,
-          effectiveIncomeHour: 0,
-          currentMultiplier: prestigeMultiplier,
-          prestigeLevel: newPrestigeLevel,
-          prestigePoints: { increment: pointsEarned },
-          prestigeMultiplier,
-          timesPrestiged: { increment: 1 },
-          totalPropertiesOwned: 0,
-          totalBusinessesOwned: 0,
-          lastCollectionAt: new Date(),
+          cash: { increment: cashEarned },
+          lifetimeCashEarned: { increment: cashEarned },
         },
       });
 
-      return { newPrestigeLevel };
+      return { cashEarned: cashEarned.toString() };
     });
   }
 }

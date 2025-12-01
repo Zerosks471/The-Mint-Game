@@ -60,6 +60,16 @@ export class GameService {
         where: { userId_propertyTypeId: { userId, propertyTypeId } },
       });
 
+      // Check max quantity limit
+      const currentQuantity = playerProperty?.quantity ?? 0;
+      if (currentQuantity >= propertyType.maxQuantity) {
+        throw new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          `Maximum quantity reached (${propertyType.maxQuantity} ${propertyType.name}${propertyType.maxQuantity > 1 ? 's' : ''})`,
+          400
+        );
+      }
+
       // Calculate cost
       const quantity = playerProperty?.quantity ?? 0;
       const cost = this.calculatePropertyCost(propertyType, quantity);

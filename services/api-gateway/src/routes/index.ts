@@ -15,6 +15,7 @@ import subscriptionsRouter from './subscriptions';
 import cosmeticsRouter from './cosmetics';
 import coinsRouter from './coins';
 import minigamesRouter from './minigames';
+import progressionRouter from './progression';
 
 const router: Router = Router();
 
@@ -73,6 +74,9 @@ v1Router.use('/coins', coinsRouter);
 
 // Minigames routes
 v1Router.use('/minigames', minigamesRouter);
+
+// Progression routes (phases, projects, upgrades)
+v1Router.use('/progression', progressionRouter);
 
 router.use('/v1', v1Router);
 

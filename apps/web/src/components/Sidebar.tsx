@@ -13,7 +13,7 @@ const mainNavItems: NavItem[] = [
   { path: '/properties', label: 'Properties', icon: '🏢', color: 'blue' },
   { path: '/businesses', label: 'Businesses', icon: '💼', color: 'purple' },
   { path: '/stocks', label: 'Stocks', icon: '📈', color: 'cyan' },
-  { path: '/prestige', label: 'Go Public', icon: '🚀', color: 'pink' },
+  { path: '/upgrades', label: 'Upgrades', icon: '⚡', color: 'pink' },
 ];
 
 const secondaryNavItems: NavItem[] = [
@@ -187,6 +187,14 @@ export function Sidebar({ onLogout }: SidebarProps) {
           </svg>
           {!collapsed && <span className="font-medium">Logout</span>}
         </button>
+
+        {/* Version & Credits */}
+        {!collapsed && (
+          <div className="px-4 py-3 text-center border-t border-dark-border mt-2">
+            <p className="text-xs text-zinc-600">v1.0.0</p>
+            <p className="text-xs text-zinc-500">Created by Qips</p>
+          </div>
+        )}
       </div>
     </aside>
   );

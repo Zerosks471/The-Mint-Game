@@ -1,6 +1,6 @@
 {
   "name": "the-mint",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@8.15.0",
   "scripts": {

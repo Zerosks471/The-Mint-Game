@@ -1,13 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import {
-  createChart,
-  ColorType,
-  IChartApi,
-  ISeriesApi,
-  LineData,
-  Time,
-  AreaSeries,
-} from 'lightweight-charts';
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts';
 import { formatCurrency } from '@mint/utils';
 
 interface PricePoint {
@@ -22,130 +23,130 @@ interface IPOChartProps {
   isPositive: boolean;
 }
 
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  isPositive,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+  isPositive: boolean;
+}) {
+  if (!active || !payload?.length) return null;
+
+  const value = payload[0].value;
+  const time = label ? new Date(Number(label)).toLocaleTimeString() : '';
+
+  return (
+    <div className="bg-dark-elevated border border-dark-border rounded-lg px-3 py-2 shadow-xl">
+      <p className="text-zinc-400 text-xs">{time}</p>
+      <p className={`font-bold font-mono ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+        {formatCurrency(value)}
+      </p>
+    </div>
+  );
+}
+
 export function IPOChart({ priceHistory, ipoPrice, currentPrice, isPositive }: IPOChartProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
+  const chartData = useMemo(
+    () =>
+      priceHistory.map((point) => ({
+        time: point.time,
+        price: point.price,
+      })),
+    [priceHistory]
+  );
 
-  // Initialize chart
-  useEffect(() => {
-    if (!chartContainerRef.current) return;
+  const strokeColor = isPositive ? '#22c55e' : '#ef4444';
+  const gradientId = isPositive ? 'ipoPositiveGradient' : 'ipoNegativeGradient';
 
-    const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: '#0f172a' },
-        textColor: '#94a3b8',
-      },
-      grid: {
-        vertLines: { color: '#1e293b' },
-        horzLines: { color: '#1e293b' },
-      },
-      width: chartContainerRef.current.clientWidth,
-      height: 300,
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: '#1e293b',
-      },
-      rightPriceScale: {
-        borderColor: '#1e293b',
-      },
-      crosshair: {
-        mode: 1,
-        vertLine: {
-          color: isPositive ? '#22c55e' : '#ef4444',
-          width: 1,
-          style: 2,
-          labelBackgroundColor: isPositive ? '#22c55e' : '#ef4444',
-        },
-        horzLine: {
-          color: isPositive ? '#22c55e' : '#ef4444',
-          width: 1,
-          style: 2,
-          labelBackgroundColor: isPositive ? '#22c55e' : '#ef4444',
-        },
-      },
-    });
-
-    chartRef.current = chart;
-
-    const lineColor = isPositive ? '#22c55e' : '#ef4444';
-    const topColor = isPositive ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
-
-    const series = chart.addSeries(AreaSeries, {
-      lineColor,
-      topColor,
-      bottomColor: 'rgba(0, 0, 0, 0)',
-      lineWidth: 2,
-      priceFormat: {
-        type: 'custom',
-        formatter: (price: number) => formatCurrency(price),
-      },
-    });
-
-    seriesRef.current = series;
-
-    // Add IPO price line
-    series.createPriceLine({
-      price: ipoPrice,
-      color: '#6366f1',
-      lineWidth: 1,
-      lineStyle: 2, // Dashed
-      axisLabelVisible: true,
-      title: 'IPO',
-    });
-
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.remove();
-    };
-  }, [ipoPrice, isPositive]);
-
-  // Update chart data
-  useEffect(() => {
-    if (!seriesRef.current || priceHistory.length === 0) return;
-
-    const chartData: LineData[] = priceHistory.map((point) => ({
-      time: point.time as Time,
-      value: point.price,
-    }));
-
-    seriesRef.current.setData(chartData);
-
-    if (chartRef.current && chartData.length > 0) {
-      chartRef.current.timeScale().fitContent();
-    }
-  }, [priceHistory]);
-
-  // Update colors when trend changes
-  useEffect(() => {
-    if (!seriesRef.current) return;
-
-    const lineColor = isPositive ? '#22c55e' : '#ef4444';
-    const topColor = isPositive ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
-
-    seriesRef.current.applyOptions({
-      lineColor,
-      topColor,
-    });
-  }, [isPositive]);
+  // Calculate domain with some padding
+  const prices = priceHistory.map((p) => p.price);
+  const minPrice = Math.min(...prices, ipoPrice) * 0.95;
+  const maxPrice = Math.max(...prices, ipoPrice) * 1.05;
 
   return (
     <div className="bg-slate-900 rounded-xl overflow-hidden">
-      <div ref={chartContainerRef} />
+      <div className="h-[300px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+            <defs>
+              <linearGradient id="ipoPositiveGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="ipoNegativeGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#1e293b"
+              strokeOpacity={0.5}
+              vertical={false}
+            />
+
+            <XAxis
+              dataKey="time"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(value) => new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              dy={10}
+            />
+
+            <YAxis
+              domain={[minPrice, maxPrice]}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(value) => formatCurrency(value)}
+              width={80}
+            />
+
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <CustomTooltip
+                  active={active}
+                  payload={payload as Array<{ value: number }>}
+                  label={String(label ?? '')}
+                  isPositive={isPositive}
+                />
+              )}
+            />
+
+            <ReferenceLine
+              y={ipoPrice}
+              stroke="#6366f1"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              label={{
+                value: `IPO ${formatCurrency(ipoPrice)}`,
+                fill: '#6366f1',
+                fontSize: 11,
+                position: 'right',
+              }}
+            />
+
+            <Area
+              type="monotone"
+              dataKey="price"
+              stroke={strokeColor}
+              strokeWidth={2}
+              fill={`url(#${gradientId})`}
+              style={{ filter: `drop-shadow(0 0 6px ${strokeColor}50)` }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
       <div className="flex items-center justify-between px-4 py-2 bg-slate-800 text-sm">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-0.5 bg-indigo-500" style={{ borderStyle: 'dashed' }} />
+            <div className="w-4 h-0.5 bg-indigo-500" style={{ borderStyle: 'dashed' }} />
             <span className="text-slate-400">IPO Price</span>
           </div>
           <div className="flex items-center gap-2">

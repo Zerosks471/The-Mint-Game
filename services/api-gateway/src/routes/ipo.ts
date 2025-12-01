@@ -35,28 +35,28 @@ router.post('/launch', async (req: AuthenticatedRequest, res: Response, next: Ne
   }
 });
 
-// POST /api/v1/ipo/sell - Sell shares and complete prestige
+// POST /api/v1/ipo/sell - Sell shares and earn cash (no reset)
 router.post('/sell', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const result = await ipoService.sellShares(req.user!.id);
     res.json({
       success: true,
       data: result,
-      message: `Sold shares for ${result.pointsEarned} prestige points (${result.multiplier}x multiplier)!`,
+      message: `Sold shares for $${Number(result.cashEarned).toLocaleString()} (${result.multiplier}x return)!`,
     });
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/v1/ipo/cancel - Cancel IPO and take base points
+// POST /api/v1/ipo/cancel - Cancel IPO and get back initial investment
 router.post('/cancel', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const result = await ipoService.cancelIPO(req.user!.id);
     res.json({
       success: true,
       data: result,
-      message: `IPO cancelled. You received ${result.pointsEarned} base prestige points.`,
+      message: `IPO cancelled. You received $${Number(result.cashEarned).toLocaleString()} back.`,
     });
   } catch (error) {
     next(error);

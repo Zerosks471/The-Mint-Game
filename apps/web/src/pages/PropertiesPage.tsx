@@ -305,6 +305,9 @@ interface ShopPropertyCardProps {
 function ShopPropertyCard({ type, owned, cost, cash, onBuy, isLoading }: ShopPropertyCardProps) {
   const canAfford = cash >= cost;
   const isLocked = !type.isUnlocked;
+  const currentQuantity = owned?.quantity ?? 0;
+  const isMaxed = currentQuantity >= type.maxQuantity;
+  const canBuy = canAfford && !isMaxed;
 
   return (
     <div
@@ -342,25 +345,31 @@ function ShopPropertyCard({ type, owned, cost, cash, onBuy, isLoading }: ShopPro
                 ≈ {formatCurrency(parseFloat(type.baseIncomeHour) / 3600)}/sec
               </span>
             </div>
-            {owned && (
-              <div className="flex justify-between">
-                <span className="text-zinc-500">You own</span>
-                <span className="font-medium text-zinc-200">{owned.quantity}</span>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span className="text-zinc-500">You own</span>
+              <span className={`font-medium ${isMaxed ? 'text-amber' : 'text-zinc-200'}`}>
+                {currentQuantity} / {type.maxQuantity}
+              </span>
+            </div>
           </div>
 
-          <button
-            onClick={onBuy}
-            disabled={!canAfford || isLoading}
-            className={`w-full py-2 px-3 rounded-xl font-medium transition-colors ${
-              canAfford
-                ? 'bg-mint-500 hover:bg-mint-600 text-white'
-                : 'bg-dark-elevated text-zinc-600 cursor-not-allowed'
-            }`}
-          >
-            {isLoading ? 'Buying...' : `Buy - ${formatCurrency(cost)}`}
-          </button>
+          {isMaxed ? (
+            <div className="w-full py-2 px-3 rounded-xl font-medium bg-amber/20 text-amber text-center">
+              Max Owned
+            </div>
+          ) : (
+            <button
+              onClick={onBuy}
+              disabled={!canBuy || isLoading}
+              className={`w-full py-2 px-3 rounded-xl font-medium transition-colors ${
+                canBuy
+                  ? 'bg-mint-500 hover:bg-mint-600 text-white'
+                  : 'bg-dark-elevated text-zinc-600 cursor-not-allowed'
+              }`}
+            >
+              {isLoading ? 'Buying...' : `Buy - ${formatCurrency(cost)}`}
+            </button>
+          )}
         </>
       )}
     </div>

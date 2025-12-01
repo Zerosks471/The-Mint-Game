@@ -305,6 +305,24 @@ export function SettingsPage() {
         </div>
       </div>
 
+      {/* About */}
+      <div className="bg-dark-card border border-dark-border rounded-2xl p-6">
+        <h2 className="text-lg font-semibold text-zinc-100 mb-4">About</h2>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center py-2">
+            <span className="text-zinc-400">Version</span>
+            <span className="text-zinc-100 font-mono">1.0.0</span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-zinc-400">Created by</span>
+            <span className="text-mint font-medium">Qips</span>
+          </div>
+          <div className="pt-2 border-t border-dark-border text-center">
+            <p className="text-xs text-zinc-500">The Mint - Build Your Financial Empire</p>
+          </div>
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div className="bg-dark-card border-2 border-red-500/30 rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-red-400 mb-4">Danger Zone</h2>

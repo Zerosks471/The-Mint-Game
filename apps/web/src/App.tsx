@@ -6,7 +6,7 @@ import { PropertiesPage } from './pages/PropertiesPage';
 import { BusinessesPage } from './pages/BusinessesPage';
 import { StatsPage } from './pages/StatsPage';
 import { StocksPage } from './pages/StocksPage';
-import { PrestigePage } from './pages/PrestigePage';
+import { UpgradesPage } from './pages/UpgradesPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -123,7 +123,7 @@ function HomePage() {
           </div>
         </div>
 
-        <p className="mt-8 text-sm text-zinc-500">Phase 1 Complete - Core Game MVP Ready</p>
+        <p className="mt-8 text-sm text-zinc-500">v1.0.0 | Created by Qips</p>
       </div>
     </div>
   );
@@ -187,11 +187,11 @@ function App() {
         }
       />
       <Route
-        path="/prestige"
+        path="/upgrades"
         element={
           <ProtectedRoute>
             <Layout>
-              <PrestigePage />
+              <UpgradesPage />
             </Layout>
           </ProtectedRoute>
         }

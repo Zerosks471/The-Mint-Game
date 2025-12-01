@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { formatCurrency } from '@mint/utils';
-import { PlayerStats, PlayerBusiness } from '../api/game';
+import { PlayerStats, PlayerBusiness, ProgressionStatus, gameApi } from '../api/game';
 import { UpgradeButton } from '../components/UpgradeButton';
 import { useAuthStore } from '../stores/authStore';
 import { StatCard, StatRow, ProgressRing } from '../components/ui';
@@ -180,6 +180,79 @@ function BusinessesCard({
   );
 }
 
+// Phase progress indicator
+function PhaseIndicator({ progression }: { progression: ProgressionStatus | null }) {
+  if (!progression || !progression.phase) return null;
+
+  const { phase, projects } = progression;
+  const currentPhase = phase.currentPhase;
+  const allPhases = phase.allPhases || [];
+
+  // Find next phase
+  const currentIndex = allPhases.findIndex(p => p.id === currentPhase.id);
+  const nextPhase = currentIndex >= 0 && currentIndex < allPhases.length - 1 ? allPhases[currentIndex + 1] : null;
+
+  // Count projects from grouped structure {available, completed, locked}
+  const projectsData = projects as unknown as { available?: unknown[]; completed?: unknown[]; locked?: unknown[] } || {};
+  const completedProjects = projectsData.completed?.length || 0;
+  const availableProjects = projectsData.available?.length || 0;
+  const lockedProjects = projectsData.locked?.length || 0;
+  const totalProjects = completedProjects + availableProjects + lockedProjects;
+
+  // Phase icons mapping
+  const phaseIcons: Record<string, string> = {
+    hustler: '💪',
+    landlord: '🏠',
+    mogul: '🏢',
+    investor: '📊',
+    titan: '👑',
+  };
+
+  return (
+    <Link
+      to="/upgrades"
+      className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl p-4 hover:border-amber-500/50 transition-all group"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{phaseIcons[currentPhase.slug] || '🎯'}</span>
+          <div>
+            <p className="font-bold text-zinc-100">{currentPhase.name}</p>
+            <p className="text-xs text-zinc-500">Phase {currentPhase.id}</p>
+          </div>
+        </div>
+        <span className="text-zinc-500 group-hover:text-amber text-sm transition-colors">
+          View Upgrades &rarr;
+        </span>
+      </div>
+
+      {nextPhase && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs">
+            <span className="text-zinc-500">Progress to {nextPhase.name}</span>
+            <span className="text-amber font-medium">{Math.round(currentPhase.progress)}%</span>
+          </div>
+          <div className="h-2 bg-dark-border rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
+              style={{ width: `${Math.min(100, currentPhase.progress)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {!nextPhase && (
+        <p className="text-xs text-amber">Maximum phase reached!</p>
+      )}
+
+      <div className="mt-3 pt-3 border-t border-amber-500/20 flex justify-between text-xs">
+        <span className="text-zinc-500">Projects Completed</span>
+        <span className="text-zinc-300 font-mono">{completedProjects} / {totalProjects}</span>
+      </div>
+    </Link>
+  );
+}
+
 export function DashboardPage() {
   const {
     stats,
@@ -195,10 +268,23 @@ export function DashboardPage() {
   const { user } = useAuthStore();
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [collectedAmount, setCollectedAmount] = useState<string | null>(null);
+  const [progression, setProgression] = useState<ProgressionStatus | null>(null);
+
+  const fetchProgression = useCallback(async () => {
+    try {
+      const res = await gameApi.getProgressionStatus();
+      if (res.success && res.data) {
+        setProgression(res.data);
+      }
+    } catch {
+      // Silently fail - progression is not critical
+    }
+  }, []);
 
   useEffect(() => {
     fetchAll();
-  }, [fetchAll]);
+    fetchProgression();
+  }, [fetchAll, fetchProgression]);
 
   useEffect(() => {
     if (offlineStatus) {
@@ -312,6 +398,9 @@ export function DashboardPage() {
         />
         <BusinessesCard total={stats?.totalBusinessesOwned || 0} businesses={playerBusinesses} />
       </div>
+
+      {/* Phase Indicator */}
+      <PhaseIndicator progression={progression} />
 
       {/* Quick Stats */}
       <div className="grid md:grid-cols-2 gap-6">

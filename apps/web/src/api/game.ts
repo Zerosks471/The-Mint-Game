@@ -302,9 +302,85 @@ export interface IPOLaunchResult {
 }
 
 export interface IPOSellResult {
-  pointsEarned: number;
+  cashEarned: string;
   multiplier: number;
-  newPrestigeLevel: number;
+}
+
+export interface IPOCancelResult {
+  cashEarned: string;
+}
+
+// Progression types
+export interface Phase {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  netWorthRequired: string;
+  iconUrl: string | null;
+  unlockMessage: string | null;
+}
+
+export interface Project {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  cost: string;
+  phaseRequired: number;
+  prerequisiteId: string | null;
+  effect: { type: string; value: number; target?: string };
+  isOneTime: boolean;
+  isPurchased: boolean;
+  canPurchase: boolean;
+}
+
+export interface Upgrade {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  tier: number;
+  baseCost: string;
+  costMultiplier: string;
+  effect: { type: string; value: number };
+  maxLevel: number;
+  phaseRequired: number;
+  currentLevel: number;
+  currentCost: string;
+  canPurchase: boolean;
+}
+
+export interface PhaseStatus {
+  currentPhase: {
+    id: number;
+    slug: string;
+    name: string;
+    description: string;
+    netWorthRequired: number;
+    isUnlocked: boolean;
+    isCurrent: boolean;
+    progress: number;
+  };
+  allPhases: Array<{
+    id: number;
+    slug: string;
+    name: string;
+    description: string;
+    netWorthRequired: number;
+    isUnlocked: boolean;
+    isCurrent: boolean;
+    progress: number;
+  }>;
+  netWorth: string;
+}
+
+export interface ProgressionStatus {
+  phase: PhaseStatus;
+  projects: Project[];
+  upgrades: Upgrade[];
 }
 
 // Friends types
@@ -603,8 +679,8 @@ export const gameApi = {
     return apiClient.post<IPOSellResult>('/ipo/sell');
   },
 
-  async cancelIPO(): Promise<ApiResponse<{ pointsEarned: number; newPrestigeLevel: number }>> {
-    return apiClient.post<{ pointsEarned: number; newPrestigeLevel: number }>('/ipo/cancel');
+  async cancelIPO(): Promise<ApiResponse<IPOCancelResult>> {
+    return apiClient.post<IPOCancelResult>('/ipo/cancel');
   },
 
   // Friends
@@ -705,5 +781,30 @@ export const gameApi = {
 
   async claimGift(giftId: string): Promise<ApiResponse<{ claimed: GiftInfo; cashReceived?: number }>> {
     return apiClient.post<{ claimed: GiftInfo; cashReceived?: number }>(`/gifts/${giftId}/claim`);
+  },
+
+  // Progression
+  async getProgressionStatus(): Promise<ApiResponse<ProgressionStatus>> {
+    return apiClient.get<ProgressionStatus>('/progression/status');
+  },
+
+  async getPhases(): Promise<ApiResponse<Phase[]>> {
+    return apiClient.get<Phase[]>('/progression/phases');
+  },
+
+  async getProjects(): Promise<ApiResponse<Project[]>> {
+    return apiClient.get<Project[]>('/progression/projects');
+  },
+
+  async buyProject(slug: string): Promise<ApiResponse<{ project: Project; newCash: string }>> {
+    return apiClient.post<{ project: Project; newCash: string }>(`/progression/projects/${slug}/purchase`);
+  },
+
+  async getUpgrades(): Promise<ApiResponse<Upgrade[]>> {
+    return apiClient.get<Upgrade[]>('/progression/upgrades');
+  },
+
+  async buyUpgrade(slug: string): Promise<ApiResponse<{ upgrade: Upgrade; remainingCash: string }>> {
+    return apiClient.post<{ upgrade: Upgrade; remainingCash: string }>(`/progression/upgrades/${slug}/purchase`);
   },
 };

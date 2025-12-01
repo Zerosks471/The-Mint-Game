@@ -3,7 +3,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
-  // Tier 1 - Starter
+  // Tier 1 - Starter (can own many)
   {
     slug: 'lemonade-stand',
     name: 'Lemonade Stand',
@@ -13,6 +13,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 5,
     managerCost: 500,
     managerName: 'Street Vendor',
+    maxQuantity: 100, // Can own up to 100 lemonade stands
     sortOrder: 1,
   },
   {
@@ -24,6 +25,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 25,
     managerCost: 2500,
     managerName: 'Delivery Supervisor',
+    maxQuantity: 50, // Can own up to 50 routes
     sortOrder: 2,
   },
   {
@@ -35,10 +37,11 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 100,
     managerCost: 10000,
     managerName: 'Wash Manager',
+    maxQuantity: 25, // Can own up to 25 car washes
     sortOrder: 3,
   },
 
-  // Tier 2 - Residential
+  // Tier 2 - Residential (moderate limits)
   {
     slug: 'apartment',
     name: 'Apartment',
@@ -48,6 +51,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 500,
     managerCost: 50000,
     managerName: 'Property Manager',
+    maxQuantity: 50, // Can own up to 50 apartments
     sortOrder: 4,
     unlockRequirement: { level: 5 },
   },
@@ -60,6 +64,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 2500,
     managerCost: 250000,
     managerName: 'Building Super',
+    maxQuantity: 25, // Can own up to 25 duplexes
     sortOrder: 5,
     unlockRequirement: { level: 10 },
   },
@@ -72,11 +77,12 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 10000,
     managerCost: 1000000,
     managerName: 'HOA President',
+    maxQuantity: 15, // Can own up to 15 condo complexes
     sortOrder: 6,
     unlockRequirement: { level: 15 },
   },
 
-  // Tier 3 - Commercial
+  // Tier 3 - Commercial (stricter limits)
   {
     slug: 'strip-mall',
     name: 'Strip Mall',
@@ -86,6 +92,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 50000,
     managerCost: 5000000,
     managerName: 'Mall Director',
+    maxQuantity: 10, // Can own up to 10 strip malls
     sortOrder: 7,
     unlockRequirement: { level: 20 },
   },
@@ -98,11 +105,12 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 250000,
     managerCost: 25000000,
     managerName: 'Building Manager',
+    maxQuantity: 5, // Can own up to 5 office buildings
     sortOrder: 8,
     unlockRequirement: { level: 25 },
   },
 
-  // Tier 4 - Luxury
+  // Tier 4 - Luxury (very limited)
   {
     slug: 'hotel',
     name: 'Luxury Hotel',
@@ -112,6 +120,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 1250000,
     managerCost: 125000000,
     managerName: 'Hotel GM',
+    maxQuantity: 3, // Can own up to 3 luxury hotels
     sortOrder: 9,
     unlockRequirement: { level: 30 },
   },
@@ -124,6 +133,7 @@ const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
     baseIncomeHour: 5000000,
     managerCost: 500000000,
     managerName: 'Tower Director',
+    maxQuantity: 1, // Can only own 1 skyscraper (iconic!)
     sortOrder: 10,
     unlockRequirement: { level: 35 },
   },
@@ -621,6 +631,527 @@ const achievements: Prisma.AchievementCreateInput[] = [
   },
 ];
 
+// ============================================================================
+// PHASES (Universal Paperclips-style progression milestones)
+// ============================================================================
+const phases: Prisma.PhaseCreateInput[] = [
+  {
+    id: 1,
+    slug: 'hustler',
+    name: 'Hustler',
+    description: 'Starting out with side gigs and first properties',
+    netWorthRequired: 0,
+    unlockMessage: 'Welcome to The Mint! Start building your empire.',
+  },
+  {
+    id: 2,
+    slug: 'landlord',
+    name: 'Landlord',
+    description: 'Building a real estate empire',
+    netWorthRequired: 1000000,
+    unlockMessage: 'You\'ve hit $1M net worth! New upgrades and projects unlocked.',
+  },
+  {
+    id: 3,
+    slug: 'mogul',
+    name: 'Mogul',
+    description: 'Running a business empire with franchises',
+    netWorthRequired: 10000000,
+    unlockMessage: 'You\'re a business mogul now! Advanced projects available.',
+  },
+  {
+    id: 4,
+    slug: 'investor',
+    name: 'Investor',
+    description: 'Playing the stock market and diversifying',
+    netWorthRequired: 100000000,
+    unlockMessage: 'You\'ve reached investor status! The stock market awaits.',
+  },
+  {
+    id: 5,
+    slug: 'titan',
+    name: 'Titan',
+    description: 'Dominating markets and acquiring competitors',
+    netWorthRequired: 1000000000,
+    unlockMessage: 'You are a Titan of industry! Maximum power unlocked.',
+  },
+];
+
+// ============================================================================
+// PROJECTS (Universal Paperclips-style one-time purchases)
+// ============================================================================
+const projects: Prisma.ProjectCreateInput[] = [
+  // Phase 1 - Hustler Projects
+  {
+    slug: 'marketing-101',
+    name: 'Marketing 101',
+    description: 'Learn basic marketing. +5% income from all sources.',
+    category: 'marketing',
+    cost: 10000,
+    phaseRequired: 1,
+    effect: { type: 'income_mult', value: 0.05 },
+    sortOrder: 1,
+  },
+  {
+    slug: 'networking-event',
+    name: 'Networking Event',
+    description: 'Meet other entrepreneurs. +3% income.',
+    category: 'operations',
+    cost: 25000,
+    phaseRequired: 1,
+    effect: { type: 'income_mult', value: 0.03 },
+    sortOrder: 2,
+  },
+  {
+    slug: 'local-seo',
+    name: 'Local SEO',
+    description: 'Get found online. +5% property income.',
+    category: 'marketing',
+    cost: 50000,
+    phaseRequired: 1,
+    effect: { type: 'property_income_mult', value: 0.05 },
+    sortOrder: 3,
+  },
+
+  // Phase 2 - Landlord Projects
+  {
+    slug: 'property-management-software',
+    name: 'Property Management Software',
+    description: 'Automate rent collection. +10% property income.',
+    category: 'technology',
+    cost: 250000,
+    phaseRequired: 2,
+    effect: { type: 'property_income_mult', value: 0.10 },
+    sortOrder: 10,
+  },
+  {
+    slug: 'renovation-crew',
+    name: 'Renovation Crew',
+    description: 'Faster property upgrades. -10% upgrade costs.',
+    category: 'operations',
+    cost: 500000,
+    phaseRequired: 2,
+    effect: { type: 'upgrade_discount', value: 0.10 },
+    sortOrder: 11,
+  },
+  {
+    slug: 'tenant-screening',
+    name: 'Tenant Screening Service',
+    description: 'Better tenants mean more income. +8% income.',
+    category: 'operations',
+    cost: 750000,
+    phaseRequired: 2,
+    effect: { type: 'income_mult', value: 0.08 },
+    sortOrder: 12,
+  },
+
+  // Phase 3 - Mogul Projects
+  {
+    slug: 'franchise-license',
+    name: 'Franchise License',
+    description: 'Open franchise locations. +15% business income.',
+    category: 'expansion',
+    cost: 5000000,
+    phaseRequired: 3,
+    effect: { type: 'business_income_mult', value: 0.15 },
+    sortOrder: 20,
+  },
+  {
+    slug: 'corporate-hq',
+    name: 'Corporate Headquarters',
+    description: 'Central command for your empire. +10% all income.',
+    category: 'expansion',
+    cost: 10000000,
+    phaseRequired: 3,
+    effect: { type: 'income_mult', value: 0.10 },
+    sortOrder: 21,
+  },
+  {
+    slug: 'supply-chain-optimization',
+    name: 'Supply Chain Optimization',
+    description: 'Reduce costs across the board. -15% purchase costs.',
+    category: 'operations',
+    cost: 7500000,
+    phaseRequired: 3,
+    effect: { type: 'purchase_discount', value: 0.15 },
+    sortOrder: 22,
+  },
+
+  // Phase 4 - Investor Projects
+  {
+    slug: 'hedge-fund',
+    name: 'Start a Hedge Fund',
+    description: 'Manage money for others. +20% investment returns.',
+    category: 'expansion',
+    cost: 50000000,
+    phaseRequired: 4,
+    effect: { type: 'investment_mult', value: 0.20 },
+    sortOrder: 30,
+  },
+  {
+    slug: 'real-estate-investment-trust',
+    name: 'REIT Formation',
+    description: 'Pool property investments. +25% property income.',
+    category: 'expansion',
+    cost: 75000000,
+    phaseRequired: 4,
+    effect: { type: 'property_income_mult', value: 0.25 },
+    sortOrder: 31,
+  },
+  {
+    slug: 'market-analysis-ai',
+    name: 'Market Analysis AI',
+    description: 'AI-powered trading insights. +15% all income.',
+    category: 'technology',
+    cost: 100000000,
+    phaseRequired: 4,
+    effect: { type: 'income_mult', value: 0.15 },
+    sortOrder: 32,
+  },
+
+  // Phase 5 - Titan Projects
+  {
+    slug: 'market-manipulation',
+    name: 'Market Influence',
+    description: 'Your moves shape the market. +30% all income.',
+    category: 'expansion',
+    cost: 500000000,
+    phaseRequired: 5,
+    effect: { type: 'income_mult', value: 0.30 },
+    sortOrder: 40,
+  },
+  {
+    slug: 'political-lobbying',
+    name: 'Political Lobbying',
+    description: 'Favorable regulations. -25% all costs.',
+    category: 'operations',
+    cost: 750000000,
+    phaseRequired: 5,
+    effect: { type: 'all_discount', value: 0.25 },
+    sortOrder: 41,
+  },
+  {
+    slug: 'global-domination',
+    name: 'Global Domination',
+    description: 'You own it all. +50% all income.',
+    category: 'expansion',
+    cost: 1000000000,
+    phaseRequired: 5,
+    effect: { type: 'income_mult', value: 0.50 },
+    sortOrder: 42,
+  },
+];
+
+// ============================================================================
+// UPGRADES (repeatable cash-based upgrades with levels)
+// ============================================================================
+const upgrades: Prisma.UpgradeCreateInput[] = [
+  // Income Upgrades
+  {
+    slug: 'efficiency-training',
+    name: 'Efficiency Training',
+    description: 'Train your staff to be more efficient. +2% income per level.',
+    category: 'income',
+    tier: 1,
+    baseCost: 5000,
+    costMultiplier: 1.5,
+    effect: { type: 'income_mult', value: 0.02 },
+    maxLevel: 50,
+    phaseRequired: 1,
+    sortOrder: 1,
+  },
+  {
+    slug: 'marketing-campaign',
+    name: 'Marketing Campaign',
+    description: 'Advertise your businesses. +3% income per level.',
+    category: 'income',
+    tier: 1,
+    baseCost: 10000,
+    costMultiplier: 1.6,
+    effect: { type: 'income_mult', value: 0.03 },
+    maxLevel: 30,
+    phaseRequired: 1,
+    sortOrder: 2,
+  },
+  {
+    slug: 'premium-branding',
+    name: 'Premium Branding',
+    description: 'Elevate your brand. +5% income per level.',
+    category: 'income',
+    tier: 2,
+    baseCost: 100000,
+    costMultiplier: 1.7,
+    effect: { type: 'income_mult', value: 0.05 },
+    maxLevel: 20,
+    phaseRequired: 2,
+    sortOrder: 3,
+  },
+
+  // Automation Upgrades
+  {
+    slug: 'basic-automation',
+    name: 'Basic Automation',
+    description: 'Automate routine tasks. +1 hour offline cap per level.',
+    category: 'automation',
+    tier: 1,
+    baseCost: 15000,
+    costMultiplier: 2.0,
+    effect: { type: 'offline_cap', value: 1 },
+    maxLevel: 16,
+    phaseRequired: 1,
+    sortOrder: 10,
+  },
+  {
+    slug: 'advanced-automation',
+    name: 'Advanced Automation',
+    description: 'Smart automation systems. +2 hours offline cap per level.',
+    category: 'automation',
+    tier: 2,
+    baseCost: 500000,
+    costMultiplier: 2.5,
+    effect: { type: 'offline_cap', value: 2 },
+    maxLevel: 8,
+    phaseRequired: 2,
+    sortOrder: 11,
+  },
+
+  // Efficiency Upgrades
+  {
+    slug: 'bulk-purchasing',
+    name: 'Bulk Purchasing',
+    description: 'Buy in bulk for discounts. -2% property costs per level.',
+    category: 'efficiency',
+    tier: 1,
+    baseCost: 20000,
+    costMultiplier: 1.8,
+    effect: { type: 'property_discount', value: 0.02 },
+    maxLevel: 25,
+    phaseRequired: 1,
+    sortOrder: 20,
+  },
+  {
+    slug: 'business-optimization',
+    name: 'Business Optimization',
+    description: 'Streamline operations. -3% business costs per level.',
+    category: 'efficiency',
+    tier: 2,
+    baseCost: 250000,
+    costMultiplier: 1.9,
+    effect: { type: 'business_discount', value: 0.03 },
+    maxLevel: 20,
+    phaseRequired: 2,
+    sortOrder: 21,
+  },
+];
+
+// Bot stocks - look like real player companies
+const botStocks: Prisma.BotStockCreateInput[] = [
+  // Tech (5) - High volatility
+  {
+    tickerSymbol: 'APEX',
+    companyName: 'Apex Technologies',
+    sector: 'tech',
+    basePrice: 150.00,
+    currentPrice: 150.00,
+    previousClose: 148.50,
+    highPrice24h: 152.00,
+    lowPrice24h: 147.00,
+    volatility: 0.035,
+    description: 'Leading gaming and metaverse platform',
+    sortOrder: 1,
+  },
+  {
+    tickerSymbol: 'BYTE',
+    companyName: 'ByteStream Inc',
+    sector: 'tech',
+    basePrice: 85.00,
+    currentPrice: 85.00,
+    previousClose: 84.00,
+    highPrice24h: 86.50,
+    lowPrice24h: 83.00,
+    volatility: 0.030,
+    description: 'Cloud computing and data services',
+    sortOrder: 2,
+  },
+  {
+    tickerSymbol: 'CHIP',
+    companyName: 'ChipMax Corporation',
+    sector: 'tech',
+    basePrice: 220.00,
+    currentPrice: 220.00,
+    previousClose: 218.00,
+    highPrice24h: 225.00,
+    lowPrice24h: 215.00,
+    volatility: 0.040,
+    description: 'Semiconductor manufacturing giant',
+    sortOrder: 3,
+  },
+  {
+    tickerSymbol: 'DIGI',
+    companyName: 'Digital Dynamics',
+    sector: 'tech',
+    basePrice: 45.00,
+    currentPrice: 45.00,
+    previousClose: 44.50,
+    highPrice24h: 46.00,
+    lowPrice24h: 43.50,
+    volatility: 0.045,
+    description: 'Cybersecurity and digital protection',
+    sortOrder: 4,
+  },
+  {
+    tickerSymbol: 'ECHO',
+    companyName: 'EchoNet Systems',
+    sector: 'tech',
+    basePrice: 120.00,
+    currentPrice: 120.00,
+    previousClose: 119.00,
+    highPrice24h: 122.00,
+    lowPrice24h: 117.50,
+    volatility: 0.038,
+    description: 'AI and machine learning solutions',
+    sortOrder: 5,
+  },
+
+  // Finance (3) - Medium volatility
+  {
+    tickerSymbol: 'FBNK',
+    companyName: 'First National Bank',
+    sector: 'finance',
+    basePrice: 75.00,
+    currentPrice: 75.00,
+    previousClose: 74.50,
+    highPrice24h: 76.00,
+    lowPrice24h: 74.00,
+    volatility: 0.020,
+    description: 'Traditional banking and financial services',
+    sortOrder: 6,
+  },
+  {
+    tickerSymbol: 'GILT',
+    companyName: 'Gilt Capital Partners',
+    sector: 'finance',
+    basePrice: 180.00,
+    currentPrice: 180.00,
+    previousClose: 178.00,
+    highPrice24h: 182.00,
+    lowPrice24h: 177.00,
+    volatility: 0.025,
+    description: 'Investment management and wealth advisory',
+    sortOrder: 7,
+  },
+  {
+    tickerSymbol: 'HDGE',
+    companyName: 'Hedge Masters Fund',
+    sector: 'finance',
+    basePrice: 95.00,
+    currentPrice: 95.00,
+    previousClose: 94.00,
+    highPrice24h: 96.50,
+    lowPrice24h: 93.00,
+    volatility: 0.028,
+    description: 'Alternative investment strategies',
+    sortOrder: 8,
+  },
+
+  // Energy (3) - High volatility
+  {
+    tickerSymbol: 'VOLT',
+    companyName: 'VoltPower Inc',
+    sector: 'energy',
+    basePrice: 55.00,
+    currentPrice: 55.00,
+    previousClose: 54.00,
+    highPrice24h: 57.00,
+    lowPrice24h: 53.00,
+    volatility: 0.042,
+    description: 'Renewable energy and battery storage',
+    sortOrder: 9,
+  },
+  {
+    tickerSymbol: 'OILX',
+    companyName: 'OilMax Global',
+    sector: 'energy',
+    basePrice: 90.00,
+    currentPrice: 90.00,
+    previousClose: 89.00,
+    highPrice24h: 92.00,
+    lowPrice24h: 87.50,
+    volatility: 0.038,
+    description: 'Oil exploration and production',
+    sortOrder: 10,
+  },
+  {
+    tickerSymbol: 'SOLR',
+    companyName: 'Solar Dynamics Corp',
+    sector: 'energy',
+    basePrice: 35.00,
+    currentPrice: 35.00,
+    previousClose: 34.50,
+    highPrice24h: 36.00,
+    lowPrice24h: 33.50,
+    volatility: 0.048,
+    description: 'Solar panel manufacturing',
+    sortOrder: 11,
+  },
+
+  // Consumer (2) - Low volatility
+  {
+    tickerSymbol: 'FOOD',
+    companyName: 'FoodCorp International',
+    sector: 'consumer',
+    basePrice: 65.00,
+    currentPrice: 65.00,
+    previousClose: 64.80,
+    highPrice24h: 65.50,
+    lowPrice24h: 64.50,
+    volatility: 0.015,
+    description: 'Global food and beverage conglomerate',
+    sortOrder: 12,
+  },
+  {
+    tickerSymbol: 'LUXE',
+    companyName: 'LuxeGoods Holdings',
+    sector: 'consumer',
+    basePrice: 200.00,
+    currentPrice: 200.00,
+    previousClose: 199.00,
+    highPrice24h: 202.00,
+    lowPrice24h: 198.00,
+    volatility: 0.018,
+    description: 'Premium luxury retail brands',
+    sortOrder: 13,
+  },
+
+  // Healthcare (2) - Medium volatility
+  {
+    tickerSymbol: 'MEDS',
+    companyName: 'MedTech Solutions',
+    sector: 'healthcare',
+    basePrice: 110.00,
+    currentPrice: 110.00,
+    previousClose: 109.00,
+    highPrice24h: 112.00,
+    lowPrice24h: 108.00,
+    volatility: 0.028,
+    description: 'Medical devices and diagnostics',
+    sortOrder: 14,
+  },
+  {
+    tickerSymbol: 'CURE',
+    companyName: 'CureAll Pharmaceuticals',
+    sector: 'healthcare',
+    basePrice: 140.00,
+    currentPrice: 140.00,
+    previousClose: 138.50,
+    highPrice24h: 142.00,
+    lowPrice24h: 137.00,
+    volatility: 0.032,
+    description: 'Drug development and biotechnology',
+    sortOrder: 15,
+  },
+];
+
 const marketEvents: Prisma.MarketEventCreateInput[] = [
   // Positive Events
   { slug: 'bull-run', name: 'Bull Run', description: 'Market momentum is strong! Prices trending up.', effectType: 'trend_bias', effectValue: 5, durationMinutes: 45, isPositive: true, rarity: 2 },
@@ -1010,6 +1541,46 @@ async function main() {
     });
   }
   console.log(`✅ Seeded ${cosmetics.length} cosmetics`);
+
+  // Upsert phases
+  for (const phase of phases) {
+    await prisma.phase.upsert({
+      where: { id: phase.id },
+      update: phase,
+      create: phase,
+    });
+  }
+  console.log(`✅ Seeded ${phases.length} phases`);
+
+  // Upsert projects
+  for (const project of projects) {
+    await prisma.project.upsert({
+      where: { slug: project.slug },
+      update: project,
+      create: project,
+    });
+  }
+  console.log(`✅ Seeded ${projects.length} projects`);
+
+  // Upsert upgrades
+  for (const upgrade of upgrades) {
+    await prisma.upgrade.upsert({
+      where: { slug: upgrade.slug },
+      update: upgrade,
+      create: upgrade,
+    });
+  }
+  console.log(`✅ Seeded ${upgrades.length} upgrades`);
+
+  // Upsert bot stocks
+  for (const stock of botStocks) {
+    await prisma.botStock.upsert({
+      where: { tickerSymbol: stock.tickerSymbol },
+      update: stock,
+      create: stock,
+    });
+  }
+  console.log(`✅ Seeded ${botStocks.length} bot stocks`);
 
   console.log('🎉 Seeding complete!');
 }
