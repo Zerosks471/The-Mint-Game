@@ -40,6 +40,7 @@ export function StocksPage() {
   const [floatPercentage, setFloatPercentage] = useState<number>(50);
   const [selectedStock, setSelectedStock] = useState<StockDetail | null>(null);
   const [priceHistory, setPriceHistory] = useState<Array<{ time: number; price: number }>>([]);
+  const [showDelistConfirm, setShowDelistConfirm] = useState(false);
   const refreshStats = useGameStore((s) => s.refreshStats);
 
   const fetchMarketStocks = useCallback(async () => {
@@ -160,16 +161,35 @@ export function StocksPage() {
       const res = await gameApi.getStockByTicker(ticker);
       if (res.success && res.data) {
         setSelectedStock(res.data);
-        // Generate mock price history for now (in real app, fetch from API)
+        // Generate deterministic price history based on stock data
+        // TODO: Replace with API-backed history when available
         const history: Array<{ time: number; price: number }> = [];
         const now = Date.now() / 1000;
-        const basePrice = parseFloat(res.data.currentPrice);
+        const currentPrice = parseFloat(res.data.currentPrice);
+        const highPrice = parseFloat(res.data.highPrice24h);
+        const lowPrice = parseFloat(res.data.lowPrice24h);
+
+        // Create a deterministic seed from ticker symbol
+        const seed = ticker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
         for (let i = 24; i >= 0; i--) {
           const time = now - i * 3600; // Every hour for 24 hours
-          const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
+          // Generate deterministic variation based on seed and index
+          const deterministicValue = Math.sin(seed + i * 0.5) * 0.5 + 0.5; // 0 to 1
+
+          // Interpolate between low and high prices with deterministic variation
+          const priceRange = highPrice - lowPrice;
+          const baseForHour = lowPrice + (priceRange * deterministicValue);
+
+          // Smooth transition toward current price at end
+          const progressToNow = 1 - (i / 24);
+          const price = i === 0
+            ? currentPrice
+            : baseForHour * (1 - progressToNow * 0.3) + currentPrice * progressToNow * 0.3;
+
           history.push({
             time: Math.floor(time),
-            price: basePrice * (1 + variation),
+            price: Math.max(0.01, price),
           });
         }
         setPriceHistory(history);
@@ -294,9 +314,8 @@ export function StocksPage() {
     }
   };
 
-  const handleDelist = async () => {
-    if (!confirm('Are you sure you want to delist your stock?')) return;
-
+  const handleDelistConfirm = async () => {
+    setShowDelistConfirm(false);
     setIsListing(true);
     try {
       const res = await gameApi.delistPlayerStock();
@@ -311,6 +330,10 @@ export function StocksPage() {
     } finally {
       setIsListing(false);
     }
+  };
+
+  const handleDelist = () => {
+    setShowDelistConfirm(true);
   };
 
   if (isLoading) {
@@ -725,7 +748,10 @@ export function StocksPage() {
                     .sort((a, b) => parseFloat(b.currentValue) - parseFloat(a.currentValue))
                     .slice(0, 5)
                     .map((holding) => {
-                      const percentage = (parseFloat(holding.currentValue) / totalPortfolioValue) * 100;
+                      // Guard against division by zero
+                      const percentage = totalPortfolioValue > 0
+                        ? (parseFloat(holding.currentValue) / totalPortfolioValue) * 100
+                        : 0;
                       return (
                         <div key={holding.id} className="space-y-1">
                           <div className="flex items-center justify-between text-xs">
@@ -791,8 +817,9 @@ export function StocksPage() {
                   <span>Sort by:</span>
                   <select
                     onChange={(e) => {
-                      // Simple client-side sorting
-                      const sorted = [...portfolio].sort((a, b) => {
+                      // Client-side sorting - creates new array to avoid mutating state
+                      // Note: Sort preference is purely for display, original order preserved on refetch
+                      const sortedPortfolio = [...portfolio].sort((a, b) => {
                         switch (e.target.value) {
                           case 'value':
                             return parseFloat(b.currentValue) - parseFloat(a.currentValue);
@@ -804,7 +831,7 @@ export function StocksPage() {
                             return 0;
                         }
                       });
-                      setPortfolio(sorted);
+                      setPortfolio(sortedPortfolio);
                     }}
                     className="bg-dark-elevated border border-dark-border rounded px-2 py-1 text-zinc-300"
                   >
@@ -1321,6 +1348,32 @@ export function StocksPage() {
                   {isListing ? 'Processing...' : playerStock ? 'Update' : 'Launch IPO'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delist Confirmation Modal */}
+      {showDelistConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold text-zinc-100 mb-4">Confirm Delist</h2>
+            <p className="text-zinc-400 mb-6">
+              Are you sure you want to delist your stock? This action cannot be undone and your stock will be removed from the market.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDelistConfirm(false)}
+                className="flex-1 py-3 bg-dark-elevated hover:bg-dark-border text-zinc-300 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelistConfirm}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Delist Stock
+              </button>
             </div>
           </div>
         </div>

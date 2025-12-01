@@ -274,7 +274,8 @@ export class StockService {
       const currentPrice = Number(stock.currentPrice);
       const previousClose = Number(stock.previousClose);
       const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
+      // Guard against division by zero
+      const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
       marketData.push({
         tickerSymbol: stock.tickerSymbol,
@@ -298,7 +299,8 @@ export class StockService {
       const currentPrice = Number(stock.currentPrice);
       const previousClose = Number(stock.previousClose);
       const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
+      // Guard against division by zero
+      const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
       marketData.push({
         tickerSymbol: stock.tickerSymbol,
@@ -341,7 +343,8 @@ export class StockService {
       const currentPrice = Number(botStock.currentPrice);
       const previousClose = Number(botStock.previousClose);
       const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
+      // Guard against division by zero
+      const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
       return {
         tickerSymbol: botStock.tickerSymbol,
@@ -386,7 +389,8 @@ export class StockService {
       const currentPrice = Number(playerStock.currentPrice);
       const previousClose = Number(playerStock.previousClose);
       const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
+      // Guard against division by zero
+      const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
       return {
         tickerSymbol: playerStock.tickerSymbol,
@@ -433,7 +437,8 @@ export class StockService {
     const currentPrice = Number(updated.currentPrice);
     const previousClose = Number(updated.previousClose);
     const change = currentPrice - previousClose;
-    const changePercent = (change / previousClose) * 100;
+    // Guard against division by zero
+    const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
     return {
       tickerSymbol: updated.tickerSymbol,
@@ -756,17 +761,9 @@ export class StockService {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Insufficient cash', 400);
     }
 
-    // Check available shares (for player stocks)
-    if (updatedStock.stockType === 'player') {
-      const playerStock = await prisma.playerStock.findFirst({
-        where: { tickerSymbol: updatedStock.tickerSymbol.toUpperCase() },
-      });
-      if (playerStock && shares > playerStock.floatShares) {
-        throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Not enough shares available', 400);
-      }
-    }
+    // Float shares check moved inside transaction to prevent race conditions
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Deduct cash
       await tx.playerStats.update({
         where: { userId },
@@ -832,6 +829,11 @@ export class StockService {
           where: { tickerSymbol: updatedStock.tickerSymbol.toUpperCase() },
         });
         if (!playerStock) throw new AppError(ErrorCodes.NOT_FOUND, 'Player stock not found', 404);
+
+        // Check available float shares INSIDE transaction to prevent race conditions
+        if (shares > playerStock.floatShares) {
+          throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Not enough shares available', 400);
+        }
 
         // Update float shares
         await tx.playerStock.update({
@@ -903,22 +905,6 @@ export class StockService {
         },
       });
 
-      // Apply supply/demand price impact (after transaction commits)
-      // This creates realistic market pressure
-      setImmediate(async () => {
-        try {
-          const { MarketDynamicsService } = await import('./marketDynamics.service');
-          await MarketDynamicsService.applyTradeImpact(
-            updatedStock.tickerSymbol,
-            'buy',
-            shares,
-            pricePerShare
-          );
-        } catch (error) {
-          console.error('Failed to apply trade impact:', error);
-        }
-      });
-
       // Update bot stock volume if applicable
       if (updatedStock.stockType === 'bot') {
         const botStock = await tx.botStock.findUnique({
@@ -954,8 +940,8 @@ export class StockService {
         id: order.id,
         tickerSymbol: order.tickerSymbol,
         companyName: updatedStock.companyName,
-        stockType: order.stockType,
-        orderType: order.orderType,
+        stockType: order.stockType as 'bot' | 'player',
+        orderType: order.orderType as 'buy' | 'sell',
         shares: order.shares,
         pricePerShare: order.pricePerShare.toString(),
         totalAmount: order.totalAmount.toString(),
@@ -964,6 +950,22 @@ export class StockService {
 
       return { holding: holdingData, order: orderData };
     });
+
+    // Apply supply/demand price impact AFTER transaction commits
+    // This creates realistic market pressure without race conditions
+    try {
+      const { MarketDynamicsService } = await import('./marketDynamics.service');
+      await MarketDynamicsService.applyTradeImpact(
+        updatedStock.tickerSymbol,
+        'buy',
+        shares,
+        pricePerShare
+      );
+    } catch (error) {
+      console.error('Failed to apply trade impact:', error);
+    }
+
+    return result;
   }
 
   /**
@@ -973,7 +975,7 @@ export class StockService {
     userId: string,
     tickerSymbol: string,
     shares: number
-  ): Promise<{ holding: StockHoldingData; order: StockOrderData }> {
+  ): Promise<{ holding: StockHoldingData | null; order: StockOrderData }> {
     if (shares <= 0 || !Number.isInteger(shares)) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Shares must be a positive integer', 400);
     }
@@ -1031,6 +1033,8 @@ export class StockService {
           avgBuyPrice: true,
           totalInvested: true,
           createdAt: true,
+          botStockId: true,
+          playerStockId: true,
         },
       });
     } else {
@@ -1053,6 +1057,8 @@ export class StockService {
           avgBuyPrice: true,
           totalInvested: true,
           createdAt: true,
+          botStockId: true,
+          playerStockId: true,
         },
       });
     }
@@ -1071,7 +1077,7 @@ export class StockService {
       holding.createdAt
     );
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Add cash
       const updatedStats = await tx.playerStats.update({
         where: { userId },
@@ -1129,21 +1135,6 @@ export class StockService {
           pricePerShare,
           totalAmount: totalRevenue,
         },
-      });
-
-      // Apply supply/demand price impact (after transaction commits)
-      setImmediate(async () => {
-        try {
-          const { MarketDynamicsService } = await import('./marketDynamics.service');
-          await MarketDynamicsService.applyTradeImpact(
-            updatedStock.tickerSymbol,
-            'sell',
-            shares,
-            pricePerShare
-          );
-        } catch (error) {
-          console.error('Failed to apply trade impact:', error);
-        }
       });
 
       // Update bot stock volume if applicable
@@ -1221,16 +1212,32 @@ export class StockService {
         id: order.id,
         tickerSymbol: order.tickerSymbol,
         companyName: updatedStock.companyName,
-        stockType: order.stockType,
-        orderType: order.orderType,
+        stockType: order.stockType as 'bot' | 'player',
+        orderType: order.orderType as 'buy' | 'sell',
         shares: order.shares,
         pricePerShare: order.pricePerShare.toString(),
         totalAmount: order.totalAmount.toString(),
         createdAt: order.createdAt.toISOString(),
       };
 
-      return { holding: holdingData!, order: orderData };
+      return { holding: holdingData, order: orderData };
     });
+
+    // Apply supply/demand price impact AFTER transaction commits
+    // This creates realistic market pressure without race conditions
+    try {
+      const { MarketDynamicsService } = await import('./marketDynamics.service');
+      await MarketDynamicsService.applyTradeImpact(
+        updatedStock.tickerSymbol,
+        'sell',
+        shares,
+        pricePerShare
+      );
+    } catch (error) {
+      console.error('Failed to apply trade impact:', error);
+    }
+
+    return result;
   }
 
   /**
@@ -1265,8 +1272,8 @@ export class StockService {
         id: order.id,
         tickerSymbol: order.tickerSymbol,
         companyName,
-        stockType: order.stockType,
-        orderType: order.orderType,
+        stockType: order.stockType as 'bot' | 'player',
+        orderType: order.orderType as 'buy' | 'sell',
         shares: order.shares,
         pricePerShare: order.pricePerShare.toString(),
         totalAmount: order.totalAmount.toString(),
@@ -1294,13 +1301,11 @@ export class StockService {
     }>
   > {
     try {
-      // Get all completed orders from all users (including bots)
+      // Get all orders from all users (including bots)
+      // Orders are created when trades execute, so all orders represent completed trades
       // If a limit is provided, respect it; otherwise default to a sane cap
       const take = limit ?? 300;
       const orders = await prisma.stockOrder.findMany({
-        where: {
-          status: 'completed',
-        },
         orderBy: { createdAt: 'desc' },
         take,
       });
@@ -1309,10 +1314,11 @@ export class StockService {
 
       for (const order of orders) {
         try {
-          // Check if this is a bot trade - be more explicit
+          // Check if this is a bot trade - use explicit bot user ID patterns only
+          // Don't use userId.includes('bot') as it catches player usernames like "robotics_fan"
           const isBot =
             order.userId === 'system-bot-trader' ||
-            order.userId.includes('bot') ||
+            order.userId.startsWith('system-bot-') ||
             order.userId.startsWith('system-');
 
           // Get trader name
@@ -1361,12 +1367,12 @@ export class StockService {
    * Get bot trader name from user ID
    */
   private getBotTraderName(userId: string): string {
-    // All bot trades use 'system-bot-trader' as userId
+    // All bot trades use 'system-bot-trader' or 'system-*' as userId
     // We need to identify which bot strategy made the trade
     // For now, return a generic name since we can't distinguish between bot strategies
     // In the future, we could add a field to StockOrder to track which bot made the trade
 
-    if (userId === 'system-bot-trader' || userId.includes('bot')) {
+    if (userId === 'system-bot-trader' || userId.startsWith('system-')) {
       return 'AI Trader';
     }
 

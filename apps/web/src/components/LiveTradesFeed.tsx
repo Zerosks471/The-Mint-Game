@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { formatCurrency } from '@mint/utils';
 import { gameApi } from '../api/game';
 
 interface LiveTrade {

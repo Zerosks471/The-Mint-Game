@@ -17,6 +17,8 @@ export function StockCard({ stock, onBuy, onSell, onView, showActions = true }: 
   // Update price in real-time with smooth transitions
   useEffect(() => {
     const currentPrice = parseFloat(stock.currentPrice);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     if (currentPrice !== displayPrice) {
       if (currentPrice > displayPrice) {
         setPriceChange('up');
@@ -24,10 +26,17 @@ export function StockCard({ stock, onBuy, onSell, onView, showActions = true }: 
         setPriceChange('down');
       }
       setDisplayPrice(currentPrice);
-      
+
       // Reset price change indicator after animation
-      setTimeout(() => setPriceChange(null), 1000);
+      timeoutId = setTimeout(() => setPriceChange(null), 1000);
     }
+
+    // Cleanup timeout on unmount or re-render
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [stock.currentPrice, displayPrice]);
 
   const isPositive = parseFloat(stock.change) >= 0;

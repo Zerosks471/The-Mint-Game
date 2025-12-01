@@ -858,6 +858,8 @@ model PlayerStock {
   holdings        StockHolding[] @relation("PlayerStockHoldings")
   orders          StockOrder[] @relation("PlayerStockOrders")
 
+  @@index([isListed, updatedAt])
+  @@index([lastTickAt])
   @@map("player_stocks")
 }
 
@@ -884,6 +886,8 @@ model BotStock {
   holdings        StockHolding[] @relation("BotStockHoldings")
   orders          StockOrder[] @relation("BotStockOrders")
 
+  @@index([isActive])
+  @@index([lastTickAt])
   @@map("bot_stocks")
 }
 
@@ -901,11 +905,15 @@ model StockHolding {
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  playerStock     PlayerStock? @relation("PlayerStockHoldings", fields: [playerStockId], references: [id])
-  botStock        BotStock?   @relation("BotStockHoldings", fields: [botStockId], references: [id])
+  playerStock     PlayerStock? @relation("PlayerStockHoldings", fields: [playerStockId], references: [id], onDelete: SetNull)
+  botStock        BotStock?   @relation("BotStockHoldings", fields: [botStockId], references: [id], onDelete: SetNull)
 
   @@unique([userId, stockType, playerStockId])
   @@unique([userId, stockType, botStockId])
+  @@index([userId])
+  @@index([playerStockId])
+  @@index([botStockId])
+  @@index([stockType])
   @@map("stock_holdings")
 }
 
@@ -925,9 +933,13 @@ model StockOrder {
   createdAt       DateTime  @default(now()) @map("created_at")
 
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  playerStock     PlayerStock? @relation("PlayerStockOrders", fields: [playerStockId], references: [id])
-  botStock        BotStock?   @relation("BotStockOrders", fields: [botStockId], references: [id])
+  playerStock     PlayerStock? @relation("PlayerStockOrders", fields: [playerStockId], references: [id], onDelete: SetNull)
+  botStock        BotStock?   @relation("BotStockOrders", fields: [botStockId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+  @@index([playerStockId])
+  @@index([botStockId])
+  @@index([stockType])
+  @@index([status, createdAt])
   @@map("stock_orders")
 }

@@ -33,7 +33,6 @@ export function StockTradingModal({
     if (!isBuy) return null; // Only show for buys
 
     const currentPrice = parseFloat(stock.currentPrice);
-    const previousClose = parseFloat(stock.previousClose);
     const changePercent = stock.changePercent || 0;
     const high24h = parseFloat(stock.highPrice24h);
     const low24h = parseFloat(stock.lowPrice24h);
@@ -48,9 +47,12 @@ export function StockTradingModal({
     let meanReversionScore = 0;
     if (stock.basePrice) {
       const basePrice = parseFloat(stock.basePrice);
-      const deviationFromBase = (currentPrice - basePrice) / basePrice;
-      // If price is below base, higher chance of going up (mean reversion)
-      meanReversionScore = -deviationFromBase * 0.3; // -30% to +30% contribution
+      // Guard against division by zero
+      if (basePrice > 0) {
+        const deviationFromBase = (currentPrice - basePrice) / basePrice;
+        // If price is below base, higher chance of going up (mean reversion)
+        meanReversionScore = -deviationFromBase * 0.3; // -30% to +30% contribution
+      }
     }
 
     // Trend analysis

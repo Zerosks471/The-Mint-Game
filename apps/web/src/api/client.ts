@@ -32,30 +32,55 @@ class ApiClient {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      ...fetchOptions,
-      headers,
-      credentials: 'include', // Include cookies for refresh token
-    });
+    try {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        ...fetchOptions,
+        headers,
+        credentials: 'include', // Include cookies for refresh token
+      });
 
-    const data = await response.json();
-
-    // Handle token expiration - try to refresh
-    if (response.status === 401 && !skipAuth && !endpoint.includes('/auth/')) {
-      const refreshed = await this.refreshToken();
-      if (refreshed) {
-        // Retry the original request with new token
-        (headers as Record<string, string>)['Authorization'] = `Bearer ${this.accessToken}`;
-        const retryResponse = await fetch(`${BASE_URL}${endpoint}`, {
-          ...fetchOptions,
-          headers,
-          credentials: 'include',
-        });
-        return retryResponse.json();
+      // Handle token expiration - try to refresh
+      if (response.status === 401 && !skipAuth && !endpoint.includes('/auth/')) {
+        const refreshed = await this.refreshToken();
+        if (refreshed) {
+          // Retry the original request with new token
+          (headers as Record<string, string>)['Authorization'] = `Bearer ${this.accessToken}`;
+          const retryResponse = await fetch(`${BASE_URL}${endpoint}`, {
+            ...fetchOptions,
+            headers,
+            credentials: 'include',
+          });
+          // Parse retry response with proper error handling
+          try {
+            const retryData = await retryResponse.json();
+            return retryData as ApiResponse<T>;
+          } catch {
+            return {
+              success: false,
+              error: { message: 'Failed to parse response after token refresh' },
+            } as ApiResponse<T>;
+          }
+        }
       }
-    }
 
-    return data;
+      // Parse response JSON with error handling
+      try {
+        const data = await response.json();
+        return data as ApiResponse<T>;
+      } catch {
+        // Response wasn't valid JSON
+        return {
+          success: false,
+          error: { message: `Server returned non-JSON response (status: ${response.status})` },
+        } as ApiResponse<T>;
+      }
+    } catch (err) {
+      // Network error or other fetch failure
+      return {
+        success: false,
+        error: { message: err instanceof Error ? err.message : 'Network error' },
+      } as ApiResponse<T>;
+    }
   }
 
   private async refreshToken(): Promise<boolean> {

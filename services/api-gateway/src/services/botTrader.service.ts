@@ -378,10 +378,21 @@ export class BotTraderService {
   private async executeTrade(
     botUserId: string,
     decision: TradingDecision,
-    stock: any
+    stock: any,
+    availableCash: Decimal
   ): Promise<boolean> {
     try {
       if (decision.action === 'buy' && decision.shares > 0) {
+        // Pre-validate cash before attempting buy to reduce exception overhead
+        const totalCost = new Decimal(stock.currentPrice).mul(decision.shares);
+        if (availableCash.lessThan(totalCost)) {
+          // Reduce shares to what we can afford
+          const affordableShares = Math.floor(availableCash.div(stock.currentPrice).toNumber());
+          if (affordableShares <= 0) {
+            return false;
+          }
+          decision.shares = affordableShares;
+        }
         await stockService.buyShares(botUserId, decision.ticker, decision.shares);
         return true;
       } else if (decision.action === 'sell' && decision.shares > 0) {
@@ -433,21 +444,33 @@ export class BotTraderService {
       // Each bot trader makes decisions
       // Increase trading frequency - each bot has a higher chance to trade
       let tradesExecuted = 0; // Track total trades across all bots
+      let remainingCash = cash; // Track remaining cash across all bot trades
+
       for (const bot of botTraders) {
+        // Refresh portfolio data for each bot to avoid stale data
+        const currentPortfolio = await stockService.getPortfolio(botUserId);
+        const currentStats = await prisma.playerStats.findUnique({
+          where: { userId: botUserId },
+        });
+        if (currentStats) {
+          remainingCash = new Decimal(currentStats.cash);
+        }
+
         // Increased aggressiveness - bots trade more often
         const shouldTrade = Math.random() < bot.aggressiveness * 1.5; // 50% more aggressive
         if (!shouldTrade) {
           continue;
         }
 
-        // Allocate portion of portfolio to this bot
-        const botCash = cash.mul(0.2); // Each bot gets 20% of total cash
-        const botHoldings = portfolio; // All holdings
+        // Allocate portion of remaining portfolio to this bot (max 15% per bot to prevent over-allocation)
+        const botCash = remainingCash.mul(0.15);
+        const botHoldings = currentPortfolio;
 
-        // Sector rotation - bots focus on different sectors each cycle
-        const sectorRotation = Math.floor(Date.now() / (30 * 1000)) % 5; // Rotate every 30 seconds
-        const focusSectors = ['tech', 'finance', 'energy', 'consumer', 'healthcare'];
-        const currentFocusSector = focusSectors[sectorRotation];
+        // Sector rotation - add randomness to prevent predictability
+        const randomOffset = Math.floor(Math.random() * 5);
+        const sectorRotation = (Math.floor(Date.now() / (30 * 1000)) + randomOffset) % 5;
+        const focusSectors = ['tech', 'finance', 'energy', 'consumer', 'healthcare'] as const;
+        const currentFocusSector = focusSectors[sectorRotation] ?? 'tech';
 
         // Evaluate each stock (both bot and player stocks)
         // Prioritize stocks in the current focus sector for more concentrated trading
@@ -462,7 +485,7 @@ export class BotTraderService {
           if (!stock.currentPrice || parseFloat(stock.currentPrice) <= 0) continue;
 
           // Sector focus bonus - bots are more likely to trade in focus sector
-          const isFocusSector = stock.sector?.toLowerCase().includes(currentFocusSector);
+          const isFocusSector = stock.sector?.toLowerCase().includes(currentFocusSector) ?? false;
           const sectorBonus = isFocusSector ? 0.2 : 0; // 20% confidence bonus for focus sector
 
           // Get stock detail for additional data
@@ -514,7 +537,7 @@ export class BotTraderService {
           if (decision.action !== 'hold' && adjustedConfidence >= 0.35) {
             // Use confidence as probability of executing
             if (Math.random() < adjustedConfidence) {
-              const success = await this.executeTrade(botUserId, decision, stock);
+              const success = await this.executeTrade(botUserId, decision, stock, botCash);
 
               if (success) {
                 tradesExecuted++;
@@ -526,6 +549,7 @@ export class BotTraderService {
         // Extra: specifically target player stocks sometimes so names like TESS get real activity
         if (playerStocks.length > 0 && Math.random() < 0.6) {
           const randomPlayer = playerStocks[Math.floor(Math.random() * playerStocks.length)];
+          if (!randomPlayer) continue;
           const marketStock = allStocks.find(
             (s) => s.tickerSymbol === randomPlayer.tickerSymbol
           );
@@ -534,7 +558,8 @@ export class BotTraderService {
             // Simple mean-reversion style decision for player stocks
             const previousClose = parseFloat(marketStock.previousClose);
             const currentPrice = parseFloat(marketStock.currentPrice);
-            const diffPct = (currentPrice - previousClose) / previousClose;
+            // Guard against division by zero
+            const diffPct = previousClose > 0 ? (currentPrice - previousClose) / previousClose : 0;
 
             let action: 'buy' | 'sell' | 'hold' = 'hold';
             let confidence = 0.4;
@@ -569,7 +594,7 @@ export class BotTraderService {
                     : 'Taking profits on strong player stock',
               };
 
-              const success = await this.executeTrade(botUserId, decision, marketStock);
+              const success = await this.executeTrade(botUserId, decision, marketStock, botCash);
               if (success) {
                 tradesExecuted++;
               }
@@ -580,24 +605,36 @@ export class BotTraderService {
 
       // Fallback: if no trades were executed this cycle, place a small market trade
       // so the live feed always has fresh activity when there is cash available.
-      if (tradesExecuted === 0) {
+      // Get fresh cash balance before fallback trade
+      const finalStats = await prisma.playerStats.findUnique({
+        where: { userId: botUserId },
+      });
+      const finalCash = finalStats ? new Decimal(finalStats.cash) : cash;
+
+      if (tradesExecuted === 0 && finalCash.greaterThan(1000)) {
         // Pick a random affordable stock and buy a few shares
         const affordable = allStocks.filter((s) => {
           const price = parseFloat(s.currentPrice);
-          return price > 0 && price * 5 <= Number(cash); // can afford at least ~5 shares
+          return price > 0 && price * 5 <= Number(finalCash); // can afford at least ~5 shares
         });
 
         if (affordable.length > 0) {
           const pick = affordable[Math.floor(Math.random() * affordable.length)];
-          const price = parseFloat(pick.currentPrice);
-          const maxBudget = Number(cash) * 0.02; // up to 2% of cash as a gentle nudge
-          const shares = Math.max(1, Math.floor(maxBudget / price));
+          if (pick) {
+            const price = parseFloat(pick.currentPrice);
+            const maxBudget = Number(finalCash) * 0.02; // up to 2% of cash as a gentle nudge
+            const shares = Math.max(1, Math.floor(maxBudget / price));
 
-          try {
-            await stockService.buyShares(botUserId, pick.tickerSymbol, shares);
-          } catch (error) {
-            // If fallback trade fails, just skip; don't crash the loop
-            console.error('Fallback bot trade failed:', error);
+            // Pre-validate cash before fallback trade
+            const totalCost = price * shares;
+            if (Number(finalCash) >= totalCost) {
+              try {
+                await stockService.buyShares(botUserId, pick.tickerSymbol, shares);
+              } catch (error) {
+                // If fallback trade fails, just skip; don't crash the loop
+                console.error('Fallback bot trade failed:', error);
+              }
+            }
           }
         }
       }

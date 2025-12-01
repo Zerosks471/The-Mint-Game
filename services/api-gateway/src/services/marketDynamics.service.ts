@@ -43,9 +43,11 @@ export class MarketDynamicsService {
     if (!stock) return;
 
     // Calculate market cap
-    const marketCap = stock.marketCap
-      ? new Decimal(stock.marketCap)
-      : new Decimal(stock.currentPrice).mul(stock.totalShares || 1000000);
+    const totalShares = 'totalShares' in stock && stock.totalShares ? stock.totalShares : 1000000;
+    const stockMarketCap = 'marketCap' in stock && stock.marketCap ? stock.marketCap : null;
+    const marketCap = stockMarketCap
+      ? new Decimal(stockMarketCap)
+      : new Decimal(stock.currentPrice).mul(totalShares);
 
     // Calculate trade value as percentage of market cap
     const tradeValue = pricePerShare.mul(shares);
@@ -71,28 +73,41 @@ export class MarketDynamicsService {
 
     // Update stock price
     if (botStock) {
+      // Safely compare prices, initializing high/low if not set
+      const currentHigh = botStock.highPrice24h ? new Decimal(botStock.highPrice24h) : finalPrice;
+      const currentLow = botStock.lowPrice24h ? new Decimal(botStock.lowPrice24h) : finalPrice;
+      const newHigh = finalPrice.greaterThan(currentHigh) ? finalPrice : currentHigh;
+      const newLow = finalPrice.lessThan(currentLow) ? finalPrice : currentLow;
+
       await prisma.botStock.update({
         where: { id: botStock.id },
         data: {
           currentPrice: finalPrice,
-          highPrice24h: finalPrice.greaterThan(botStock.highPrice24h) ? finalPrice : botStock.highPrice24h,
-          lowPrice24h: finalPrice.lessThan(botStock.lowPrice24h) ? finalPrice : botStock.lowPrice24h,
+          highPrice24h: newHigh,
+          lowPrice24h: newLow,
         },
       });
     } else if (playerStock) {
+      // Safely compare prices, initializing high/low if not set
+      const currentHigh = playerStock.highPrice24h ? new Decimal(playerStock.highPrice24h) : finalPrice;
+      const currentLow = playerStock.lowPrice24h ? new Decimal(playerStock.lowPrice24h) : finalPrice;
+      const newHigh = finalPrice.greaterThan(currentHigh) ? finalPrice : currentHigh;
+      const newLow = finalPrice.lessThan(currentLow) ? finalPrice : currentLow;
+
       await prisma.playerStock.update({
         where: { id: playerStock.id },
         data: {
           currentPrice: finalPrice,
-          highPrice24h: finalPrice.greaterThan(playerStock.highPrice24h) ? finalPrice : playerStock.highPrice24h,
-          lowPrice24h: finalPrice.lessThan(playerStock.lowPrice24h) ? finalPrice : playerStock.lowPrice24h,
+          highPrice24h: newHigh,
+          lowPrice24h: newLow,
         },
       });
     }
 
     // Apply sector correlation effects (smaller impact on related stocks)
-    if (stock.sector || playerStock) {
-      const sector = stock.sector || 'general';
+    const stockSector = 'sector' in stock && stock.sector ? stock.sector : null;
+    if (stockSector || playerStock) {
+      const sector = stockSector || 'general';
       await this.applySectorCorrelation(sector, orderType, impact * 0.1); // 10% of impact spreads to sector
     }
   }

@@ -25,7 +25,13 @@ router.get(
   '/market/:ticker',
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const { ticker } = req.params;
+      const ticker = req.params.ticker;
+      if (!ticker) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ticker symbol is required',
+        });
+      }
       const stock = await stockService.getStockByTicker(ticker);
       if (!stock) {
         return res.status(404).json({
@@ -61,7 +67,13 @@ router.get(
   '/player/:userId',
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const { userId } = req.params;
+      const userId = req.params.userId;
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: 'User ID is required',
+        });
+      }
       const stock = await stockService.getPlayerStock(userId);
       res.json({
         success: true,

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -51,7 +51,6 @@ export function StockChart({
   currentPrice,
   previousClose,
   height = 400,
-  showVolume = false,
 }: StockChartProps) {
   const [timeRange, setTimeRange] = useState<'1H' | '24H' | '7D' | '30D'>('24H');
 

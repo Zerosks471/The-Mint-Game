@@ -14,7 +14,6 @@ export function StockTicker({ stocks, speed = 50 }: StockTickerProps) {
   useEffect(() => {
     if (!contentRef.current || stocks.length === 0) return;
 
-    const container = containerRef.current;
     const content = contentRef.current;
     let animationFrameId: number;
     let startTime: number;
