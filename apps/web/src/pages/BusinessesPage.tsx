@@ -7,6 +7,57 @@ import { minigameApi, StartTaskResponse } from '../api/minigames';
 
 type Tab = 'owned' | 'shop';
 
+// Animated cycle progress that updates in real-time
+function AnimatedCycleProgress({
+  cycleStart,
+  cycleSeconds,
+  cycleComplete
+}: {
+  cycleStart: string;
+  cycleSeconds: number;
+  cycleComplete: boolean;
+}) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (cycleComplete) {
+      setProgress(100);
+      return;
+    }
+
+    const updateProgress = () => {
+      const startTime = new Date(cycleStart).getTime();
+      const elapsed = (Date.now() - startTime) / 1000;
+      const newProgress = Math.min(100, (elapsed / cycleSeconds) * 100);
+      setProgress(newProgress);
+    };
+
+    updateProgress();
+    const interval = setInterval(updateProgress, 100);
+
+    return () => clearInterval(interval);
+  }, [cycleStart, cycleSeconds, cycleComplete]);
+
+  return (
+    <div className="mb-4">
+      <div className="flex items-center justify-between text-sm mb-1">
+        <span className="text-zinc-500">Cycle Progress</span>
+        <span className="font-medium text-zinc-200">
+          {cycleComplete ? 'Ready!' : `${Math.floor(progress)}%`}
+        </span>
+      </div>
+      <div className="w-full bg-dark-border rounded-full h-3">
+        <div
+          className={`h-3 rounded-full transition-all duration-100 ${
+            cycleComplete ? 'bg-green-500' : 'bg-purple-500'
+          }`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function BusinessesPage() {
   const {
     stats,
@@ -36,11 +87,11 @@ export function BusinessesPage() {
     fetchStats();
   }, [fetchBusinessTypes, fetchPlayerBusinesses, fetchStats]);
 
-  // Refresh businesses every 5 seconds for cycle progress
+  // Refresh businesses every 10 seconds (progress is animated client-side)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchPlayerBusinesses();
-    }, 5000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [fetchPlayerBusinesses]);
 
@@ -271,25 +322,14 @@ function OwnedBusinessCard({
       </div>
 
       {/* Cycle Progress */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between text-sm mb-1">
-          <span className="text-zinc-500">Cycle Progress</span>
-          <span className="font-medium text-zinc-200">
-            {business.cycleComplete ? 'Ready!' : `${Math.floor(business.cycleProgress * 100)}%`}
-          </span>
-        </div>
-        <div className="w-full bg-dark-border rounded-full h-3">
-          <div
-            className={`h-3 rounded-full transition-all ${
-              business.cycleComplete ? 'bg-green-500' : 'bg-purple-500'
-            }`}
-            style={{ width: `${business.cycleProgress * 100}%` }}
-          />
-        </div>
-        <p className="text-xs text-zinc-600 mt-1">
-          Cycle time: {formatTime(business.cycleSeconds)}
-        </p>
-      </div>
+      <AnimatedCycleProgress
+        cycleStart={business.currentCycleStart}
+        cycleSeconds={business.cycleSeconds}
+        cycleComplete={business.cycleComplete}
+      />
+      <p className="text-xs text-zinc-600 -mt-3 mb-4">
+        Cycle time: {formatTime(business.cycleSeconds)}
+      </p>
 
       {/* Revenue Info */}
       <div className="bg-mint/10 rounded-xl p-3 mb-4">
