@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { StockMarketData } from '../api/game';
 import { formatCurrency } from '@mint/utils';
 
@@ -10,6 +11,25 @@ interface StockCardProps {
 }
 
 export function StockCard({ stock, onBuy, onSell, onView, showActions = true }: StockCardProps) {
+  const [displayPrice, setDisplayPrice] = useState(parseFloat(stock.currentPrice));
+  const [priceChange, setPriceChange] = useState<'up' | 'down' | null>(null);
+
+  // Update price in real-time with smooth transitions
+  useEffect(() => {
+    const currentPrice = parseFloat(stock.currentPrice);
+    if (currentPrice !== displayPrice) {
+      if (currentPrice > displayPrice) {
+        setPriceChange('up');
+      } else if (currentPrice < displayPrice) {
+        setPriceChange('down');
+      }
+      setDisplayPrice(currentPrice);
+      
+      // Reset price change indicator after animation
+      setTimeout(() => setPriceChange(null), 1000);
+    }
+  }, [stock.currentPrice, displayPrice]);
+
   const isPositive = parseFloat(stock.change) >= 0;
   const trendColor =
     stock.trend === 'bullish'
@@ -39,8 +59,16 @@ export function StockCard({ stock, onBuy, onSell, onView, showActions = true }: 
           <p className="text-sm text-zinc-400">{stock.companyName}</p>
         </div>
         <div className="text-right">
-          <p className="text-xl font-bold text-zinc-100 font-mono">
-            ${parseFloat(stock.currentPrice).toFixed(2)}
+          <p
+            className={`text-xl font-bold font-mono transition-all duration-300 ${
+              priceChange === 'up'
+                ? 'text-green-400 scale-105'
+                : priceChange === 'down'
+                  ? 'text-red-400 scale-105'
+                  : 'text-zinc-100'
+            }`}
+          >
+            ${displayPrice.toFixed(2)}
           </p>
           <div className={`flex items-center gap-1 text-sm ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
             <span>{isPositive ? '↑' : '↓'}</span>

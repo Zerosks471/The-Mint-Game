@@ -1,6 +1,8 @@
 import { createApp } from './app';
 import { config } from './config';
 import { prisma } from '@mint/database';
+import { botTraderService } from './services/botTrader.service';
+import { stockService } from './services/stock.service';
 
 async function main() {
   const app = createApp();
@@ -19,6 +21,26 @@ async function main() {
     console.log(`🚀 API Gateway running on port ${config.PORT}`);
     console.log(`📍 Environment: ${config.NODE_ENV}`);
   });
+
+  // Start bot trading scheduler
+  const startBotTrading = async () => {
+    try {
+      // Update stock prices first
+      await stockService.updateBotStockPrices();
+      
+      // Run bot trading
+      await botTraderService.runBotTrading();
+    } catch (error) {
+      console.error('Bot trading error:', error);
+    }
+  };
+
+  // Run bot trading every 2 minutes (more frequent than price updates)
+  setInterval(startBotTrading, 2 * 60 * 1000);
+  console.log('🤖 Bot trading system started (runs every 2 minutes)');
+  
+  // Run immediately on startup
+  startBotTrading();
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

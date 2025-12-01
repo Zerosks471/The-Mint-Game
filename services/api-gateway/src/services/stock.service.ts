@@ -145,6 +145,66 @@ export class StockService {
   }
 
   /**
+   * Add small real-time price variations to make prices feel alive
+   */
+  async addRealTimePriceVariations(): Promise<void> {
+    const botStocks = await prisma.botStock.findMany({
+      where: { isActive: true },
+    });
+
+    for (const stock of botStocks) {
+      const currentPrice = Number(stock.currentPrice);
+      const volatility = Number(stock.volatility);
+
+      // Add tiny random variation (0.1% to 0.5% of volatility)
+      const variation = (Math.random() - 0.5) * volatility * 0.1;
+      const newPrice = currentPrice * (1 + variation);
+
+      // Update high/low if needed
+      let highPrice = Number(stock.highPrice24h);
+      let lowPrice = Number(stock.lowPrice24h);
+
+      if (newPrice > highPrice) highPrice = newPrice;
+      if (newPrice < lowPrice) lowPrice = newPrice;
+
+      await prisma.botStock.update({
+        where: { id: stock.id },
+        data: {
+          currentPrice: new Decimal(Math.round(newPrice * 100) / 100),
+          highPrice24h: new Decimal(Math.round(highPrice * 100) / 100),
+          lowPrice24h: new Decimal(Math.round(lowPrice * 100) / 100),
+        },
+      });
+    }
+
+    // Also update player stocks
+    const playerStocks = await prisma.playerStock.findMany({
+      where: { isListed: true },
+    });
+
+    for (const stock of playerStocks) {
+      const currentPrice = Number(stock.currentPrice);
+      const variation = (Math.random() - 0.5) * 0.01; // ±0.5% variation
+      const newPrice = currentPrice * (1 + variation);
+
+      let highPrice = Number(stock.highPrice24h);
+      let lowPrice = Number(stock.lowPrice24h);
+
+      if (newPrice > highPrice) highPrice = newPrice;
+      if (newPrice < lowPrice) lowPrice = newPrice;
+
+      await prisma.playerStock.update({
+        where: { id: stock.id },
+        data: {
+          currentPrice: new Decimal(Math.round(newPrice * 100) / 100),
+          highPrice24h: new Decimal(Math.round(highPrice * 100) / 100),
+          lowPrice24h: new Decimal(Math.round(lowPrice * 100) / 100),
+        },
+      });
+    }
+  }
+
+  /**
    * Update player stock price based on net worth
    */
   async updatePlayerStockPrice(userId: string): Promise<void> {
@@ -235,11 +295,12 @@ export class StockService {
   }
 
   /**
-   * Get all stocks (player + bot) for market view
+   * Get all stocks (player + bot) for market view with real-time price updates
    */
   async getMarketStocks(): Promise<StockMarketData[]> {
-    // Update prices first
+    // Update prices first - add small real-time variations
     await this.updateBotStockPrices();
+    await this.addRealTimePriceVariations();
 
     const [botStocks, playerStocks] = await Promise.all([
       prisma.botStock.findMany({
@@ -456,7 +517,12 @@ export class StockService {
   async listPlayerStock(
     userId: string,
     tickerSymbol: string,
-    companyName: string
+    companyName: string,
+    options?: {
+      marketCap?: number; // Company valuation in dollars
+      sharePrice?: number; // Price per share
+      floatPercentage?: number; // Percentage of shares available for trading (0-100)
+    }
   ): Promise<StockDetail> {
     // Validate ticker symbol (3-4 uppercase letters)
     const cleanTicker = tickerSymbol.toUpperCase().trim();
@@ -480,13 +546,78 @@ export class StockService {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Ticker symbol already taken', 400);
     }
 
-    // Get user and calculate net worth
+    // Get user and calculate net worth for validation
     const { prestigeService } = await import('./prestige.service');
     const netWorth = await prestigeService.calculateNetWorth(userId);
 
-    // Base price: $1 per $10K net worth
-    const basePrice = netWorth.div(10000);
-    const initialPrice = basePrice.greaterThan(0.01) ? basePrice : new Decimal(0.01);
+    // Calculate IPO parameters
+    let marketCap: Decimal;
+    let sharePrice: Decimal;
+    let totalShares: number;
+    let floatShares: number;
+    let ownerShares: number;
+
+    if (options?.marketCap && options?.sharePrice) {
+      // User provided both market cap and share price
+      marketCap = new Decimal(options.marketCap);
+      sharePrice = new Decimal(options.sharePrice);
+
+      if (sharePrice.lessThanOrEqualTo(0)) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Share price must be greater than $0', 400);
+      }
+
+      totalShares = Math.floor(marketCap.div(sharePrice).toNumber());
+      if (totalShares < 1000) {
+        throw new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          'Market cap too small for share price. Try a lower share price or higher market cap.',
+          400
+        );
+      }
+    } else if (options?.marketCap) {
+      // User provided only market cap - suggest share price
+      marketCap = new Decimal(options.marketCap);
+      // Suggest share price: aim for 1M shares, but at least $0.01
+      const suggestedPrice = marketCap.div(1000000);
+      sharePrice = suggestedPrice.greaterThan(0.01) ? suggestedPrice : new Decimal(0.01);
+      totalShares = Math.floor(marketCap.div(sharePrice).toNumber());
+    } else if (options?.sharePrice) {
+      // User provided only share price - use net worth as market cap
+      sharePrice = new Decimal(options.sharePrice);
+      if (sharePrice.lessThanOrEqualTo(0)) {
+        throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Share price must be greater than $0', 400);
+      }
+      // Use net worth as market cap, but minimum $100K
+      marketCap = netWorth.greaterThan(100000) ? netWorth : new Decimal(100000);
+      totalShares = Math.floor(marketCap.div(sharePrice).toNumber());
+      if (totalShares < 1000) {
+        marketCap = sharePrice.mul(1000000); // Ensure at least 1M shares
+        totalShares = 1000000;
+      }
+    } else {
+      // Default: use net worth-based calculation
+      const basePrice = netWorth.div(10000);
+      sharePrice = basePrice.greaterThan(0.01) ? basePrice : new Decimal(0.01);
+      marketCap = sharePrice.mul(1000000); // Default 1M shares
+      totalShares = 1000000;
+    }
+
+    // Calculate float and owner shares
+    const floatPct = options?.floatPercentage ?? 50; // Default 50% float
+    if (floatPct < 10 || floatPct > 90) {
+      throw new AppError(
+        ErrorCodes.VALIDATION_ERROR,
+        'Float percentage must be between 10% and 90%',
+        400
+      );
+    }
+
+    floatShares = Math.floor((totalShares * floatPct) / 100);
+    ownerShares = totalShares - floatShares;
+
+    // Apply trading rules validation for IPO listing
+    const { TradingRulesService } = await import('./tradingRules.service');
+    await TradingRulesService.validateIPOListing(userId, marketCap, sharePrice, totalShares);
 
     // Check if player already has a stock
     const existing = await prisma.playerStock.findUnique({
@@ -500,11 +631,14 @@ export class StockService {
         data: {
           tickerSymbol: cleanTicker,
           companyName: companyName.trim(),
-          currentPrice: initialPrice,
-          previousClose: initialPrice,
-          highPrice24h: initialPrice,
-          lowPrice24h: initialPrice,
-          marketCap: initialPrice.mul(1000000), // totalShares default
+          currentPrice: sharePrice,
+          previousClose: sharePrice,
+          highPrice24h: sharePrice,
+          lowPrice24h: sharePrice,
+          marketCap: marketCap,
+          totalShares: totalShares,
+          floatShares: floatShares,
+          ownerShares: ownerShares,
           isListed: true,
         },
       });
@@ -518,11 +652,14 @@ export class StockService {
         userId,
         tickerSymbol: cleanTicker,
         companyName: companyName.trim(),
-        currentPrice: initialPrice,
-        previousClose: initialPrice,
-        highPrice24h: initialPrice,
-        lowPrice24h: initialPrice,
-        marketCap: initialPrice.mul(1000000),
+        currentPrice: sharePrice,
+        previousClose: sharePrice,
+        highPrice24h: sharePrice,
+        lowPrice24h: sharePrice,
+        marketCap: marketCap,
+        totalShares: totalShares,
+        floatShares: floatShares,
+        ownerShares: ownerShares,
       },
     });
 
@@ -652,8 +789,16 @@ export class StockService {
       throw new AppError(ErrorCodes.NOT_FOUND, 'Stock not found', 404);
     }
 
+    if (!updatedStock.currentPrice) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Stock price is not available', 400);
+    }
+
     const pricePerShare = new Decimal(updatedStock.currentPrice);
     const totalCost = pricePerShare.mul(shares);
+
+    // Apply trading rules validation
+    const { TradingRulesService } = await import('./tradingRules.service');
+    await TradingRulesService.validateBuy(userId, tickerSymbol, shares, pricePerShare);
 
     // Check player has enough cash
     const stats = await prisma.playerStats.findUnique({
@@ -898,6 +1043,10 @@ export class StockService {
       throw new AppError(ErrorCodes.NOT_FOUND, 'Stock not found', 404);
     }
 
+    if (!updatedStock.currentPrice) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Stock price is not available', 400);
+    }
+
     const pricePerShare = new Decimal(updatedStock.currentPrice);
     const totalRevenue = pricePerShare.mul(shares);
 
@@ -917,6 +1066,13 @@ export class StockService {
             botStockId: botStock.id,
           },
         },
+        select: {
+          id: true,
+          shares: true,
+          avgBuyPrice: true,
+          totalInvested: true,
+          createdAt: true,
+        },
       });
     } else {
       const playerStock = await prisma.playerStock.findFirst({
@@ -932,12 +1088,29 @@ export class StockService {
             playerStockId: playerStock.id,
           },
         },
+        select: {
+          id: true,
+          shares: true,
+          avgBuyPrice: true,
+          totalInvested: true,
+          createdAt: true,
+        },
       });
     }
 
     if (!holding || holding.shares < shares) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Not enough shares to sell', 400);
     }
+
+    // Apply trading rules validation
+    const { TradingRulesService } = await import('./tradingRules.service');
+    await TradingRulesService.validateSell(
+      userId,
+      tickerSymbol,
+      shares,
+      pricePerShare,
+      holding.createdAt
+    );
 
     return prisma.$transaction(async (tx) => {
       // Add cash
@@ -1098,6 +1271,75 @@ export class StockService {
     }
 
     return orderData;
+  }
+
+  /**
+   * Get all recent trades (for live feed) - includes all users and bots
+   */
+  async getRecentTrades(limit: number = 50): Promise<Array<{
+    id: string;
+    tickerSymbol: string;
+    orderType: 'buy' | 'sell';
+    shares: number;
+    pricePerShare: string;
+    createdAt: string;
+    traderName: string;
+    traderType: 'player' | 'bot';
+  }>> {
+    const orders = await prisma.stockOrder.findMany({
+      where: {
+        status: 'completed',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    const trades = [];
+
+    for (const order of orders) {
+      // Check if this is a bot trade (bot user ID pattern)
+      const isBot = order.userId.includes('bot') || order.userId === 'system-bot-trader';
+      const traderName = isBot 
+        ? this.getBotTraderName(order.userId)
+        : order.user.username || 'Player';
+
+      trades.push({
+        id: order.id,
+        tickerSymbol: order.tickerSymbol,
+        orderType: order.orderType as 'buy' | 'sell',
+        shares: order.shares,
+        pricePerShare: order.pricePerShare.toString(),
+        createdAt: order.createdAt.toISOString(),
+        traderName,
+        traderType: isBot ? 'bot' : 'player',
+      });
+    }
+
+    return trades;
+  }
+
+  /**
+   * Get bot trader name from user ID
+   */
+  private getBotTraderName(userId: string): string {
+    // All bot trades use 'system-bot-trader' as userId
+    // We need to identify which bot strategy made the trade
+    // For now, return a generic name since we can't distinguish between bot strategies
+    // In the future, we could add a field to StockOrder to track which bot made the trade
+    
+    if (userId === 'system-bot-trader' || userId.includes('bot')) {
+      return 'AI Trader';
+    }
+
+    return 'Player';
   }
 }
 

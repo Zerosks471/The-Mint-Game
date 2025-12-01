@@ -76,14 +76,18 @@ router.get(
 // POST /api/v1/stocks/list - List your company stock
 router.post('/list', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { tickerSymbol, companyName } = req.body;
+    const { tickerSymbol, companyName, marketCap, sharePrice, floatPercentage } = req.body;
     if (!tickerSymbol || !companyName) {
       return res.status(400).json({
         success: false,
         error: 'Ticker symbol and company name are required',
       });
     }
-    const stock = await stockService.listPlayerStock(req.user!.id, tickerSymbol, companyName);
+    const stock = await stockService.listPlayerStock(req.user!.id, tickerSymbol, companyName, {
+      marketCap: marketCap ? parseFloat(marketCap) : undefined,
+      sharePrice: sharePrice ? parseFloat(sharePrice) : undefined,
+      floatPercentage: floatPercentage ? parseFloat(floatPercentage) : undefined,
+    });
     res.json({
       success: true,
       data: stock,
@@ -191,6 +195,20 @@ router.get('/orders', async (req: AuthenticatedRequest, res: Response, next: Nex
     res.json({
       success: true,
       data: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/stocks/trades - Get recent trades (all users, for live feed)
+router.get('/trades', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+    const trades = await stockService.getRecentTrades(limit);
+    res.json({
+      success: true,
+      data: trades,
     });
   } catch (error) {
     next(error);

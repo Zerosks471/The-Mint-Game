@@ -902,9 +902,18 @@ export const gameApi = {
 
   async listPlayerStock(
     tickerSymbol: string,
-    companyName: string
+    companyName: string,
+    options?: {
+      marketCap?: number;
+      sharePrice?: number;
+      floatPercentage?: number;
+    }
   ): Promise<ApiResponse<StockDetail>> {
-    return apiClient.post<StockDetail>('/stocks/list', { tickerSymbol, companyName });
+    return apiClient.post<StockDetail>('/stocks/list', {
+      tickerSymbol,
+      companyName,
+      ...options,
+    });
   },
 
   async updatePlayerStockName(companyName: string): Promise<ApiResponse<StockDetail>> {
@@ -930,5 +939,23 @@ export const gameApi = {
   async getStockOrderHistory(limit?: number): Promise<ApiResponse<StockOrderData[]>> {
     const query = limit ? `?limit=${limit}` : '';
     return apiClient.get<StockOrderData[]>(`/stocks/orders${query}`);
+  },
+
+  async getRecentTrades(limit?: number): Promise<
+    ApiResponse<
+      Array<{
+        id: string;
+        tickerSymbol: string;
+        orderType: 'buy' | 'sell';
+        shares: number;
+        pricePerShare: string;
+        createdAt: string;
+        traderName: string;
+        traderType: 'player' | 'bot';
+      }>
+    >
+  > {
+    const query = limit ? `?limit=${limit}` : '';
+    return apiClient.get(`/stocks/trades${query}`);
   },
 };
