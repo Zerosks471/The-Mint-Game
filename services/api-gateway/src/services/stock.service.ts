@@ -65,31 +65,66 @@ export class StockService {
 
   /**
    * Reset 24h volume at midnight (or on first call each day)
+   * Smart reset: checks if trades exist today before resetting to avoid wiping valid data on restart
    */
   private async resetDailyVolumeIfNeeded(): Promise<void> {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const now = new Date();
+    const today = now.toISOString().split('T')[0] || now.toISOString().substring(0, 10); // YYYY-MM-DD
 
     if (this.lastVolumeResetDate === today) {
-      return; // Already reset today
+      return; // Already reset today in this session
     }
 
-    // Reset all bot stock volumes
-    await prisma.botStock.updateMany({
-      data: {
-        volume24h: 0,
-        // Also reset high/low to current price for new day
+    // Check if there are any orders from today - if so, volumes are already tracking correctly
+    const todayStart = new Date(`${today}T00:00:00.000Z`);
+    const todayEnd = new Date(`${today}T23:59:59.999Z`);
+
+    const ordersToday = await prisma.stockOrder.count({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
       },
     });
 
-    // Reset all player stock volumes
-    await prisma.playerStock.updateMany({
-      data: {
-        volume24h: 0,
-      },
+    // If there are orders today, volumes are already being tracked - just mark as checked
+    if (ordersToday > 0) {
+      this.lastVolumeResetDate = today;
+      console.log(`📊 Volume check: ${ordersToday} orders found today, volumes are accurate`);
+      return;
+    }
+
+    // No orders today - check if we have stale volume data from yesterday
+    const totalBotVolume = await prisma.botStock.aggregate({
+      _sum: { volume24h: true },
     });
+    const totalPlayerVolume = await prisma.playerStock.aggregate({
+      _sum: { volume24h: true },
+    });
+
+    const totalVolume = (totalBotVolume._sum.volume24h || 0) + (totalPlayerVolume._sum.volume24h || 0);
+
+    // Only reset if there's stale volume data (volume > 0 but no orders today)
+    if (totalVolume > 0) {
+      // Reset all bot stock volumes
+      await prisma.botStock.updateMany({
+        data: {
+          volume24h: 0,
+        },
+      });
+
+      // Reset all player stock volumes
+      await prisma.playerStock.updateMany({
+        data: {
+          volume24h: 0,
+        },
+      });
+
+      console.log(`📊 Daily volume reset completed for ${today} (cleared ${totalVolume} stale volume)`);
+    }
 
     this.lastVolumeResetDate = today;
-    console.log(`📊 Daily volume reset completed for ${today}`);
   }
 
   /**

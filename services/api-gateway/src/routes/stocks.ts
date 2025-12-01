@@ -242,27 +242,27 @@ router.get('/market-summary', async (req: AuthenticatedRequest, res: Response, n
 
     // Calculate top gainers (sorted by positive change percentage)
     const topGainers = [...stocks]
-      .filter(s => parseFloat(s.changePercent) > 0)
-      .sort((a, b) => parseFloat(b.changePercent) - parseFloat(a.changePercent))
+      .filter(s => s.changePercent > 0)
+      .sort((a, b) => b.changePercent - a.changePercent)
       .slice(0, 5)
       .map(s => ({
         tickerSymbol: s.tickerSymbol,
         companyName: s.companyName,
         currentPrice: s.currentPrice,
-        changePercent: parseFloat(s.changePercent),
+        changePercent: s.changePercent,
         stockType: s.stockType,
       }));
 
     // Calculate top losers (sorted by negative change percentage)
     const topLosers = [...stocks]
-      .filter(s => parseFloat(s.changePercent) < 0)
-      .sort((a, b) => parseFloat(a.changePercent) - parseFloat(b.changePercent))
+      .filter(s => s.changePercent < 0)
+      .sort((a, b) => a.changePercent - b.changePercent)
       .slice(0, 5)
       .map(s => ({
         tickerSymbol: s.tickerSymbol,
         companyName: s.companyName,
         currentPrice: s.currentPrice,
-        changePercent: parseFloat(s.changePercent),
+        changePercent: s.changePercent,
         stockType: s.stockType,
       }));
 
@@ -275,7 +275,7 @@ router.get('/market-summary', async (req: AuthenticatedRequest, res: Response, n
         companyName: s.companyName,
         volume24h: s.volume24h,
         currentPrice: s.currentPrice,
-        changePercent: parseFloat(s.changePercent),
+        changePercent: s.changePercent,
         stockType: s.stockType,
       }));
 
@@ -290,12 +290,12 @@ router.get('/market-summary', async (req: AuthenticatedRequest, res: Response, n
 
     // Market overview stats
     const totalStocks = stocks.length;
-    const gainersCount = stocks.filter(s => parseFloat(s.changePercent) > 0).length;
-    const losersCount = stocks.filter(s => parseFloat(s.changePercent) < 0).length;
+    const gainersCount = stocks.filter(s => s.changePercent > 0).length;
+    const losersCount = stocks.filter(s => s.changePercent < 0).length;
     const unchangedCount = totalStocks - gainersCount - losersCount;
     const totalVolume = stocks.reduce((sum, s) => sum + s.volume24h, 0);
     const avgChange = stocks.length > 0
-      ? stocks.reduce((sum, s) => sum + parseFloat(s.changePercent), 0) / stocks.length
+      ? stocks.reduce((sum, s) => sum + s.changePercent, 0) / stocks.length
       : 0;
 
     res.json({

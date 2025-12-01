@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
-import { gameApi, DailyStatus, IPOStatus, StockHoldingData } from '../api/game';
+import { gameApi, DailyStatus, IPOStatus } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
 import { BuyCoinsModal } from './BuyCoinsModal';
 import { PremiumBadge } from './PremiumBadge';
@@ -37,8 +37,15 @@ export function Layout({ children }: LayoutProps) {
   // Calculate business summary
   const businessSummary = playerBusinesses.length > 0 ? {
     count: playerBusinesses.length,
-    pendingRevenue: playerBusinesses.reduce((sum, b) => sum + parseFloat(b.pendingRevenue || '0'), 0),
-    totalIncomeHr: playerBusinesses.reduce((sum, b) => sum + parseFloat(b.incomePerHour || '0'), 0),
+    // Count businesses with completed cycles as pending revenue
+    pendingCount: playerBusinesses.filter(b => b.cycleComplete).length,
+    // Calculate hourly income: revenue per cycle * (3600 / cycleSeconds)
+    totalIncomeHr: playerBusinesses.reduce((sum, b) => {
+      const revenuePerCycle = parseFloat(b.currentRevenue || '0');
+      const cycleSeconds = b.cycleSeconds || 60;
+      const incomePerHour = revenuePerCycle * (3600 / cycleSeconds);
+      return sum + incomePerHour;
+    }, 0),
   } : null;
 
   // Fetch daily reward status, IPO status, and portfolio on mount
@@ -204,9 +211,9 @@ export function Layout({ children }: LayoutProps) {
                           suffix="/hr"
                           className="text-lg font-bold text-amber font-mono"
                         />
-                        {businessSummary.pendingRevenue > 0 && (
+                        {businessSummary.pendingCount > 0 && (
                           <span className="text-xs text-amber animate-pulse">
-                            💰 ${businessSummary.pendingRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            💰 {businessSummary.pendingCount} ready
                           </span>
                         )}
                       </div>
