@@ -7,6 +7,16 @@ import {
 } from '../api/game';
 import { formatCurrency } from '@mint/utils';
 import { PremiumBadge } from '../components/PremiumBadge';
+import { PlayerAvatar } from '../components/PlayerAvatar';
+
+// Badge emojis
+const BADGE_EMOJIS: Record<string, string> = {
+  badge_newbie: '🌱',
+  badge_trader: '📈',
+  badge_whale: '🐋',
+  badge_vip: '⭐',
+  badge_founder: '🏆',
+};
 
 export function LeaderboardPage() {
   const [types, setTypes] = useState<LeaderboardType[]>([]);
@@ -219,16 +229,19 @@ export function LeaderboardPage() {
                     {getRankChange(entry.rank, entry.previousRank)}
                   </div>
                   <div className="col-span-6 flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                        entry.isCurrentUser ? 'bg-mint-500' : 'bg-gray-400 dark:bg-gray-600'
-                      }`}
-                    >
-                      {(entry.displayName || entry.username || '?')[0].toUpperCase()}
-                    </div>
+                    <PlayerAvatar
+                      avatarId={entry.avatarId}
+                      frameId={entry.avatarFrameId}
+                      size="md"
+                    />
                     <div>
                       <p className={`font-medium flex items-center gap-1.5 ${entry.isCurrentUser ? 'text-mint-700 dark:text-mint-400' : 'text-gray-900 dark:text-white'}`}>
                         {entry.displayName || entry.username || 'Anonymous'}
+                        {entry.badgeId && (
+                          <span title={entry.badgeId.replace('badge_', '').replace('_', ' ')}>
+                            {BADGE_EMOJIS[entry.badgeId] || ''}
+                          </span>
+                        )}
                         {entry.isPremium && <PremiumBadge size="sm" />}
                         {entry.isCurrentUser && (
                           <span className="ml-1 text-xs bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 px-2 py-0.5 rounded-full">

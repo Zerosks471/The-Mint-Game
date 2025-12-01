@@ -6,6 +6,7 @@ import { gameApi, DailyStatus, IPOStatus } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
 import { PremiumBadge } from './PremiumBadge';
 import { UpgradeButton } from './UpgradeButton';
+import { PlayerAvatar } from './PlayerAvatar';
 import { AnimatedCounter, ToastContainer, useToast } from './ui';
 
 interface LayoutProps {
@@ -175,14 +176,19 @@ export function Layout({ children }: LayoutProps) {
                 )}
               </button>
 
-              <div className="flex items-center gap-2">
+              <Link to="/shop" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <PlayerAvatar
+                  avatarId={user?.avatarId}
+                  frameId={user?.avatarFrameId}
+                  size="sm"
+                />
                 <span className="text-sm text-gray-600 dark:text-gray-300">{user?.username}</span>
                 {user?.isPremium ? (
                   <PremiumBadge size="sm" />
                 ) : (
                   <UpgradeButton size="sm" />
                 )}
-              </div>
+              </Link>
               <Link
                 to="/settings"
                 className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"

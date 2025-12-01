@@ -13,6 +13,9 @@ interface User {
   soundEnabled?: boolean;
   musicEnabled?: boolean;
   notificationsEnabled?: boolean;
+  avatarId?: string;
+  avatarFrameId?: string | null;
+  badgeId?: string | null;
 }
 
 interface AuthState {
@@ -58,6 +61,9 @@ export const useAuthStore = create<AuthState>()(
                 soundEnabled: userData.soundEnabled as boolean | undefined,
                 musicEnabled: userData.musicEnabled as boolean | undefined,
                 notificationsEnabled: userData.notificationsEnabled as boolean | undefined,
+                avatarId: userData.avatarId as string | undefined,
+                avatarFrameId: userData.avatarFrameId as string | null | undefined,
+                badgeId: userData.badgeId as string | null | undefined,
               },
               isAuthenticated: true,
               isLoading: false,
@@ -99,6 +105,9 @@ export const useAuthStore = create<AuthState>()(
                 soundEnabled: userData.soundEnabled as boolean | undefined,
                 musicEnabled: userData.musicEnabled as boolean | undefined,
                 notificationsEnabled: userData.notificationsEnabled as boolean | undefined,
+                avatarId: userData.avatarId as string | undefined,
+                avatarFrameId: userData.avatarFrameId as string | null | undefined,
+                badgeId: userData.badgeId as string | null | undefined,
               },
               isAuthenticated: true,
               isLoading: false,
@@ -143,13 +152,16 @@ export const useAuthStore = create<AuthState>()(
 
             const userResponse = await authApi.getMe();
             if (userResponse.success && userResponse.data) {
-              const userData = userResponse.data;
+              const userData = userResponse.data as Record<string, unknown>;
               set({
                 user: {
-                  id: userData.id,
-                  email: userData.email,
-                  username: userData.username,
-                  isPremium: userData.isPremium,
+                  id: userData.id as string,
+                  email: userData.email as string,
+                  username: userData.username as string,
+                  isPremium: userData.isPremium as boolean,
+                  avatarId: userData.avatarId as string | undefined,
+                  avatarFrameId: userData.avatarFrameId as string | null | undefined,
+                  badgeId: userData.badgeId as string | null | undefined,
                 },
                 isAuthenticated: true,
               });

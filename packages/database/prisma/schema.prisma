@@ -550,6 +550,8 @@ model LeaderboardEntry {
   username       String?
   displayName    String?   @map("display_name")
   avatarId       String?   @map("avatar_id")
+  avatarFrameId  String?   @map("avatar_frame_id")
+  badgeId        String?   @map("badge_id")
   isPremium      Boolean   @default(false) @map("is_premium")
   updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
 
