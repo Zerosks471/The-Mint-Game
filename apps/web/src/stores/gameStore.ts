@@ -24,6 +24,11 @@ interface GameState {
   tickerInterval: ReturnType<typeof setInterval> | null;
   syncInterval: ReturnType<typeof setInterval> | null;
 
+  // Sync tracking
+  lastSyncedCash: number;
+  isSyncing: boolean;
+  syncFailed: boolean;
+
   // UI State
   isLoading: boolean;
   error: string | null;
@@ -69,6 +74,9 @@ const initialState = {
   incomePerSecond: 0,
   tickerInterval: null as ReturnType<typeof setInterval> | null,
   syncInterval: null as ReturnType<typeof setInterval> | null,
+  lastSyncedCash: 0,
+  isSyncing: false,
+  syncFailed: false,
   isLoading: false,
   error: null,
 };
@@ -226,16 +234,38 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   // Collect earnings from server and sync cash
   collectEarnings: async () => {
-    const response = await gameApi.collectEarnings();
-    if (response.success && response.data) {
-      const newCash = parseFloat(response.data.newCash);
-      const incomePerHour = parseFloat(response.data.incomePerHour);
+    set({ isSyncing: true });
+    try {
+      const response = await gameApi.collectEarnings();
+      if (response.success && response.data) {
+        const newCash = parseFloat(response.data.newCash);
+        const incomePerHour = parseFloat(response.data.incomePerHour);
+        set({
+          displayedCash: newCash,
+          lastSyncedCash: newCash,
+          incomePerSecond: incomePerHour / 3600,
+          isSyncing: false,
+          syncFailed: false,
+        });
+        // Also update stats
+        await get().fetchStats();
+      } else {
+        // Sync failed - rollback to last known good value
+        const { lastSyncedCash } = get();
+        set({
+          displayedCash: lastSyncedCash,
+          isSyncing: false,
+          syncFailed: true,
+        });
+      }
+    } catch {
+      // Network error - rollback to last known good value
+      const { lastSyncedCash } = get();
       set({
-        displayedCash: newCash,
-        incomePerSecond: incomePerHour / 3600,
+        displayedCash: lastSyncedCash,
+        isSyncing: false,
+        syncFailed: true,
       });
-      // Also update stats
-      await get().fetchStats();
     }
   },
 
@@ -251,9 +281,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const stats = get().stats;
     if (stats) {
       const incomePerHour = parseFloat(stats.effectiveIncomeHour);
+      const cash = parseFloat(stats.cash);
       set({
-        displayedCash: parseFloat(stats.cash),
+        displayedCash: cash,
+        lastSyncedCash: cash,
         incomePerSecond: incomePerHour / 3600,
+        syncFailed: false,
       });
     }
 
@@ -262,16 +295,17 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
     // Update displayed cash locally every 100ms
     const tickerInterval = setInterval(() => {
-      const { displayedCash, incomePerSecond } = get();
-      if (incomePerSecond > 0) {
+      const { displayedCash, incomePerSecond, syncFailed } = get();
+      // Don't increment if sync failed (wait for recovery)
+      if (incomePerSecond > 0 && !syncFailed) {
         set({ displayedCash: displayedCash + incomePerSecond * 0.1 });
       }
     }, 100);
 
-    // Sync with server every 5 seconds
+    // Sync with server every 2 seconds (reduced from 5s for better accuracy)
     const syncInterval = setInterval(() => {
       get().collectEarnings();
-    }, 5000);
+    }, 2000);
 
     set({ tickerInterval, syncInterval });
   },
