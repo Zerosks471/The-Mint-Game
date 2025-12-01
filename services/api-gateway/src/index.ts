@@ -28,17 +28,23 @@ async function main() {
       // Update stock prices first
       await stockService.updateBotStockPrices();
 
-      // Run bot trading
+      // Run bot trading (each bot has its own interval internally)
       await botTraderService.runBotTrading();
     } catch (error) {
       console.error('Bot trading error:', error);
     }
   };
 
-  // Run bot trading every 30 seconds for faster, more active market
-  setInterval(startBotTrading, 30 * 1000);
-  console.log('🤖 Bot trading system started (runs every 30 seconds)');
-  
+  // Run bot trading every 10 seconds for more active, realistic market
+  // Individual bots have their own trade intervals (8s-120s) managed internally
+  // This faster tick rate allows aggressive bots to trade frequently
+  setInterval(startBotTrading, 10 * 1000);
+  console.log('🤖 Bot trading system started (10-second market ticks)');
+  console.log('   📈 Aggressive bots: 8-15 second intervals');
+  console.log('   ⚖️  Moderate bots: 25-45 second intervals');
+  console.log('   🐢 Conservative bots: 60-120 second intervals');
+  console.log('   💥 Random pump/dump events enabled');
+
   // Run immediately on startup (with delay to ensure DB is ready)
   setTimeout(() => {
     startBotTrading();

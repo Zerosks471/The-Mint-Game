@@ -60,6 +60,38 @@ export class StockService {
   private static PLAYER_PRICE_VOLATILITY = 0.05; // ±5% per tick
   private static MEAN_REVERSION_RATE = 0.1; // 10% reversion per tick
 
+  // Track last volume reset time
+  private lastVolumeResetDate: string = '';
+
+  /**
+   * Reset 24h volume at midnight (or on first call each day)
+   */
+  private async resetDailyVolumeIfNeeded(): Promise<void> {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    if (this.lastVolumeResetDate === today) {
+      return; // Already reset today
+    }
+
+    // Reset all bot stock volumes
+    await prisma.botStock.updateMany({
+      data: {
+        volume24h: 0,
+        // Also reset high/low to current price for new day
+      },
+    });
+
+    // Reset all player stock volumes
+    await prisma.playerStock.updateMany({
+      data: {
+        volume24h: 0,
+      },
+    });
+
+    this.lastVolumeResetDate = today;
+    console.log(`📊 Daily volume reset completed for ${today}`);
+  }
+
   /**
    * Update bot stock prices with mean reversion and volatility
    */
