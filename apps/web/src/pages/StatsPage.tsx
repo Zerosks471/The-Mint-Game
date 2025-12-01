@@ -3,6 +3,7 @@ import { gameApi, EarningsSnapshot, EarningsSummary } from '../api/game';
 import { createPortalSession } from '../api/subscriptions';
 import { formatCurrency } from '@mint/utils';
 import { useAuthStore } from '../stores/authStore';
+import { useGameStore } from '../stores/gameStore';
 import { PremiumBadge } from '../components/PremiumBadge';
 import { UpgradeButton } from '../components/UpgradeButton';
 import { StatCard, GradientChart, DonutChart, type ChartColor } from '../components/ui';
@@ -16,8 +17,14 @@ const chartTypeConfig: Record<ChartType, { label: string; color: ChartColor }> =
   income: { label: 'Income/hr', color: 'cyan' },
 };
 
+// Match backend XP curve so level progress is accurate
+function xpForLevel(level: number): number {
+  return Math.floor(100 * Math.pow(1.5, level - 1));
+}
+
 export function StatsPage() {
   const { user } = useAuthStore();
+  const { stats, fetchStats } = useGameStore();
   const [history, setHistory] = useState<EarningsSnapshot[]>([]);
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +71,13 @@ export function StatsPage() {
 
     fetchData();
   }, []);
+
+  // Ensure we have up-to-date player stats for level / XP display
+  useEffect(() => {
+    if (!stats) {
+      void fetchStats();
+    }
+  }, [stats, fetchStats]);
 
   // Process chart data
   const chartData = useMemo(() => {
@@ -116,6 +130,61 @@ export function StatsPage() {
     });
   }, [history, chartType, timeRange]);
 
+  // Calculate detailed level + XP progress and estimated time to next level
+  const levelDetails = useMemo(() => {
+    if (!stats) {
+      return null;
+    }
+
+    const level = stats.playerLevel ?? 1;
+    const currentXp = Number(stats.experiencePoints ?? 0);
+    const xpNeeded = xpForLevel(level);
+    const progressPct = xpNeeded > 0 ? Math.min(100, (currentXp / xpNeeded) * 100) : 0;
+
+    const incomePerHour = parseFloat(stats.effectiveIncomeHour || '0');
+    // Backend: XP is granted as revenue / 100 on business collections,
+    // so we approximate XP gain rate from current effective income.
+    const xpPerHour = incomePerHour / 100;
+    const remainingXp = Math.max(0, xpNeeded - currentXp);
+
+    let hoursToNext = Infinity;
+    if (xpPerHour > 0 && remainingXp > 0) {
+      hoursToNext = remainingXp / xpPerHour;
+    } else if (remainingXp === 0) {
+      hoursToNext = 0;
+    }
+
+    let timeLabel = 'Play to start earning XP';
+    if (!Number.isFinite(hoursToNext) || hoursToNext < 0) {
+      timeLabel = 'Play to start earning XP';
+    } else if (hoursToNext === 0) {
+      timeLabel = 'Ready to level up!';
+    } else {
+      const totalMinutes = Math.round(hoursToNext * 60);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      if (hours <= 0) {
+        timeLabel = `≈ ${minutes} min until next level`;
+      } else {
+        timeLabel = `≈ ${hours}h ${minutes.toString().padStart(2, '0')}m until next level`;
+      }
+    }
+
+    const xpPerHourDisplay =
+      xpPerHour > 0 ? `${xpPerHour.toFixed(1).replace(/\.0$/, '')} XP/hr` : '0 XP/hr';
+
+    return {
+      level,
+      currentXp,
+      xpNeeded,
+      progressPct,
+      remainingXp,
+      timeLabel,
+      xpPerHourDisplay,
+    };
+  }, [stats]);
+
   // Calculate progress towards next level (mock data for now)
   const levelProgress = useMemo(() => {
     if (!summary) return 0;
@@ -141,6 +210,43 @@ export function StatsPage() {
         <h1 className="text-2xl font-bold text-zinc-100">Financial Stats</h1>
         <p className="text-zinc-500">Track your empire's growth over time</p>
       </div>
+
+      {/* Player Level & XP Progress */}
+      {levelDetails && (
+        <div className="bg-dark-card border border-dark-border rounded-2xl p-5 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-zinc-500">Player Level</p>
+              <p className="text-3xl font-extrabold text-mint font-mono">
+                Lv. {levelDetails.level}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-zinc-500 mb-1">XP</p>
+              <p className="text-sm font-mono text-zinc-100">
+                {levelDetails.currentXp.toLocaleString()} / {levelDetails.xpNeeded.toLocaleString()}
+              </p>
+              <p className="text-xs text-zinc-500 mt-1">{levelDetails.xpPerHourDisplay}</p>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-2 text-xs">
+              <span className="text-zinc-500">Progress to next level</span>
+              <span className="text-mint font-semibold font-mono">
+                {Math.round(levelDetails.progressPct)}%
+              </span>
+            </div>
+            <div className="h-2.5 bg-dark-border rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-mint to-cyan rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, levelDetails.progressPct)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-zinc-400">{levelDetails.timeLabel}</p>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       {summary && (

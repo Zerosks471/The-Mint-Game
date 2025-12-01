@@ -85,3 +85,44 @@ Implementation plans are in `/docs/plans/`:
 - `2025-11-28-the-mint-technical-design.md` - System architecture
 - `2025-11-28-phase-1-core-game-mvp.md` - Current implementation phase
 - `2025-11-29-passive-income-system-design.md` - Income mechanics design
+
+## Stocks Page Deep Scan (Web)
+
+- **Location**: `apps/web/src/pages/StocksPage.tsx`
+- **Purpose**: Main in-game stock market experience (Market, Portfolio, My Company IPO, Orders).
+
+### Critical Issues Found
+
+- **Undefined state setter**: `setRealTimePrices` is called in `fetchMarketStocks` but no `useState` for `realTimePrices` exists and the value is never used. This is a hard error and dead code.
+- **Broken MarketStatus props**:
+  - `MarketStatus` is declared as `MarketStatus({ lastTickAt }: MarketStatusProps)` without any `MarketStatusProps` definition or import.
+  - `StocksPage` renders `<MarketStatus />` without props, while the component signature expects one.
+
+### Major Logic / Data Issues
+
+- **Unsafe price math**:
+  - Price change % in the market table and `StockChart` divides by `previousClose` without guarding for `0`/missing values, which can produce `Infinity`/`NaN` and ugly UI.
+- **IPO summary NaN risk**:
+  - `formatCurrency(parseFloat(marketCap))` can show `$NaN` if user input is invalid, even when other fields look fine.
+- **fetchAllData error handling is misleading**:
+  - `fetchAllData` wraps `Promise.all([...])` in a `try/catch`, but each fetch function swallows errors and only logs them, so the combined promise almost never rejects and the page-level `error` state rarely updates.
+
+### Performance / UX Concerns
+
+- **Multiple polling loops**:
+  - `StocksPage` polls stocks/portfolio every 5s and `LiveTradesFeed` polls trades every 3s; this can be noisy for the API and the client.
+- **Random chart history**:
+  - `handleViewStock` generates a random 24h history every open, making charts feel fake and non-deterministic relative to the backend price.
+- **Portfolio sorting mutates canonical state**:
+  - Sorting directly mutates the `portfolio` state array, losing the original order and mixing view concerns with data storage.
+- **Native confirm dialog**:
+  - `handleDelist` uses `window.confirm`, which breaks visual consistency with the rest of the game’s UI.
+
+### Fix Strategy (Implemented / Planned)
+
+- Remove or properly wire the unused `setRealTimePrices` state.
+- Define a simple `MarketStatusProps` type or inline props, and/or simplify `MarketStatus` to take no props (since `lastTickAt` is unused).
+- Guard all price percentage math against `0`/falsy denominators; render graceful fallbacks when data is missing.
+- Consolidate portfolio aggregate calculations (e.g., reuse `totalInvested`) to avoid repeated `reduce` calls.
+- Replace native `confirm` with a styled in-game confirmation pattern when delisting.
+- Revisit polling and chart history in a future pass to prefer shared live data streams or API-backed history over random client-side generation.

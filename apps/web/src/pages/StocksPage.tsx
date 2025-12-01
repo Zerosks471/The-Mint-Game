@@ -47,12 +47,6 @@ export function StocksPage() {
       const res = await gameApi.getMarketStocks();
       if (res.success && res.data) {
         setStocks(res.data);
-        // Initialize real-time prices from fetched data
-        const initialPrices: Record<string, number> = {};
-        res.data.forEach((stock) => {
-          initialPrices[stock.tickerSymbol] = parseFloat(stock.currentPrice);
-        });
-        setRealTimePrices((prev) => ({ ...prev, ...initialPrices }));
       }
     } catch (err) {
       console.error('Failed to fetch market stocks:', err);
@@ -550,8 +544,14 @@ export function StocksPage() {
 
                             const currentPrice = parseFloat(stock.currentPrice);
                             const previousClose = parseFloat(stock.previousClose);
-                            const priceChange = currentPrice - previousClose;
-                            const priceChangePercent = (priceChange / previousClose) * 100;
+                            const hasValidPreviousClose =
+                              Number.isFinite(previousClose) && previousClose > 0;
+                            const priceChange = hasValidPreviousClose
+                              ? currentPrice - previousClose
+                              : 0;
+                            const priceChangePercent = hasValidPreviousClose
+                              ? (priceChange / previousClose) * 100
+                              : 0;
                             const isPositive = priceChange >= 0;
                             
                             return (

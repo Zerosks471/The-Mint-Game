@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export function MarketStatus({ lastTickAt }: MarketStatusProps) {
+export function MarketStatus() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Market is always open 24/7

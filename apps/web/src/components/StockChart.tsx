@@ -56,9 +56,12 @@ export function StockChart({
   const [timeRange, setTimeRange] = useState<'1H' | '24H' | '7D' | '30D'>('24H');
 
   // Use backend-provided currentPrice directly (no extra random jitter)
-  const isPositive = currentPrice >= previousClose;
-  const change = currentPrice - previousClose;
-  const changePercent = ((change / previousClose) * 100).toFixed(2);
+  const hasValidPreviousClose = Number.isFinite(previousClose) && previousClose > 0;
+  const isPositive = hasValidPreviousClose ? currentPrice >= previousClose : currentPrice >= 0;
+  const change = hasValidPreviousClose ? currentPrice - previousClose : 0;
+  const changePercent = hasValidPreviousClose
+    ? ((change / previousClose) * 100).toFixed(2)
+    : '0.00';
 
   // Calculate time range in seconds
   const timeRangeSeconds = useMemo(() => {
@@ -131,8 +134,10 @@ export function StockChart({
 
   // Calculate domain with padding
   const prices = chartData.map((d) => d.price);
-  const minPrice = Math.min(...prices, previousClose) * 0.95;
-  const maxPrice = Math.max(...prices, previousClose) * 1.05;
+  const baseMin = prices.length > 0 ? Math.min(...prices) : previousClose || currentPrice;
+  const baseMax = prices.length > 0 ? Math.max(...prices) : previousClose || currentPrice;
+  const minPrice = baseMin * 0.95;
+  const maxPrice = baseMax * 1.05;
 
   return (
     <div className="bg-[#0a0a0f] border border-[#1a1a24] rounded-lg overflow-hidden">
@@ -279,7 +284,10 @@ export function StockChart({
       <div className="px-4 py-2 border-t border-[#1a1a24] bg-[#0f0f15]">
         <div className="flex items-center justify-between text-xs text-zinc-500">
           <div className="flex items-center gap-4">
-            <span>Prev Close: ${previousClose.toFixed(2)}</span>
+            <span>
+              Prev Close:{' '}
+              {hasValidPreviousClose ? `$${previousClose.toFixed(2)}` : 'N/A'}
+            </span>
             <span>Last Update: {new Date().toLocaleTimeString()}</span>
           </div>
           <div className="flex items-center gap-2">
