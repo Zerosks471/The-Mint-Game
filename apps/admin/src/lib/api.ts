@@ -189,6 +189,364 @@ class AdminApi {
   async getMetrics() {
     return this.request('/health/metrics');
   }
+
+  // User Management (extended)
+  async giveCash(userId: string, amount: number, reason?: string) {
+    return this.request(`/users/${userId}/give-cash`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    });
+  }
+
+  async removeCash(userId: string, amount: number, reason?: string) {
+    return this.request(`/users/${userId}/remove-cash`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    });
+  }
+
+  async setCash(userId: string, amount: number, reason?: string) {
+    return this.request(`/users/${userId}/set-cash`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    });
+  }
+
+  async updateUserPremium(userId: string, isPremium: boolean, expiresAt?: string) {
+    return this.request(`/users/${userId}/premium`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isPremium, expiresAt }),
+    });
+  }
+
+  async getUserInventory(userId: string) {
+    return this.request(`/users/${userId}/inventory`);
+  }
+
+  async resetUserProgress(userId: string, reason?: string) {
+    return this.request(`/users/${userId}/reset-progress`, {
+      method: 'POST',
+      body: JSON.stringify({ confirm: 'RESET', reason }),
+    });
+  }
+
+  async forceLogoutUser(userId: string, reason?: string) {
+    return this.request(`/users/${userId}/force-logout`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getUserActivity(userId: string, limit?: number) {
+    const query = new URLSearchParams();
+    if (limit) query.set('limit', limit.toString());
+    return this.request(`/users/${userId}/activity?${query}`);
+  }
+
+  // System
+  async getSystemStatus() {
+    return this.request('/system/status');
+  }
+
+  async setMaintenanceMode(enabled: boolean, message?: string, endTime?: string) {
+    return this.request('/system/maintenance', {
+      method: 'POST',
+      body: JSON.stringify({ enabled, message, endTime }),
+    });
+  }
+
+  async sendAnnouncement(title: string, message: string, type?: string) {
+    return this.request('/system/announcement', {
+      method: 'POST',
+      body: JSON.stringify({ title, message, type }),
+    });
+  }
+
+  async sendNotification(userIds: string[], title: string, message: string, type?: string) {
+    return this.request('/system/notification', {
+      method: 'POST',
+      body: JSON.stringify({ userIds, title, message, type }),
+    });
+  }
+
+  async forceLogoutAll(reason?: string) {
+    return this.request('/system/force-logout-all', {
+      method: 'POST',
+      body: JSON.stringify({ confirm: 'LOGOUT_ALL', reason }),
+    });
+  }
+
+  async getOnlineUsers(limit?: number) {
+    const query = new URLSearchParams();
+    if (limit) query.set('limit', limit.toString());
+    return this.request(`/system/online-users?${query}`);
+  }
+
+  // Game Config
+  async getPropertyTypes() {
+    return this.request('/gameconfig/properties');
+  }
+
+  async updatePropertyType(id: number, data: Record<string, unknown>) {
+    return this.request(`/gameconfig/properties/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getBusinessTypes() {
+    return this.request('/gameconfig/businesses');
+  }
+
+  async updateBusinessType(id: number, data: Record<string, unknown>) {
+    return this.request(`/gameconfig/businesses/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUpgrades() {
+    return this.request('/gameconfig/upgrades');
+  }
+
+  async updateUpgrade(id: string, data: Record<string, unknown>) {
+    return this.request(`/gameconfig/upgrades/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getProjects() {
+    return this.request('/gameconfig/projects');
+  }
+
+  async updateProject(id: string, data: Record<string, unknown>) {
+    return this.request(`/gameconfig/projects/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getAchievements() {
+    return this.request('/gameconfig/achievements');
+  }
+
+  // Stocks
+  async getStockStatus() {
+    return this.request('/stocks/status');
+  }
+
+  async haltTrading(halt: boolean, reason?: string) {
+    return this.request('/stocks/halt-trading', {
+      method: 'POST',
+      body: JSON.stringify({ halt, reason }),
+    });
+  }
+
+  async getBotStocks() {
+    return this.request('/stocks/bot');
+  }
+
+  async updateBotStock(id: string, data: Record<string, unknown>) {
+    return this.request(`/stocks/bot/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async resetBotStockPrice(id: string) {
+    return this.request(`/stocks/bot/${id}/reset-price`, {
+      method: 'POST',
+    });
+  }
+
+  async getPlayerStocks() {
+    return this.request('/stocks/player');
+  }
+
+  async updatePlayerStock(id: string, data: Record<string, unknown>) {
+    return this.request(`/stocks/player/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async delistPlayerStock(id: string, reason?: string) {
+    return this.request(`/stocks/player/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getSuspiciousTrading() {
+    return this.request('/stocks/suspicious');
+  }
+
+  // Analytics
+  async getAnalyticsOverview() {
+    return this.request('/analytics/overview');
+  }
+
+  async getRegistrationStats(days?: number) {
+    const query = new URLSearchParams();
+    if (days) query.set('days', days.toString());
+    return this.request(`/analytics/registrations?${query}`);
+  }
+
+  async getRetentionStats() {
+    return this.request('/analytics/retention');
+  }
+
+  async getActivityStats() {
+    return this.request('/analytics/activity');
+  }
+
+  async getEconomyStats() {
+    return this.request('/analytics/economy');
+  }
+
+  async getLeaderboard(limit?: number) {
+    const query = new URLSearchParams();
+    if (limit) query.set('limit', limit.toString());
+    return this.request(`/analytics/leaderboard?${query}`);
+  }
+
+  async getTransactionStats(days?: number) {
+    const query = new URLSearchParams();
+    if (days) query.set('days', days.toString());
+    return this.request(`/analytics/transactions?${query}`);
+  }
+
+  // Security
+  async getFailedLogins(hours?: number, limit?: number) {
+    const query = new URLSearchParams();
+    if (hours) query.set('hours', hours.toString());
+    if (limit) query.set('limit', limit.toString());
+    return this.request(`/security/failed-logins?${query}`);
+  }
+
+  async getFailedLoginsByIP(hours?: number) {
+    const query = new URLSearchParams();
+    if (hours) query.set('hours', hours.toString());
+    return this.request(`/security/failed-logins/by-ip?${query}`);
+  }
+
+  async getFailedLoginsByUser(hours?: number) {
+    const query = new URLSearchParams();
+    if (hours) query.set('hours', hours.toString());
+    return this.request(`/security/failed-logins/by-user?${query}`);
+  }
+
+  async getBlockedIPs() {
+    return this.request('/security/blocked-ips');
+  }
+
+  async blockIP(ipAddress: string, reason?: string, persistent?: boolean) {
+    return this.request('/security/block-ip', {
+      method: 'POST',
+      body: JSON.stringify({ ipAddress, reason, persistent }),
+    });
+  }
+
+  async unblockIP(ipAddress: string) {
+    return this.request(`/security/block-ip/${encodeURIComponent(ipAddress)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getUserSessions(userId: string) {
+    return this.request(`/security/sessions/${userId}`);
+  }
+
+  async revokeSession(sessionId: string, reason?: string) {
+    return this.request(`/security/sessions/${sessionId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getSecurityAuditLog(page?: number, limit?: number) {
+    const query = new URLSearchParams();
+    if (page) query.set('page', page.toString());
+    if (limit) query.set('limit', limit.toString());
+    return this.request(`/security/audit-log?${query}`);
+  }
+
+  async getSuspiciousActivity() {
+    return this.request('/security/suspicious');
+  }
+
+  // Coupons
+  async getCoupons(page?: number, limit?: number, activeOnly?: boolean) {
+    const query = new URLSearchParams();
+    if (page) query.set('page', page.toString());
+    if (limit) query.set('limit', limit.toString());
+    if (activeOnly) query.set('active', 'true');
+    return this.request(`/coupons?${query}`);
+  }
+
+  async getCoupon(id: string) {
+    return this.request(`/coupons/${id}`);
+  }
+
+  async createCoupon(data: {
+    code?: string;
+    description?: string;
+    rewardType: string;
+    rewardAmount?: number;
+    rewardData?: unknown;
+    maxRedemptions?: number;
+    maxPerUser?: number;
+    expiresAt?: string;
+    requiresPremium?: boolean;
+    minLevel?: number;
+  }) {
+    return this.request('/coupons', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createBulkCoupons(data: {
+    count: number;
+    prefix?: string;
+    rewardType: string;
+    rewardAmount?: number;
+    rewardData?: unknown;
+    maxRedemptions?: number;
+    maxPerUser?: number;
+    expiresAt?: string;
+    description?: string;
+  }) {
+    return this.request('/coupons/bulk', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCoupon(id: string, data: Record<string, unknown>) {
+    return this.request(`/coupons/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deactivateCoupon(id: string) {
+    return this.request(`/coupons/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getCouponRedemptions(id: string, page?: number, limit?: number) {
+    const query = new URLSearchParams();
+    if (page) query.set('page', page.toString());
+    if (limit) query.set('limit', limit.toString());
+    return this.request(`/coupons/${id}/redemptions?${query}`);
+  }
+
+  async getCouponStats() {
+    return this.request('/coupons/stats/summary');
+  }
 }
 
 export const api = new AdminApi();

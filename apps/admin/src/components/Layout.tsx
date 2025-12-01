@@ -5,6 +5,12 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊' },
   { path: '/users', label: 'Users', icon: '👥' },
   { path: '/economy', label: 'Economy', icon: '💰' },
+  { path: '/analytics', label: 'Analytics', icon: '📈' },
+  { path: '/stocks', label: 'Stocks', icon: '📉' },
+  { path: '/gameconfig', label: 'Game Config', icon: '⚙️' },
+  { path: '/coupons', label: 'Coupons', icon: '🎟️' },
+  { path: '/system', label: 'System', icon: '🖥️' },
+  { path: '/security', label: 'Security', icon: '🛡️' },
   { path: '/logs', label: 'Logs', icon: '📋' },
   { path: '/health', label: 'Health', icon: '💚' },
 ];
