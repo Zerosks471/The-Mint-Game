@@ -222,7 +222,6 @@ export class PrestigeService {
         where: { userId },
         data: {
           cash: 1000, // Starting cash
-          lifetimeCashEarned: 0,
           playerLevel: 1,
           experiencePoints: 0,
           baseIncomePerHour: 0,
