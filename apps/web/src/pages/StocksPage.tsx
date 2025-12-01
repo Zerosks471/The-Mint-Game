@@ -13,6 +13,25 @@ import { StockChart } from '../components/StockChart';
 import { MarketStatus } from '../components/MarketStatus';
 import { LiveTradesFeed } from '../components/LiveTradesFeed';
 import { useGameStore } from '../stores/gameStore';
+import { MiniSparkline } from '../components/ui';
+
+// Generate simulated price history for sparkline based on current price and trend
+function generateSparklineData(currentPrice: number, changePercent: number, points: number = 12): number[] {
+  const startPrice = currentPrice / (1 + changePercent / 100);
+  const data: number[] = [];
+
+  for (let i = 0; i < points; i++) {
+    const progress = i / (points - 1);
+    // Add some random noise but trend towards current price
+    const trendPrice = startPrice + (currentPrice - startPrice) * progress;
+    const noise = trendPrice * (Math.random() - 0.5) * 0.02; // 2% noise
+    data.push(trendPrice + noise);
+  }
+
+  // Ensure last point is exactly current price
+  data[data.length - 1] = currentPrice;
+  return data;
+}
 
 type TabType = 'market' | 'portfolio' | 'company' | 'orders';
 
@@ -672,15 +691,32 @@ export function StocksPage() {
             <div className="space-y-6">
           {/* Portfolio Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
-              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Total Portfolio Value</p>
+            {/* Total Portfolio Value */}
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border-l-4 border-l-cyan-500 border border-dark-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-xs text-zinc-500 uppercase tracking-wider">Portfolio Value</p>
+              </div>
               <p className="text-3xl font-bold text-zinc-100 mb-1">
                 {formatCurrency(totalPortfolioValue)}
               </p>
               <p className="text-xs text-zinc-500">Current market value</p>
-                  </div>
-            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
-              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Total Invested</p>
+            </div>
+
+            {/* Total Invested */}
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border-l-4 border-l-blue-500 border border-dark-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <p className="text-xs text-zinc-500 uppercase tracking-wider">Total Invested</p>
+              </div>
               <p className="text-3xl font-bold text-zinc-100 mb-1">
                 {formatCurrency(
                   portfolio.reduce((sum, h) => sum + parseFloat(h.totalInvested), 0)
@@ -688,8 +724,25 @@ export function StocksPage() {
               </p>
               <p className="text-xs text-zinc-500">Your initial investment</p>
             </div>
-            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
-              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Total Profit/Loss</p>
+
+            {/* Total Profit/Loss */}
+            <div className={`bg-gradient-to-br from-dark-card to-dark-elevated border-l-4 ${
+              totalProfitLoss >= 0 ? 'border-l-green-500' : 'border-l-red-500'
+            } border border-dark-border rounded-xl p-5`}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  totalProfitLoss >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                }`}>
+                  <svg className={`w-4 h-4 ${totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {totalProfitLoss >= 0 ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                    )}
+                  </svg>
+                </div>
+                <p className="text-xs text-zinc-500 uppercase tracking-wider">Profit/Loss</p>
+              </div>
               <p
                 className={`text-3xl font-bold mb-1 ${
                   totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
@@ -703,16 +756,25 @@ export function StocksPage() {
                 {totalProfitLossPercent.toFixed(2)}% return
               </p>
             </div>
-            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5">
-              <p className="text-xs text-zinc-500 uppercase mb-2 tracking-wider">Holdings</p>
+
+            {/* Holdings Count */}
+            <div className="bg-gradient-to-br from-dark-card to-dark-elevated border-l-4 border-l-purple-500 border border-dark-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <p className="text-xs text-zinc-500 uppercase tracking-wider">Holdings</p>
+              </div>
               <p className="text-3xl font-bold text-zinc-100 mb-1">
                 {portfolio.length}
               </p>
               <p className="text-xs text-zinc-500">
                 {portfolio.reduce((sum, h) => sum + h.shares, 0).toLocaleString()} total shares
               </p>
-                  </div>
-                </div>
+            </div>
+          </div>
 
           {/* Portfolio Performance Breakdown */}
           {portfolio.length > 0 && (
@@ -848,25 +910,32 @@ export function StocksPage() {
                   const profitLoss = parseFloat(holding.profitLoss);
                   const profitLossPercent = holding.profitLossPercent;
                   const isProfit = profitLoss >= 0;
-                  
+                  const sparklineData = generateSparklineData(
+                    parseFloat(holding.currentPrice),
+                    stock.changePercent
+                  );
+
                   return (
                     <div
                       key={holding.id}
-                      className="bg-gradient-to-br from-dark-card to-dark-elevated border border-dark-border rounded-xl p-5 hover:border-mint/30 transition-all"
+                      className={`bg-gradient-to-br from-dark-card to-dark-elevated border rounded-xl p-5 hover:border-mint/30 transition-all ${
+                        isProfit ? 'border-l-green-500/50' : 'border-l-red-500/50'
+                      } border-l-4 border-dark-border`}
                     >
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-bold text-zinc-100 text-xl">{holding.tickerSymbol}</h3>
-                            <span className={`text-xs px-2 py-1 rounded font-medium ${
-                              holding.stockType === 'bot' 
-                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                                : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                            <MiniSparkline data={sparklineData} width={50} height={20} />
+                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                              holding.stockType === 'bot'
+                                ? 'bg-blue-500/20 text-blue-400'
+                                : 'bg-purple-500/20 text-purple-400'
                             } uppercase`}>
                               {holding.stockType}
                             </span>
                     </div>
-                          <p className="text-sm text-zinc-400 mb-3">{holding.companyName}</p>
+                          <p className="text-sm text-zinc-400 mb-2">{holding.companyName}</p>
                           
                           {/* Profit/Loss Badge */}
                           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${
@@ -1067,35 +1136,43 @@ export function StocksPage() {
                     {orders.map((order) => (
                       <tr
                         key={order.id}
-                        className="border-b border-dark-border/50 hover:bg-dark-elevated/50"
+                        className={`border-b border-dark-border/50 hover:bg-dark-elevated/50 border-l-4 ${
+                          order.orderType === 'buy'
+                            ? 'border-l-green-500/60'
+                            : 'border-l-red-500/60'
+                        }`}
                       >
-                        <td className="px-4 py-3 text-zinc-400 text-sm">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                        <td className="px-4 py-3.5 text-zinc-400 text-sm">
+                          <div>
+                            <p className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</p>
+                            <p className="text-xs text-zinc-600">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
                       </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <div>
                             <p className="font-bold text-zinc-100">{order.tickerSymbol}</p>
-                            <p className="text-xs text-zinc-500">{order.companyName}</p>
+                            <p className="text-xs text-zinc-500 truncate max-w-[120px]">{order.companyName}</p>
                         </div>
                       </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold ${
                               order.orderType === 'buy'
-                                ? 'bg-green-500/20 text-green-400'
-                                : 'bg-red-500/20 text-red-400'
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
                             }`}
                           >
+                            {order.orderType === 'buy' ? '↑' : '↓'}
                             {order.orderType.toUpperCase()}
                           </span>
                       </td>
-                        <td className="px-4 py-3 text-right font-mono text-zinc-100">
+                        <td className="px-4 py-3.5 text-right font-mono text-zinc-100 font-medium">
                           {order.shares.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-zinc-100">
+                        <td className="px-4 py-3.5 text-right font-mono text-zinc-100">
                           ${parseFloat(order.pricePerShare).toFixed(2)}
                       </td>
-                        <td className="px-4 py-3 text-right font-mono text-zinc-100">
+                        <td className="px-4 py-3.5 text-right font-mono font-bold text-zinc-100">
                           {formatCurrency(parseFloat(order.totalAmount))}
                     </td>
                   </tr>

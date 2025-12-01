@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, useId } from 'react';
+import { useEffect, useRef, useId } from 'react';
 import gsap from 'gsap';
 
 interface CircularProgressProps {
   progress: number; // 0-100
   size?: number;
   strokeWidth?: number;
-  showPercentage?: boolean;
   showWave?: boolean;
   color?: string;
   trackColor?: string;
@@ -18,7 +17,6 @@ export function CircularProgress({
   progress,
   size = 80,
   strokeWidth = 4,
-  showPercentage = false,
   showWave = true,
   color = '#4ade80', // green-400
   trackColor = 'rgba(255, 255, 255, 0.1)',
@@ -28,7 +26,6 @@ export function CircularProgress({
   const circleRef = useRef<SVGCircleElement>(null);
   const containerRef = useRef<SVGSVGElement>(null);
   const waveRef = useRef<SVGPathElement>(null);
-  const [displayPercent, setDisplayPercent] = useState(0);
   const clipId = useId();
 
   const radius = (size - strokeWidth) / 2;
@@ -47,19 +44,6 @@ export function CircularProgress({
       duration: 0.8,
       ease: 'power2.out',
     });
-
-    // Animate the percentage counter (for internal tracking)
-    gsap.to(
-      { value: displayPercent },
-      {
-        value: progress,
-        duration: 0.8,
-        ease: 'power2.out',
-        onUpdate: function () {
-          setDisplayPercent(Math.round(this.targets()[0].value));
-        },
-      }
-    );
 
     // Pulse animation when complete
     if (isComplete && containerRef.current) {
@@ -189,19 +173,45 @@ export function CircularProgress({
         />
       </svg>
 
-      {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        {showPercentage && (
-          <span
-            className="text-sm font-bold font-mono"
-            style={{ color: currentColor }}
-          >
-            {displayPercent}%
-          </span>
-        )}
-        {isComplete && (
-          <span className="text-[10px] text-green-400 font-medium">Ready!</span>
-        )}
+      {/* Center content - thin wave bar */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <svg
+          width={size * 0.5}
+          height={size * 0.15}
+          viewBox="0 0 50 15"
+          className="overflow-visible"
+        >
+          <defs>
+            <linearGradient id={`wave-bar-grad-${clipId}`} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={currentColor} stopOpacity={0.3} />
+              <stop offset="50%" stopColor={currentColor} stopOpacity={1} />
+              <stop offset="100%" stopColor={currentColor} stopOpacity={0.3} />
+            </linearGradient>
+          </defs>
+          {/* Animated wave bars */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect
+              key={i}
+              x={8 + i * 8}
+              y={7.5}
+              width={3}
+              height={1}
+              rx={0.5}
+              fill={`url(#wave-bar-grad-${clipId})`}
+              style={{
+                transformOrigin: `${9.5 + i * 8}px 7.5px`,
+                animation: `waveBar 0.8s ease-in-out infinite`,
+                animationDelay: `${i * 0.1}s`,
+              }}
+            />
+          ))}
+          <style>{`
+            @keyframes waveBar {
+              0%, 100% { transform: scaleY(1); }
+              50% { transform: scaleY(${isComplete ? 4 : 2 + (progress / 100) * 3}); }
+            }
+          `}</style>
+        </svg>
       </div>
     </div>
   );

@@ -226,3 +226,71 @@ export function Sparkline({ data, color = 'mint', height = 40, className = '' }:
     />
   );
 }
+
+// Inline mini sparkline for portfolio cards - auto-detects trend color
+interface MiniSparklineProps {
+  data: number[];
+  width?: number;
+  height?: number;
+  className?: string;
+  positiveColor?: string;
+  negativeColor?: string;
+}
+
+export function MiniSparkline({
+  data,
+  width = 60,
+  height = 24,
+  className = '',
+  positiveColor = '#4ade80',
+  negativeColor = '#f87171',
+}: MiniSparklineProps) {
+  // Determine trend: compare first and last values
+  const isPositive = data.length >= 2 ? data[data.length - 1] >= data[0] : true;
+  const color = isPositive ? positiveColor : negativeColor;
+
+  // Normalize data to fit in the height
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  // Generate SVG path
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * width;
+    const y = height - ((value - min) / range) * (height - 4) - 2; // 2px padding
+    return `${x},${y}`;
+  });
+
+  const linePath = `M ${points.join(' L ')}`;
+  const areaPath = `${linePath} L ${width},${height} L 0,${height} Z`;
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      className={className}
+      style={{ display: 'block' }}
+    >
+      <defs>
+        <linearGradient id={`sparkGrad-${isPositive ? 'pos' : 'neg'}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      {/* Area fill */}
+      <path
+        d={areaPath}
+        fill={`url(#sparkGrad-${isPositive ? 'pos' : 'neg'})`}
+      />
+      {/* Line */}
+      <path
+        d={linePath}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

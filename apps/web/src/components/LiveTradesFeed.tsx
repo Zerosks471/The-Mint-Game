@@ -12,6 +12,21 @@ interface LiveTrade {
   traderType: 'player' | 'bot';
 }
 
+// Format relative time (e.g., "2m ago", "just now")
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffSecs < 10) return 'just now';
+  if (diffSecs < 60) return `${diffSecs}s ago`;
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return date.toLocaleDateString();
+}
+
 interface LiveTradesFeedProps {
   maxTrades?: number;
   showMarketActivity?: boolean;
@@ -203,7 +218,7 @@ export function LiveTradesFeed({ maxTrades, showMarketActivity = true }: LiveTra
               <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Live Feed</span>
               <span className="text-[10px] text-zinc-500">{trades.length} trades</span>
             </div>
-            <div className="space-y-1.5 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar flex-1">
+            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar flex-1">
               {isLoading ? (
                 <div className="text-center py-8 text-zinc-500 text-sm">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-mint mx-auto mb-2"></div>
@@ -214,38 +229,53 @@ export function LiveTradesFeed({ maxTrades, showMarketActivity = true }: LiveTra
                   <p>No trades yet</p>
                 </div>
               ) : (
-                trades.map((trade) => (
-                  <div
-                    key={trade.id}
-                    className="flex items-center justify-between py-2 px-2.5 bg-[#0a0a0f] rounded-lg border border-[#1a1a24] hover:border-mint/30 transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-zinc-100 text-sm">{trade.ticker}</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                          trade.type === 'buy'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
-                      >
-                        {trade.type.toUpperCase()}
-                      </span>
-                      {trade.traderType === 'bot' && (
-                        <span className="text-[9px] px-1 py-0.5 bg-blue-500/20 text-blue-400 rounded">
-                          BOT
-                        </span>
-                      )}
+                trades.map((trade) => {
+                  const tradeValue = parseFloat(trade.price) * trade.shares;
+                  const isBuy = trade.type === 'buy';
+
+                  return (
+                    <div
+                      key={trade.id}
+                      className={`flex items-center justify-between py-2.5 px-3 bg-[#0a0a0f] rounded-lg border border-[#1a1a24] hover:border-mint/30 transition-all duration-200 border-l-4 ${
+                        isBuy ? 'border-l-green-500/60' : 'border-l-red-500/60'
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-zinc-100 text-sm">{trade.ticker}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5 ${
+                              isBuy
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            }`}
+                          >
+                            {isBuy ? '↑' : '↓'}
+                            {trade.type.toUpperCase()}
+                          </span>
+                          {trade.traderType === 'bot' && (
+                            <span className="text-[9px] px-1 py-0.5 bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
+                              BOT
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                          <span>{trade.shares.toLocaleString()} × ${parseFloat(trade.price).toFixed(2)}</span>
+                          <span className="text-zinc-600">•</span>
+                          <span>{formatRelativeTime(trade.timestamp)}</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className={`text-sm font-mono font-bold ${isBuy ? 'text-green-400' : 'text-red-400'}`}>
+                          ${tradeValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-[10px] text-zinc-500">
+                          total
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs font-mono font-bold text-zinc-100">
-                        ${parseFloat(trade.price).toFixed(2)}
-                      </p>
-                      <p className="text-[10px] text-zinc-500">
-                        {trade.shares.toLocaleString()} shares
-                      </p>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
