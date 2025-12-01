@@ -1,5 +1,6 @@
 import { ComponentType } from 'react';
 import { MiniGameProps } from './MiniGameModal';
+import { OrderRushGame } from './business/OrderRushGame';
 
 // Placeholder game component (will be replaced with actual games)
 const PlaceholderGame: ComponentType<MiniGameProps> = ({ difficulty, onComplete }) => {
@@ -38,7 +39,7 @@ export const BUSINESS_TASKS: Record<string, {
   restaurant: {
     name: 'Order Rush',
     description: 'Match ingredients to order tickets',
-    component: PlaceholderGame, // Will be: OrderRushGame
+    component: OrderRushGame,
   },
   tech_startup: {
     name: 'Debug Code',
