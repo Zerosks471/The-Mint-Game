@@ -571,6 +571,60 @@ export class GameService {
     });
   }
 
+  /**
+   * Sell a business to recover from softlock or liquidate assets
+   * Returns 50% of total invested value
+   */
+  async sellBusiness(userId: string, businessId: string) {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const business = await tx.playerBusiness.findUnique({
+        where: { id: businessId },
+        include: { businessType: true },
+      });
+
+      if (!business || business.userId !== userId) {
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Business not found', 404);
+      }
+
+      const playerStats = await tx.playerStats.findUnique({
+        where: { userId },
+      });
+
+      if (!playerStats) {
+        throw new AppError(ErrorCodes.NOT_FOUND, 'Player stats not found', 404);
+      }
+
+      // Return 50% of total investment
+      const sellValue = new Prisma.Decimal(business.totalInvested).mul(0.5);
+
+      // Delete the business
+      await tx.playerBusiness.delete({
+        where: { id: businessId },
+      });
+
+      // Update player stats
+      await tx.playerStats.update({
+        where: { userId },
+        data: {
+          cash: { increment: sellValue },
+          totalBusinessesOwned: { decrement: 1 },
+        },
+      });
+
+      // Grant a small amount of XP (slower than active play)
+      if (!sellValue.isZero()) {
+        await this.addExperience(tx, userId, Number(sellValue) / 200);
+      }
+
+      return {
+        businessName: business.businessType.name,
+        level: business.level,
+        cashReceived: sellValue.toString(),
+        totalInvested: business.totalInvested.toString(),
+      };
+    });
+  }
+
   // ==================== HELPER METHODS ====================
 
   private checkUnlock(requirement: any, playerLevel: number): boolean {

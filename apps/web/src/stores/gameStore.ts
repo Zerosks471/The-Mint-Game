@@ -49,6 +49,10 @@ interface GameState {
   sellProperty: (propertyId: string, quantity?: number) => Promise<boolean>;
   buyBusiness: (typeId: number) => Promise<boolean>;
   levelUpBusiness: (businessId: string) => Promise<boolean>;
+  sellBusiness: (businessId: string) => Promise<{
+    businessName: string;
+    cashReceived: string;
+  } | null>;
   collectBusinessRevenue: (businessId: string, collectionType?: 'minigame' | 'instant') => Promise<{
     collected: string;
     message?: string;
@@ -232,6 +236,21 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     set({ error: response.error?.message || 'Failed to level up business' });
     return false;
+  },
+
+  sellBusiness: async (businessId: string) => {
+    set({ error: null });
+    const response = await gameApi.sellBusiness(businessId);
+    if (response.success && response.data) {
+      await Promise.all([get().fetchStats(), get().fetchPlayerBusinesses()]);
+      get().syncDisplayedCashFromStats();
+      return {
+        businessName: response.data.businessName,
+        cashReceived: response.data.cashReceived,
+      };
+    }
+    set({ error: response.error?.message || 'Failed to sell business' });
+    return null;
   },
 
   collectBusinessRevenue: async (businessId: string, collectionType: 'minigame' | 'instant' = 'minigame') => {

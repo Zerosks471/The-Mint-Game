@@ -4,19 +4,12 @@ import { formatCurrency } from '@mint/utils';
 import type { BusinessType, PlayerBusiness } from '../api/game';
 import { MiniGameModal, getBusinessTask } from '../components/minigames';
 import { minigameApi, StartTaskResponse } from '../api/minigames';
+import { CircularProgress } from '../components/ui';
 
 type Tab = 'owned' | 'shop';
 
-// Animated cycle progress that updates in real-time
-function AnimatedCycleProgress({
-  cycleStart,
-  cycleSeconds,
-  cycleComplete
-}: {
-  cycleStart: string;
-  cycleSeconds: number;
-  cycleComplete: boolean;
-}) {
+// Hook for real-time cycle progress
+function useCycleProgress(cycleStart: string, cycleSeconds: number, cycleComplete: boolean) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -38,24 +31,7 @@ function AnimatedCycleProgress({
     return () => clearInterval(interval);
   }, [cycleStart, cycleSeconds, cycleComplete]);
 
-  return (
-    <div className="mb-4">
-      <div className="flex items-center justify-between text-sm mb-1">
-        <span className="text-zinc-500">Cycle Progress</span>
-        <span className="font-medium text-zinc-200">
-          {cycleComplete ? 'Ready!' : `${Math.floor(progress)}%`}
-        </span>
-      </div>
-      <div className="w-full bg-dark-border rounded-full h-3">
-        <div
-          className={`h-3 rounded-full transition-all duration-100 ${
-            cycleComplete ? 'bg-green-500' : 'bg-purple-500'
-          }`}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
-  );
+  return progress;
 }
 
 export function BusinessesPage() {
@@ -70,6 +46,7 @@ export function BusinessesPage() {
     fetchStats,
     buyBusiness,
     levelUpBusiness,
+    sellBusiness,
     collectBusinessRevenue,
     clearError,
   } = useGameStore();
@@ -77,6 +54,7 @@ export function BusinessesPage() {
   const [activeTab, setActiveTab] = useState<Tab>('owned');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [instantCollectLoading, setInstantCollectLoading] = useState<string | null>(null);
+  const [sellConfirm, setSellConfirm] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<{
     business: PlayerBusiness;
     session: StartTaskResponse;
@@ -135,6 +113,24 @@ export function BusinessesPage() {
       }
     }
     setInstantCollectLoading(null);
+  };
+
+  const handleSellClick = (businessId: string) => {
+    setSellConfirm(businessId);
+  };
+
+  const handleSellConfirm = async (businessId: string) => {
+    setActionLoading(`sell-${businessId}`);
+    const result = await sellBusiness(businessId);
+    if (result) {
+      console.log(`Sold ${result.businessName} for ${formatCurrency(parseFloat(result.cashReceived))}`);
+    }
+    setActionLoading(null);
+    setSellConfirm(null);
+  };
+
+  const handleSellCancel = () => {
+    setSellConfirm(null);
   };
 
   const handleTaskComplete = async (success: boolean, score: number) => {
@@ -266,11 +262,16 @@ export function BusinessesPage() {
                   onLevelUp={() => handleLevelUp(business.id)}
                   onCollect={() => handleCollectClick(business)}
                   onInstantCollect={() => handleInstantCollect(business)}
+                  onSellClick={() => handleSellClick(business.id)}
+                  onSellConfirm={() => handleSellConfirm(business.id)}
+                  onSellCancel={handleSellCancel}
                   isLoading={
                     actionLoading === `level-${business.id}` ||
-                    actionLoading === `collect-${business.id}`
+                    actionLoading === `collect-${business.id}` ||
+                    actionLoading === `sell-${business.id}`
                   }
                   instantCollectLoading={instantCollectLoading === business.id}
+                  showSellConfirm={sellConfirm === business.id}
                 />
               ))}
             </div>
@@ -318,8 +319,12 @@ interface OwnedBusinessCardProps {
   onLevelUp: () => void;
   onCollect: () => void;
   onInstantCollect: () => void;
+  onSellClick: () => void;
+  onSellConfirm: () => void;
+  onSellCancel: () => void;
   isLoading: boolean;
   instantCollectLoading: boolean;
+  showSellConfirm: boolean;
 }
 
 function OwnedBusinessCard({
@@ -328,11 +333,24 @@ function OwnedBusinessCard({
   onLevelUp,
   onCollect,
   onInstantCollect,
+  onSellClick,
+  onSellConfirm,
+  onSellCancel,
   isLoading,
   instantCollectLoading,
+  showSellConfirm,
 }: OwnedBusinessCardProps) {
   const levelCost = business.nextLevelCost ? parseFloat(business.nextLevelCost) : null;
   const canLevelUp = levelCost !== null && cash >= levelCost;
+  const progress = useCycleProgress(
+    business.currentCycleStart,
+    business.cycleSeconds,
+    business.cycleComplete
+  );
+  const revenueAmount = formatCurrency(parseFloat(business.currentRevenue));
+  const instantAmount = formatCurrency(parseFloat(business.currentRevenue) * 0.25);
+  const totalInvested = parseFloat(business.totalInvested || '0');
+  const sellValue = formatCurrency(totalInvested * 0.5);
 
   const formatTime = (seconds: number): string => {
     if (seconds < 60) return `${seconds}s`;
@@ -342,7 +360,8 @@ function OwnedBusinessCard({
 
   return (
     <div className="bg-dark-card border border-dark-border rounded-2xl p-5 border-l-4 border-purple-500">
-      <div className="flex items-start justify-between mb-3">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="font-bold text-zinc-100">{business.businessType.name}</h3>
           <p className="text-sm text-zinc-500 capitalize">{business.businessType.category}</p>
@@ -352,58 +371,48 @@ function OwnedBusinessCard({
         </span>
       </div>
 
-      {/* Cycle Progress */}
-      <AnimatedCycleProgress
-        cycleStart={business.currentCycleStart}
-        cycleSeconds={business.cycleSeconds}
-        cycleComplete={business.cycleComplete}
-      />
-      <p className="text-xs text-zinc-600 -mt-3 mb-4">
-        Cycle time: {formatTime(business.cycleSeconds)}
-      </p>
+      {/* Main content - Circular Progress centered with action buttons */}
+      <div className="flex flex-col items-center mb-4">
+        {/* Circular Progress with Wave Animation */}
+        <div className="relative mb-3">
+          <CircularProgress
+            progress={progress}
+            size={100}
+            strokeWidth={6}
+            color={business.cycleComplete ? '#4ade80' : '#a855f7'}
+            isComplete={business.cycleComplete}
+          />
+          {/* Revenue overlay when complete */}
+          {business.cycleComplete && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-lg font-bold text-green-400">{revenueAmount}</span>
+            </div>
+          )}
+        </div>
 
-      {/* Revenue Info */}
-      <div className="bg-mint/10 rounded-xl p-3 mb-4">
-        <p className="text-sm text-mint">Revenue per cycle</p>
-        <p className="text-xl font-bold text-mint">
-          {formatCurrency(parseFloat(business.currentRevenue))}
+        <p className="text-xs text-zinc-500 mb-3">
+          Cycle: {formatTime(business.cycleSeconds)}
         </p>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-        <div className="bg-dark-elevated rounded-xl p-2">
-          <p className="text-zinc-400">Cycles Completed</p>
-          <p className="font-bold text-zinc-100">{business.cyclesCompleted}</p>
-        </div>
-        <div className="bg-dark-elevated rounded-xl p-2">
-          <p className="text-zinc-400">Employees</p>
-          <p className="font-bold text-zinc-100">{business.employeeCount}</p>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="space-y-2">
+        {/* Collection Buttons - shown when cycle is complete */}
         {business.cycleComplete && (
-          <>
+          <div className="flex flex-col gap-2 w-full max-w-[220px]">
             {/* Mini-Game Collection - 100% Profit */}
             <button
               onClick={onCollect}
               disabled={isLoading || instantCollectLoading}
-              className="w-full py-2.5 px-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+              className="flex items-center justify-between w-full py-2.5 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-all disabled:opacity-50 shadow-lg shadow-green-500/20"
             >
               {isLoading ? (
-                'Starting...'
+                <span className="w-full text-center">Starting...</span>
               ) : (
-                <div className="flex items-center justify-between">
+                <>
                   <span className="flex items-center gap-2">
                     <span>🎮</span>
-                    <span>Play to Collect</span>
+                    <span>Play</span>
                   </span>
-                  <span className="text-green-200 font-bold">
-                    {formatCurrency(parseFloat(business.currentRevenue))}
-                  </span>
-                </div>
+                  <span className="font-bold">{revenueAmount}</span>
+                </>
               )}
             </button>
 
@@ -411,42 +420,88 @@ function OwnedBusinessCard({
             <button
               onClick={onInstantCollect}
               disabled={isLoading || instantCollectLoading}
-              className="w-full py-2 px-3 bg-amber-600/80 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+              className="flex items-center justify-between w-full py-1.5 px-4 bg-amber-600/80 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-all disabled:opacity-50"
             >
               {instantCollectLoading ? (
-                'Collecting...'
+                <span className="w-full text-center">Collecting...</span>
               ) : (
-                <div className="flex items-center justify-between">
+                <>
                   <span className="flex items-center gap-2">
                     <span>⚡</span>
-                    <span>Instant Collect (25%)</span>
+                    <span>Quick (25%)</span>
                   </span>
-                  <span className="text-amber-200">
-                    {formatCurrency(parseFloat(business.currentRevenue) * 0.25)}
-                  </span>
-                </div>
+                  <span className="text-amber-200">{instantAmount}</span>
+                </>
               )}
             </button>
-            <p className="text-xs text-zinc-500 text-center">
-              Manager handles restocking - takes 75% fee
+            <p className="text-[10px] text-zinc-600 text-center">
+              Manager takes 75% fee for restocking
             </p>
-          </>
-        )}
-
-        {levelCost !== null && (
-          <button
-            onClick={onLevelUp}
-            disabled={!canLevelUp || isLoading}
-            className={`w-full py-2 px-3 rounded-xl text-sm font-medium transition-colors ${
-              canLevelUp
-                ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                : 'bg-dark-elevated text-zinc-600 cursor-not-allowed'
-            }`}
-          >
-            {isLoading ? 'Upgrading...' : `Level Up - ${formatCurrency(levelCost)}`}
-          </button>
+          </div>
         )}
       </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
+        <div className="bg-dark-elevated rounded-xl p-2 text-center">
+          <p className="text-[10px] text-zinc-500">Revenue</p>
+          <p className="font-bold text-mint text-xs">{revenueAmount}</p>
+        </div>
+        <div className="bg-dark-elevated rounded-xl p-2 text-center">
+          <p className="text-[10px] text-zinc-500">Cycles</p>
+          <p className="font-bold text-zinc-100 text-xs">{business.cyclesCompleted}</p>
+        </div>
+        <div className="bg-dark-elevated rounded-xl p-2 text-center">
+          <p className="text-[10px] text-zinc-500">Staff</p>
+          <p className="font-bold text-zinc-100 text-xs">{business.employeeCount}</p>
+        </div>
+      </div>
+
+      {/* Level Up Button */}
+      {levelCost !== null && (
+        <button
+          onClick={onLevelUp}
+          disabled={!canLevelUp || isLoading}
+          className={`w-full py-2 px-3 rounded-xl text-sm font-medium transition-colors ${
+            canLevelUp
+              ? 'bg-purple-500 hover:bg-purple-600 text-white'
+              : 'bg-dark-elevated text-zinc-600 cursor-not-allowed'
+          }`}
+        >
+          {isLoading ? 'Upgrading...' : `Level Up - ${formatCurrency(levelCost)}`}
+        </button>
+      )}
+
+      {/* Sell Business */}
+      {showSellConfirm ? (
+        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <p className="text-xs text-red-400 mb-2 text-center">
+            Sell for {sellValue}? (50% of invested)
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={onSellCancel}
+              className="flex-1 py-1.5 px-3 bg-dark-elevated hover:bg-dark-border text-zinc-300 rounded-lg text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSellConfirm}
+              disabled={isLoading}
+              className="flex-1 py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {isLoading ? 'Selling...' : 'Confirm'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={onSellClick}
+          className="mt-3 w-full py-1.5 px-3 text-xs text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+        >
+          Sell Business ({sellValue})
+        </button>
+      )}
     </div>
   );
 }

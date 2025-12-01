@@ -5,3 +5,4 @@ export { GlowButton } from './GlowButton';
 export { GradientChart, Sparkline, type ChartColor } from './GradientChart';
 export { DonutChart, ProgressRing, type DonutColor } from './DonutChart';
 export { StatCard, StatRow, type StatCardColor } from './StatCard';
+export { CircularProgress, CircularCollectButton } from './CircularProgress';

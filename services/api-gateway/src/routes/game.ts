@@ -173,6 +173,21 @@ router.post(
   }
 );
 
+// POST /api/v1/game/businesses/:id/sell
+// Sell a business for 50% of total invested value
+router.post(
+  '/businesses/:id/sell',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = await gameService.sellBusiness(req.user!.id, req.params.id as string);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ==================== EARNINGS ====================
 
 // POST /api/v1/game/collect - Collect earnings from all properties (real-time)

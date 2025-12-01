@@ -56,6 +56,7 @@ export interface PlayerBusiness {
   currentCycleStart: string;
   cyclesCompleted: number;
   nextLevelCost: string | null;
+  totalInvested: string;
   cycleProgress: number;
   cycleComplete: boolean;
   businessType: BusinessType;
@@ -654,6 +655,22 @@ export const gameApi = {
       `/game/businesses/${businessId}/collect`,
       { collectionType }
     );
+  },
+
+  async sellBusiness(
+    businessId: string
+  ): Promise<ApiResponse<{
+    businessName: string;
+    level: number;
+    cashReceived: string;
+    totalInvested: string;
+  }>> {
+    return apiClient.post<{
+      businessName: string;
+      level: number;
+      cashReceived: string;
+      totalInvested: string;
+    }>(`/game/businesses/${businessId}/sell`);
   },
 
   // Real-time earnings (collect from all properties while playing)
