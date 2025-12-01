@@ -53,14 +53,14 @@ export function MarketStatus() {
           </p>
         </div>
 
-        {/* Trading Hours */}
+        {/* Next Trade Hint */}
         <div>
-          <p className="text-xs text-zinc-500 uppercase mb-1">Trading Hours</p>
+          <p className="text-xs text-zinc-500 uppercase mb-1">Next Trade</p>
           <p className="text-lg font-bold text-zinc-100">
-            24/7
+            Happening soon
           </p>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Continuous
+            Background traders keep the market moving.
           </p>
         </div>
       </div>

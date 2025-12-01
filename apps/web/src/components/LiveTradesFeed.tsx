@@ -26,8 +26,8 @@ export function LiveTradesFeed({ maxTrades }: LiveTradesFeedProps) {
       if (isInitial) {
         setIsLoading(true);
       }
-      // No limit - fetch all trades
-      const res = await gameApi.getRecentTrades();
+      const limit = maxTrades ?? 300;
+      const res = await gameApi.getRecentTrades(limit);
       if (res.success && res.data && Array.isArray(res.data)) {
         const formattedTrades: LiveTrade[] = res.data.map((trade) => ({
           id: trade.id,
@@ -40,25 +40,8 @@ export function LiveTradesFeed({ maxTrades }: LiveTradesFeedProps) {
           traderType: trade.traderType || 'player',
         }));
 
-        // Merge new trades into existing list without resetting scroll
-        setTrades((prev) => {
-          if (prev.length === 0) {
-            return formattedTrades;
-          }
-
-          const existingIds = new Set(prev.map((t) => t.id));
-          const newTrades = formattedTrades.filter((t) => !existingIds.has(t.id));
-
-          if (newTrades.length === 0) {
-            return prev;
-          }
-
-          // Keep newest first (API already returns newest first)
-          const merged = [...newTrades, ...prev];
-
-          // Soft cap to avoid unbounded growth
-          return merged.slice(0, maxTrades ?? 300);
-        });
+        // Replace with latest snapshot from server (API already returns newest first)
+        setTrades(formattedTrades);
       } else {
         console.warn('Trades API returned unexpected response:', res);
         // Only clear if we got an explicit error

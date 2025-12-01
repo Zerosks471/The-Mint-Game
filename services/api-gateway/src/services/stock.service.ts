@@ -1265,13 +1265,14 @@ export class StockService {
   > {
     try {
       // Get all completed orders from all users (including bots)
-      // If a limit is provided, respect it; otherwise return all trades
+      // If a limit is provided, respect it; otherwise default to a sane cap
+      const take = limit ?? 300;
       const orders = await prisma.stockOrder.findMany({
         where: {
           status: 'completed',
         },
         orderBy: { createdAt: 'desc' },
-        ...(limit ? { take: limit } : {}),
+        take,
       });
 
       const trades = [];

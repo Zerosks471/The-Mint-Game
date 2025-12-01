@@ -668,6 +668,11 @@ export class GameService {
         },
       });
 
+      // Grant XP based on online earnings (1 XP per $100 earned, matching business collection)
+      if (!earnings.isZero()) {
+        await this.addExperience(tx, userId, Number(earnings) / 100);
+      }
+
       return {
         collected: earnings,
         newCash: updated.cash,
@@ -729,7 +734,10 @@ export class GameService {
 
       // Apply premium income multiplier if user is premium
       const premiumMultiplier = user?.isPremium ? GameService.PREMIUM_INCOME_MULTIPLIER : 1.0;
-      const earnings = totalIncome.mul(cappedHours).mul(playerStats.currentMultiplier).mul(premiumMultiplier);
+      const earnings = totalIncome
+        .mul(cappedHours)
+        .mul(playerStats.currentMultiplier)
+        .mul(premiumMultiplier);
 
       await tx.playerStats.update({
         where: { userId },
@@ -739,6 +747,11 @@ export class GameService {
           lastCollectionAt: now,
         },
       });
+
+      // Grant XP based on offline earnings as well
+      if (!earnings.isZero()) {
+        await this.addExperience(tx, userId, Number(earnings) / 100);
+      }
 
       return {
         collected: earnings,

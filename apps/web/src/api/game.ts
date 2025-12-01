@@ -956,6 +956,17 @@ export const gameApi = {
     >
   > {
     const query = limit ? `?limit=${limit}` : '';
-    return apiClient.get(`/stocks/trades${query}`);
+    return apiClient.get<
+      Array<{
+        id: string;
+        tickerSymbol: string;
+        orderType: 'buy' | 'sell';
+        shares: number;
+        pricePerShare: string;
+        createdAt: string;
+        traderName: string;
+        traderType: 'player' | 'bot';
+      }>
+    >(`/stocks/trades${query}`);
   },
 };
