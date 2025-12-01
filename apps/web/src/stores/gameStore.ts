@@ -61,6 +61,7 @@ interface GameState {
   clearError: () => void;
   reset: () => void;
   refreshStats: () => Promise<void>;
+  syncDisplayedCashFromStats: () => void;
 }
 
 const initialState = {
@@ -83,6 +84,20 @@ const initialState = {
 
 export const useGameStore = create<GameState>()((set, get) => ({
   ...initialState,
+
+  // Helper to sync displayedCash from stats after game actions
+  syncDisplayedCashFromStats: () => {
+    const stats = get().stats;
+    if (stats) {
+      const cash = parseFloat(stats.cash);
+      const incomePerHour = parseFloat(stats.effectiveIncomeHour);
+      set({
+        displayedCash: cash,
+        lastSyncedCash: cash,
+        incomePerSecond: incomePerHour / 3600,
+      });
+    }
+  },
 
   fetchStats: async () => {
     const response = await gameApi.getStats();
@@ -149,6 +164,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.buyProperty(typeId);
     if (response.success) {
       await Promise.all([get().fetchStats(), get().fetchPlayerProperties()]);
+      get().syncDisplayedCashFromStats();
       return true;
     }
     set({ error: response.error?.message || 'Failed to buy property' });
@@ -160,6 +176,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.upgradeProperty(propertyId);
     if (response.success) {
       await Promise.all([get().fetchStats(), get().fetchPlayerProperties()]);
+      get().syncDisplayedCashFromStats();
       return true;
     }
     set({ error: response.error?.message || 'Failed to upgrade property' });
@@ -171,6 +188,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.hireManager(propertyId);
     if (response.success) {
       await Promise.all([get().fetchStats(), get().fetchPlayerProperties()]);
+      get().syncDisplayedCashFromStats();
       return true;
     }
     set({ error: response.error?.message || 'Failed to hire manager' });
@@ -182,6 +200,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.sellProperty(propertyId, quantity);
     if (response.success) {
       await Promise.all([get().fetchStats(), get().fetchPlayerProperties()]);
+      get().syncDisplayedCashFromStats();
       return true;
     }
     set({ error: response.error?.message || 'Failed to sell property' });
@@ -193,6 +212,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.buyBusiness(typeId);
     if (response.success) {
       await Promise.all([get().fetchStats(), get().fetchPlayerBusinesses()]);
+      get().syncDisplayedCashFromStats();
       return true;
     }
     set({ error: response.error?.message || 'Failed to buy business' });
@@ -204,6 +224,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.levelUpBusiness(businessId);
     if (response.success) {
       await Promise.all([get().fetchStats(), get().fetchPlayerBusinesses()]);
+      get().syncDisplayedCashFromStats();
       return true;
     }
     set({ error: response.error?.message || 'Failed to level up business' });
@@ -215,6 +236,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.collectBusinessRevenue(businessId);
     if (response.success && response.data) {
       await Promise.all([get().fetchStats(), get().fetchPlayerBusinesses()]);
+      get().syncDisplayedCashFromStats();
       return response.data.collected;
     }
     set({ error: response.error?.message || 'Failed to collect revenue' });
@@ -226,6 +248,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const response = await gameApi.collectOfflineEarnings();
     if (response.success && response.data) {
       await Promise.all([get().fetchStats(), get().fetchOfflineStatus()]);
+      get().syncDisplayedCashFromStats();
       return response.data.collected;
     }
     set({ error: response.error?.message || 'Failed to collect offline earnings' });
