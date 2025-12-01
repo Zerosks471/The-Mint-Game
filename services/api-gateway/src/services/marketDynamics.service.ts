@@ -52,10 +52,8 @@ export class MarketDynamicsService {
     const tradePercentage = tradeValue.div(marketCap);
 
     // Price impact scales with trade size
-    // Bot trades have more impact to control markets
-    // Check if this is a bot trade (more impactful)
-    const isBotTrade = await this.isBotTrade(tickerSymbol, shares, pricePerShare);
-    const impactMultiplier = isBotTrade ? 3 : 1; // Bots have 3x more market impact
+    // For now, all trades use the same impact multiplier to avoid runtime errors
+    const impactMultiplier = 1;
     
     const rawImpact = Number(tradePercentage) * 10 * impactMultiplier;
     const impact = Math.min(
