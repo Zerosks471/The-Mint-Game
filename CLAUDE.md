@@ -52,15 +52,18 @@ pnpm --filter @mint/database generate
 3. Run `pnpm setup` for complete initialization
 
 **Local Services (Docker):**
+
 - PostgreSQL on port 5434
 - Redis on port 6379
 - MailHog on ports 1025 (SMTP) / 8025 (Web UI)
+- Adminer on port 8080 (Database web admin - http://localhost:8080)
 
 ## Code Patterns
 
 **Adding API endpoints:** Create route in `services/api-gateway/src/routes/`, register in routes index
 
 **Database changes:** Edit `packages/database/prisma/schema.prisma`, then run:
+
 ```bash
 pnpm db:generate && pnpm db:push
 ```
@@ -78,6 +81,7 @@ pnpm db:generate && pnpm db:push
 ## Design Documents
 
 Implementation plans are in `/docs/plans/`:
+
 - `2025-11-28-the-mint-technical-design.md` - System architecture
 - `2025-11-28-phase-1-core-game-mvp.md` - Current implementation phase
 - `2025-11-29-passive-income-system-design.md` - Income mechanics design

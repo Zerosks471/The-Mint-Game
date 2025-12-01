@@ -43,6 +43,18 @@ services:
     logging:
       driver: none
 
+  adminer:
+    image: adminer:latest
+    container_name: mint-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Web UI for database management
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:

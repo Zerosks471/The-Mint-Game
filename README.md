@@ -32,6 +32,7 @@ Build Your Financial Empire. One Click at a Time.
    - Frontend: http://localhost:5173
    - API: http://localhost:3000
    - MailHog: http://localhost:8025
+   - Adminer (Database Admin): http://localhost:8080
 
 ## Project Structure
 

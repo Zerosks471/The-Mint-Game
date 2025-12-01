@@ -310,6 +310,68 @@ export interface IPOCancelResult {
   cashEarned: string;
 }
 
+// Stock Market types
+export interface StockMarketData {
+  tickerSymbol: string;
+  companyName: string;
+  stockType: 'player' | 'bot';
+  currentPrice: string;
+  previousClose: string;
+  highPrice24h: string;
+  lowPrice24h: string;
+  change: string;
+  changePercent: number;
+  volume24h: number;
+  trend: string;
+  marketCap?: string;
+  sector?: string;
+  description?: string;
+}
+
+export interface StockDetail extends StockMarketData {
+  totalShares?: number;
+  floatShares?: number;
+  ownerShares?: number;
+  basePrice?: string;
+  volatility?: string;
+}
+
+export interface StockHoldingData {
+  id: string;
+  tickerSymbol: string;
+  companyName: string;
+  stockType: 'player' | 'bot';
+  shares: number;
+  avgBuyPrice: string;
+  totalInvested: string;
+  currentPrice: string;
+  currentValue: string;
+  profitLoss: string;
+  profitLossPercent: number;
+}
+
+export interface StockOrderData {
+  id: string;
+  tickerSymbol: string;
+  companyName: string;
+  stockType: 'player' | 'bot';
+  orderType: 'buy' | 'sell';
+  shares: number;
+  pricePerShare: string;
+  totalAmount: string;
+  createdAt: string;
+}
+
+export interface StockBuyResult {
+  holding: StockHoldingData;
+  order: StockOrderData;
+}
+
+export interface StockSellResult {
+  holding: StockHoldingData | null;
+  order: StockOrderData;
+}
+
 // Progression types
 export interface Phase {
   id: number;
@@ -584,7 +646,9 @@ export const gameApi = {
     return apiClient.get<EarningsSummary>('/game/stats/summary');
   },
 
-  async createSnapshot(type: 'hourly' | 'daily' = 'hourly'): Promise<ApiResponse<EarningsSnapshot>> {
+  async createSnapshot(
+    type: 'hourly' | 'daily' = 'hourly'
+  ): Promise<ApiResponse<EarningsSnapshot>> {
     return apiClient.post<EarningsSnapshot>('/game/stats/snapshot', { type });
   },
 
@@ -598,7 +662,9 @@ export const gameApi = {
   },
 
   async goPublic(): Promise<ApiResponse<{ pointsEarned: number; newPrestigeLevel: number }>> {
-    return apiClient.post<{ pointsEarned: number; newPrestigeLevel: number }>('/prestige/go-public');
+    return apiClient.post<{ pointsEarned: number; newPrestigeLevel: number }>(
+      '/prestige/go-public'
+    );
   },
 
   async buyPerk(
@@ -766,8 +832,12 @@ export const gameApi = {
     return apiClient.get<GiftInfo[]>('/gifts/sent');
   },
 
-  async getGiftCounts(): Promise<ApiResponse<{ pending: number; sentToday: number; maxPerDay: number }>> {
-    return apiClient.get<{ pending: number; sentToday: number; maxPerDay: number }>('/gifts/counts');
+  async getGiftCounts(): Promise<
+    ApiResponse<{ pending: number; sentToday: number; maxPerDay: number }>
+  > {
+    return apiClient.get<{ pending: number; sentToday: number; maxPerDay: number }>(
+      '/gifts/counts'
+    );
   },
 
   async sendGift(
@@ -779,7 +849,9 @@ export const gameApi = {
     return apiClient.post<GiftInfo>('/gifts/send', { receiverId, giftType, amount, message });
   },
 
-  async claimGift(giftId: string): Promise<ApiResponse<{ claimed: GiftInfo; cashReceived?: number }>> {
+  async claimGift(
+    giftId: string
+  ): Promise<ApiResponse<{ claimed: GiftInfo; cashReceived?: number }>> {
     return apiClient.post<{ claimed: GiftInfo; cashReceived?: number }>(`/gifts/${giftId}/claim`);
   },
 
@@ -797,14 +869,66 @@ export const gameApi = {
   },
 
   async buyProject(slug: string): Promise<ApiResponse<{ project: Project; newCash: string }>> {
-    return apiClient.post<{ project: Project; newCash: string }>(`/progression/projects/${slug}/purchase`);
+    return apiClient.post<{ project: Project; newCash: string }>(
+      `/progression/projects/${slug}/purchase`
+    );
   },
 
   async getUpgrades(): Promise<ApiResponse<Upgrade[]>> {
     return apiClient.get<Upgrade[]>('/progression/upgrades');
   },
 
-  async buyUpgrade(slug: string): Promise<ApiResponse<{ upgrade: Upgrade; remainingCash: string }>> {
-    return apiClient.post<{ upgrade: Upgrade; remainingCash: string }>(`/progression/upgrades/${slug}/purchase`);
+  async buyUpgrade(
+    slug: string
+  ): Promise<ApiResponse<{ upgrade: Upgrade; remainingCash: string }>> {
+    return apiClient.post<{ upgrade: Upgrade; remainingCash: string }>(
+      `/progression/upgrades/${slug}/purchase`
+    );
+  },
+
+  // Stock Market
+  async getMarketStocks(): Promise<ApiResponse<StockMarketData[]>> {
+    return apiClient.get<StockMarketData[]>('/stocks/market');
+  },
+
+  async getStockByTicker(ticker: string): Promise<ApiResponse<StockDetail>> {
+    return apiClient.get<StockDetail>(`/stocks/market/${ticker}`);
+  },
+
+  async getPlayerStock(userId?: string): Promise<ApiResponse<StockDetail | null>> {
+    const endpoint = userId ? `/stocks/player/${userId}` : '/stocks/player';
+    return apiClient.get<StockDetail | null>(endpoint);
+  },
+
+  async listPlayerStock(
+    tickerSymbol: string,
+    companyName: string
+  ): Promise<ApiResponse<StockDetail>> {
+    return apiClient.post<StockDetail>('/stocks/list', { tickerSymbol, companyName });
+  },
+
+  async updatePlayerStockName(companyName: string): Promise<ApiResponse<StockDetail>> {
+    return apiClient.put<StockDetail>('/stocks/list', { companyName });
+  },
+
+  async delistPlayerStock(): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>('/stocks/list');
+  },
+
+  async getPortfolio(): Promise<ApiResponse<StockHoldingData[]>> {
+    return apiClient.get<StockHoldingData[]>('/stocks/portfolio');
+  },
+
+  async buyStockShares(ticker: string, shares: number): Promise<ApiResponse<StockBuyResult>> {
+    return apiClient.post<StockBuyResult>('/stocks/buy', { ticker, shares });
+  },
+
+  async sellStockShares(ticker: string, shares: number): Promise<ApiResponse<StockSellResult>> {
+    return apiClient.post<StockSellResult>('/stocks/sell', { ticker, shares });
+  },
+
+  async getStockOrderHistory(limit?: number): Promise<ApiResponse<StockOrderData[]>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return apiClient.get<StockOrderData[]>(`/stocks/orders${query}`);
   },
 };
