@@ -13,6 +13,7 @@
 ## Overview
 
 Phase 1 delivers a playable idle game with:
+
 - User registration and login (JWT auth)
 - 10 property types to buy and upgrade
 - 8 business types with cycle mechanics
@@ -27,6 +28,7 @@ Phase 1 delivers a playable idle game with:
 ## Task 1: User Service - Registration
 
 **Files:**
+
 - Create: `services/api-gateway/src/services/user.service.ts`
 - Create: `services/api-gateway/src/routes/auth.ts`
 - Create: `services/api-gateway/src/validators/auth.validators.ts`
@@ -109,7 +111,12 @@ export interface AuthTokens {
 }
 
 export class UserService {
-  async register(email: string, username: string, password: string, ip?: string): Promise<{ user: any; tokens: AuthTokens }> {
+  async register(
+    email: string,
+    username: string,
+    password: string,
+    ip?: string
+  ): Promise<{ user: any; tokens: AuthTokens }> {
     // Check if email exists
     const existingEmail = await prisma.user.findUnique({ where: { email } });
     if (existingEmail) {
@@ -161,7 +168,11 @@ export class UserService {
     };
   }
 
-  async login(email: string, password: string, ip?: string): Promise<{ user: any; tokens: AuthTokens }> {
+  async login(
+    email: string,
+    password: string,
+    ip?: string
+  ): Promise<{ user: any; tokens: AuthTokens }> {
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -298,17 +309,13 @@ export class UserService {
       sessionId,
     };
 
-    const accessToken = jwt.sign(
-      { ...basePayload, type: 'access' },
-      config.JWT_ACCESS_SECRET,
-      { expiresIn: ACCESS_TOKEN_EXPIRY }
-    );
+    const accessToken = jwt.sign({ ...basePayload, type: 'access' }, config.JWT_ACCESS_SECRET, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+    });
 
-    const refreshToken = jwt.sign(
-      { ...basePayload, type: 'refresh' },
-      config.JWT_REFRESH_SECRET,
-      { expiresIn: REFRESH_TOKEN_EXPIRY }
-    );
+    const refreshToken = jwt.sign({ ...basePayload, type: 'refresh' }, config.JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRY,
+    });
 
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
 
@@ -316,7 +323,8 @@ export class UserService {
   }
 
   private sanitizeUser(user: any) {
-    const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } = user;
+    const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } =
+      user;
     return sanitized;
   }
 }
@@ -531,6 +539,7 @@ git commit -m "feat(auth): add user registration and login
 ## Task 2: Authentication Middleware
 
 **Files:**
+
 - Create: `services/api-gateway/src/middleware/auth.ts`
 - Modify: `services/api-gateway/src/middleware/index.ts`
 
@@ -652,6 +661,7 @@ git commit -m "feat(auth): add authentication middleware
 ## Task 3: Get Current User & Profile Routes
 
 **Files:**
+
 - Create: `services/api-gateway/src/routes/user.ts`
 - Modify: `services/api-gateway/src/routes/index.ts`
 
@@ -668,50 +678,59 @@ import { AppError } from '../middleware/errorHandler';
 const router = Router();
 
 // GET /api/v1/user/me - Get current user with stats
-router.get('/me', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
-      include: {
-        playerStats: true,
-      },
-    });
+router.get(
+  '/me',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        include: {
+          playerStats: true,
+        },
+      });
 
-    if (!user) {
-      throw new AppError('User not found', 404);
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      // Sanitize user
+      const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } =
+        user;
+
+      res.json({
+        success: true,
+        data: sanitized,
+      });
+    } catch (error) {
+      next(error);
     }
-
-    // Sanitize user
-    const { passwordHash, twoFactorSecret, emailVerifyToken, passwordResetToken, ...sanitized } = user;
-
-    res.json({
-      success: true,
-      data: sanitized,
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 // GET /api/v1/user/stats - Get player stats only
-router.get('/stats', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const stats = await prisma.playerStats.findUnique({
-      where: { userId: req.user!.id },
-    });
+router.get(
+  '/stats',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const stats = await prisma.playerStats.findUnique({
+        where: { userId: req.user!.id },
+      });
 
-    if (!stats) {
-      throw new AppError('Player stats not found', 404);
+      if (!stats) {
+        throw new AppError('Player stats not found', 404);
+      }
+
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      next(error);
     }
-
-    res.json({
-      success: true,
-      data: stats,
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;
 ```
@@ -741,6 +760,7 @@ git commit -m "feat(user): add user profile and stats routes
 ## Task 4: Seed Property & Business Types
 
 **Files:**
+
 - Create: `packages/database/prisma/seed.ts`
 - Modify: `packages/database/package.json`
 
@@ -755,40 +775,234 @@ const prisma = new PrismaClient();
 
 const propertyTypes: Prisma.PropertyTypeCreateInput[] = [
   // Tier 1 - Starter
-  { slug: 'lemonade-stand', name: 'Lemonade Stand', category: 'starter', tier: 1, baseCost: 100, baseIncomeHour: 5, managerCost: 500, managerName: 'Street Vendor', sortOrder: 1 },
-  { slug: 'newspaper-route', name: 'Newspaper Route', category: 'starter', tier: 1, baseCost: 500, baseIncomeHour: 25, managerCost: 2500, managerName: 'Delivery Supervisor', sortOrder: 2 },
-  { slug: 'car-wash', name: 'Car Wash', category: 'starter', tier: 1, baseCost: 2000, baseIncomeHour: 100, managerCost: 10000, managerName: 'Wash Manager', sortOrder: 3 },
+  {
+    slug: 'lemonade-stand',
+    name: 'Street Food Cart',
+    category: 'starter',
+    tier: 1,
+    baseCost: 100,
+    baseIncomeHour: 15,
+    managerCost: 500,
+    managerName: 'Street Vendor',
+    sortOrder: 1,
+  },
+  {
+    slug: 'newspaper-route',
+    name: 'Newspaper Route',
+    category: 'starter',
+    tier: 1,
+    baseCost: 500,
+    baseIncomeHour: 25,
+    managerCost: 2500,
+    managerName: 'Delivery Supervisor',
+    sortOrder: 2,
+  },
+  {
+    slug: 'car-wash',
+    name: 'Car Wash',
+    category: 'starter',
+    tier: 1,
+    baseCost: 2000,
+    baseIncomeHour: 100,
+    managerCost: 10000,
+    managerName: 'Wash Manager',
+    sortOrder: 3,
+  },
 
   // Tier 2 - Residential
-  { slug: 'apartment', name: 'Apartment', category: 'residential', tier: 2, baseCost: 10000, baseIncomeHour: 500, managerCost: 50000, managerName: 'Property Manager', sortOrder: 4, unlockRequirement: { level: 5 } },
-  { slug: 'duplex', name: 'Duplex', category: 'residential', tier: 2, baseCost: 50000, baseIncomeHour: 2500, managerCost: 250000, managerName: 'Building Super', sortOrder: 5, unlockRequirement: { level: 10 } },
-  { slug: 'condo-complex', name: 'Condo Complex', category: 'residential', tier: 2, baseCost: 200000, baseIncomeHour: 10000, managerCost: 1000000, managerName: 'HOA President', sortOrder: 6, unlockRequirement: { level: 15 } },
+  {
+    slug: 'apartment',
+    name: 'Apartment',
+    category: 'residential',
+    tier: 2,
+    baseCost: 10000,
+    baseIncomeHour: 500,
+    managerCost: 50000,
+    managerName: 'Property Manager',
+    sortOrder: 4,
+    unlockRequirement: { level: 5 },
+  },
+  {
+    slug: 'duplex',
+    name: 'Duplex',
+    category: 'residential',
+    tier: 2,
+    baseCost: 50000,
+    baseIncomeHour: 2500,
+    managerCost: 250000,
+    managerName: 'Building Super',
+    sortOrder: 5,
+    unlockRequirement: { level: 10 },
+  },
+  {
+    slug: 'condo-complex',
+    name: 'Condo Complex',
+    category: 'residential',
+    tier: 2,
+    baseCost: 200000,
+    baseIncomeHour: 10000,
+    managerCost: 1000000,
+    managerName: 'HOA President',
+    sortOrder: 6,
+    unlockRequirement: { level: 15 },
+  },
 
   // Tier 3 - Commercial
-  { slug: 'strip-mall', name: 'Strip Mall', category: 'commercial', tier: 3, baseCost: 1000000, baseIncomeHour: 50000, managerCost: 5000000, managerName: 'Mall Director', sortOrder: 7, unlockRequirement: { level: 20 } },
-  { slug: 'office-building', name: 'Office Building', category: 'commercial', tier: 3, baseCost: 5000000, baseIncomeHour: 250000, managerCost: 25000000, managerName: 'Building Manager', sortOrder: 8, unlockRequirement: { level: 25 } },
+  {
+    slug: 'strip-mall',
+    name: 'Strip Mall',
+    category: 'commercial',
+    tier: 3,
+    baseCost: 1000000,
+    baseIncomeHour: 50000,
+    managerCost: 5000000,
+    managerName: 'Mall Director',
+    sortOrder: 7,
+    unlockRequirement: { level: 20 },
+  },
+  {
+    slug: 'office-building',
+    name: 'Office Building',
+    category: 'commercial',
+    tier: 3,
+    baseCost: 5000000,
+    baseIncomeHour: 250000,
+    managerCost: 25000000,
+    managerName: 'Building Manager',
+    sortOrder: 8,
+    unlockRequirement: { level: 25 },
+  },
 
   // Tier 4 - Luxury
-  { slug: 'hotel', name: 'Luxury Hotel', category: 'luxury', tier: 4, baseCost: 25000000, baseIncomeHour: 1250000, managerCost: 125000000, managerName: 'Hotel GM', sortOrder: 9, unlockRequirement: { level: 30 } },
-  { slug: 'skyscraper', name: 'Skyscraper', category: 'luxury', tier: 4, baseCost: 100000000, baseIncomeHour: 5000000, managerCost: 500000000, managerName: 'Tower Director', sortOrder: 10, unlockRequirement: { level: 35 } },
+  {
+    slug: 'hotel',
+    name: 'Luxury Hotel',
+    category: 'luxury',
+    tier: 4,
+    baseCost: 25000000,
+    baseIncomeHour: 1250000,
+    managerCost: 125000000,
+    managerName: 'Hotel GM',
+    sortOrder: 9,
+    unlockRequirement: { level: 30 },
+  },
+  {
+    slug: 'skyscraper',
+    name: 'Skyscraper',
+    category: 'luxury',
+    tier: 4,
+    baseCost: 100000000,
+    baseIncomeHour: 5000000,
+    managerCost: 500000000,
+    managerName: 'Tower Director',
+    sortOrder: 10,
+    unlockRequirement: { level: 35 },
+  },
 ];
 
 const businessTypes: Prisma.BusinessTypeCreateInput[] = [
   // Tier 1 - Small Business
-  { slug: 'food-truck', name: 'Food Truck', category: 'food', tier: 1, baseCost: 5000, baseRevenue: 1000, cycleSeconds: 60, employeeBaseCost: 500, sortOrder: 1 },
-  { slug: 'coffee-shop', name: 'Coffee Shop', category: 'food', tier: 1, baseCost: 25000, baseRevenue: 5000, cycleSeconds: 120, employeeBaseCost: 2500, sortOrder: 2, unlockRequirement: { level: 5 } },
+  {
+    slug: 'food-truck',
+    name: 'Food Truck',
+    category: 'food',
+    tier: 1,
+    baseCost: 5000,
+    baseRevenue: 1000,
+    cycleSeconds: 60,
+    employeeBaseCost: 500,
+    sortOrder: 1,
+  },
+  {
+    slug: 'coffee-shop',
+    name: 'Coffee Shop',
+    category: 'food',
+    tier: 1,
+    baseCost: 25000,
+    baseRevenue: 5000,
+    cycleSeconds: 120,
+    employeeBaseCost: 2500,
+    sortOrder: 2,
+    unlockRequirement: { level: 5 },
+  },
 
   // Tier 2 - Medium Business
-  { slug: 'restaurant', name: 'Restaurant', category: 'food', tier: 2, baseCost: 100000, baseRevenue: 20000, cycleSeconds: 300, employeeBaseCost: 10000, sortOrder: 3, unlockRequirement: { level: 10 } },
-  { slug: 'gym', name: 'Fitness Gym', category: 'service', tier: 2, baseCost: 250000, baseRevenue: 50000, cycleSeconds: 600, employeeBaseCost: 25000, sortOrder: 4, unlockRequirement: { level: 15 } },
+  {
+    slug: 'restaurant',
+    name: 'Restaurant',
+    category: 'food',
+    tier: 2,
+    baseCost: 100000,
+    baseRevenue: 20000,
+    cycleSeconds: 300,
+    employeeBaseCost: 10000,
+    sortOrder: 3,
+    unlockRequirement: { level: 10 },
+  },
+  {
+    slug: 'gym',
+    name: 'Fitness Gym',
+    category: 'service',
+    tier: 2,
+    baseCost: 250000,
+    baseRevenue: 50000,
+    cycleSeconds: 600,
+    employeeBaseCost: 25000,
+    sortOrder: 4,
+    unlockRequirement: { level: 15 },
+  },
 
   // Tier 3 - Large Business
-  { slug: 'tech-startup', name: 'Tech Startup', category: 'tech', tier: 3, baseCost: 1000000, baseRevenue: 200000, cycleSeconds: 1800, employeeBaseCost: 100000, sortOrder: 5, unlockRequirement: { level: 20 } },
-  { slug: 'factory', name: 'Factory', category: 'manufacturing', tier: 3, baseCost: 5000000, baseRevenue: 1000000, cycleSeconds: 3600, employeeBaseCost: 500000, sortOrder: 6, unlockRequirement: { level: 25 } },
+  {
+    slug: 'tech-startup',
+    name: 'Tech Startup',
+    category: 'tech',
+    tier: 3,
+    baseCost: 1000000,
+    baseRevenue: 200000,
+    cycleSeconds: 1800,
+    employeeBaseCost: 100000,
+    sortOrder: 5,
+    unlockRequirement: { level: 20 },
+  },
+  {
+    slug: 'factory',
+    name: 'Factory',
+    category: 'manufacturing',
+    tier: 3,
+    baseCost: 5000000,
+    baseRevenue: 1000000,
+    cycleSeconds: 3600,
+    employeeBaseCost: 500000,
+    sortOrder: 6,
+    unlockRequirement: { level: 25 },
+  },
 
   // Tier 4 - Enterprise
-  { slug: 'bank', name: 'Private Bank', category: 'finance', tier: 4, baseCost: 25000000, baseRevenue: 5000000, cycleSeconds: 7200, employeeBaseCost: 2500000, sortOrder: 7, unlockRequirement: { level: 30 } },
-  { slug: 'space-company', name: 'Space Company', category: 'tech', tier: 4, baseCost: 100000000, baseRevenue: 20000000, cycleSeconds: 14400, employeeBaseCost: 10000000, sortOrder: 8, unlockRequirement: { level: 35 } },
+  {
+    slug: 'bank',
+    name: 'Private Bank',
+    category: 'finance',
+    tier: 4,
+    baseCost: 25000000,
+    baseRevenue: 5000000,
+    cycleSeconds: 7200,
+    employeeBaseCost: 2500000,
+    sortOrder: 7,
+    unlockRequirement: { level: 30 },
+  },
+  {
+    slug: 'space-company',
+    name: 'Space Company',
+    category: 'tech',
+    tier: 4,
+    baseCost: 100000000,
+    baseRevenue: 20000000,
+    cycleSeconds: 14400,
+    employeeBaseCost: 10000000,
+    sortOrder: 8,
+    unlockRequirement: { level: 35 },
+  },
 ];
 
 async function main() {
@@ -863,6 +1077,7 @@ git commit -m "feat(db): add seed data for properties and businesses
 ## Task 5: Game Service - Properties
 
 **Files:**
+
 - Create: `services/api-gateway/src/services/game.service.ts`
 - Create: `services/api-gateway/src/routes/game.ts`
 
@@ -942,7 +1157,10 @@ export class GameService {
       }
 
       // Calculate new income
-      const newIncomePerProperty = this.calculatePropertyIncome(propertyType, playerProperty?.upgradeLevel ?? 0);
+      const newIncomePerProperty = this.calculatePropertyIncome(
+        propertyType,
+        playerProperty?.upgradeLevel ?? 0
+      );
 
       if (playerProperty) {
         // Update existing
@@ -1012,7 +1230,10 @@ export class GameService {
       }
 
       // Calculate upgrade cost (base cost * 0.5 * level multiplier)
-      const upgradeCost = this.calculateUpgradeCost(playerProperty.propertyType, playerProperty.upgradeLevel);
+      const upgradeCost = this.calculateUpgradeCost(
+        playerProperty.propertyType,
+        playerProperty.upgradeLevel
+      );
 
       if (playerStats.cash.lessThan(upgradeCost)) {
         throw new AppError('Not enough cash', 400);
@@ -1020,7 +1241,10 @@ export class GameService {
 
       // Calculate new income
       const newLevel = playerProperty.upgradeLevel + 1;
-      const newIncomePerProperty = this.calculatePropertyIncome(playerProperty.propertyType, newLevel);
+      const newIncomePerProperty = this.calculatePropertyIncome(
+        playerProperty.propertyType,
+        newLevel
+      );
 
       const updated = await tx.playerProperty.update({
         where: { id: propertyId },
@@ -1028,9 +1252,10 @@ export class GameService {
           upgradeLevel: newLevel,
           totalSpent: { increment: upgradeCost },
           currentIncomeHour: newIncomePerProperty.mul(playerProperty.quantity),
-          nextUpgradeCost: newLevel < playerProperty.propertyType.maxUpgradeLevel
-            ? this.calculateUpgradeCost(playerProperty.propertyType, newLevel)
-            : null,
+          nextUpgradeCost:
+            newLevel < playerProperty.propertyType.maxUpgradeLevel
+              ? this.calculateUpgradeCost(playerProperty.propertyType, newLevel)
+              : null,
         },
         include: { propertyType: true },
       });
@@ -1161,55 +1386,75 @@ const router = Router();
 // ==================== PROPERTIES ====================
 
 // GET /api/v1/game/properties/types
-router.get('/properties/types', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const types = await gameService.getPropertyTypes(req.user!.id);
-    res.json({ success: true, data: types });
-  } catch (error) {
-    next(error);
+router.get(
+  '/properties/types',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const types = await gameService.getPropertyTypes(req.user!.id);
+      res.json({ success: true, data: types });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // GET /api/v1/game/properties
-router.get('/properties', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const properties = await gameService.getPlayerProperties(req.user!.id);
-    res.json({ success: true, data: properties });
-  } catch (error) {
-    next(error);
+router.get(
+  '/properties',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const properties = await gameService.getPlayerProperties(req.user!.id);
+      res.json({ success: true, data: properties });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/properties/:typeId/buy
-router.post('/properties/:typeId/buy', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const typeId = parseInt(req.params.typeId);
-    const property = await gameService.buyProperty(req.user!.id, typeId);
-    res.json({ success: true, data: property });
-  } catch (error) {
-    next(error);
+router.post(
+  '/properties/:typeId/buy',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const typeId = parseInt(req.params.typeId);
+      const property = await gameService.buyProperty(req.user!.id, typeId);
+      res.json({ success: true, data: property });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/properties/:id/upgrade
-router.post('/properties/:id/upgrade', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const property = await gameService.upgradeProperty(req.user!.id, req.params.id);
-    res.json({ success: true, data: property });
-  } catch (error) {
-    next(error);
+router.post(
+  '/properties/:id/upgrade',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const property = await gameService.upgradeProperty(req.user!.id, req.params.id);
+      res.json({ success: true, data: property });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/properties/:id/hire-manager
-router.post('/properties/:id/hire-manager', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const property = await gameService.hireManager(req.user!.id, req.params.id);
-    res.json({ success: true, data: property });
-  } catch (error) {
-    next(error);
+router.post(
+  '/properties/:id/hire-manager',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const property = await gameService.hireManager(req.user!.id, req.params.id);
+      res.json({ success: true, data: property });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;
 ```
@@ -1242,6 +1487,7 @@ git commit -m "feat(game): add property purchase, upgrade, and manager system
 ## Task 6: Game Service - Businesses
 
 **Files:**
+
 - Modify: `services/api-gateway/src/services/game.service.ts`
 - Modify: `services/api-gateway/src/routes/game.ts`
 
@@ -1506,55 +1752,75 @@ Add to `services/api-gateway/src/routes/game.ts`:
 // ==================== BUSINESSES ====================
 
 // GET /api/v1/game/businesses/types
-router.get('/businesses/types', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const types = await gameService.getBusinessTypes(req.user!.id);
-    res.json({ success: true, data: types });
-  } catch (error) {
-    next(error);
+router.get(
+  '/businesses/types',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const types = await gameService.getBusinessTypes(req.user!.id);
+      res.json({ success: true, data: types });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // GET /api/v1/game/businesses
-router.get('/businesses', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const businesses = await gameService.getPlayerBusinesses(req.user!.id);
-    res.json({ success: true, data: businesses });
-  } catch (error) {
-    next(error);
+router.get(
+  '/businesses',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const businesses = await gameService.getPlayerBusinesses(req.user!.id);
+      res.json({ success: true, data: businesses });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/businesses/:typeId/buy
-router.post('/businesses/:typeId/buy', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const typeId = parseInt(req.params.typeId);
-    const business = await gameService.buyBusiness(req.user!.id, typeId);
-    res.json({ success: true, data: business });
-  } catch (error) {
-    next(error);
+router.post(
+  '/businesses/:typeId/buy',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const typeId = parseInt(req.params.typeId);
+      const business = await gameService.buyBusiness(req.user!.id, typeId);
+      res.json({ success: true, data: business });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/businesses/:id/level-up
-router.post('/businesses/:id/level-up', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const business = await gameService.levelUpBusiness(req.user!.id, req.params.id);
-    res.json({ success: true, data: business });
-  } catch (error) {
-    next(error);
+router.post(
+  '/businesses/:id/level-up',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const business = await gameService.levelUpBusiness(req.user!.id, req.params.id);
+      res.json({ success: true, data: business });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/businesses/:id/collect
-router.post('/businesses/:id/collect', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const result = await gameService.collectBusinessRevenue(req.user!.id, req.params.id);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    next(error);
+router.post(
+  '/businesses/:id/collect',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = await gameService.collectBusinessRevenue(req.user!.id, req.params.id);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 ```
 
 ### Step 3: Commit
@@ -1576,6 +1842,7 @@ git commit -m "feat(game): add business system with cycles and revenue
 ## Task 7: Offline Earnings Collection
 
 **Files:**
+
 - Modify: `services/api-gateway/src/services/game.service.ts`
 - Modify: `services/api-gateway/src/routes/game.ts`
 
@@ -1687,24 +1954,32 @@ Add to `services/api-gateway/src/routes/game.ts`:
 // ==================== OFFLINE EARNINGS ====================
 
 // GET /api/v1/game/offline/status
-router.get('/offline/status', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const status = await gameService.getOfflineStatus(req.user!.id);
-    res.json({ success: true, data: status });
-  } catch (error) {
-    next(error);
+router.get(
+  '/offline/status',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const status = await gameService.getOfflineStatus(req.user!.id);
+      res.json({ success: true, data: status });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // POST /api/v1/game/offline/collect
-router.post('/offline/collect', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const result = await gameService.collectOfflineEarnings(req.user!.id);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    next(error);
+router.post(
+  '/offline/collect',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = await gameService.collectOfflineEarnings(req.user!.id);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 ```
 
 ### Step 3: Commit
@@ -1755,10 +2030,11 @@ After completing all tasks:
 ## Next Steps
 
 After Phase 1 completion:
+
 1. Run full integration tests
 2. Deploy to staging environment
 3. Begin Phase 2: Social features & polish
 
 ---
 
-*Plan created: November 28, 2025*
+_Plan created: November 28, 2025_

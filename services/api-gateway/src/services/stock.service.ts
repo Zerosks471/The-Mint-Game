@@ -144,65 +144,9 @@ export class StockService {
     }
   }
 
-  /**
-   * Add small real-time price variations to make prices feel alive
-   */
-  async addRealTimePriceVariations(): Promise<void> {
-    const botStocks = await prisma.botStock.findMany({
-      where: { isActive: true },
-    });
-
-    for (const stock of botStocks) {
-      const currentPrice = Number(stock.currentPrice);
-      const volatility = Number(stock.volatility);
-
-      // Add tiny random variation (0.1% to 0.5% of volatility)
-      const variation = (Math.random() - 0.5) * volatility * 0.1;
-      const newPrice = currentPrice * (1 + variation);
-
-      // Update high/low if needed
-      let highPrice = Number(stock.highPrice24h);
-      let lowPrice = Number(stock.lowPrice24h);
-
-      if (newPrice > highPrice) highPrice = newPrice;
-      if (newPrice < lowPrice) lowPrice = newPrice;
-
-      await prisma.botStock.update({
-        where: { id: stock.id },
-        data: {
-          currentPrice: new Decimal(Math.round(newPrice * 100) / 100),
-          highPrice24h: new Decimal(Math.round(highPrice * 100) / 100),
-          lowPrice24h: new Decimal(Math.round(lowPrice * 100) / 100),
-        },
-      });
-    }
-
-    // Also update player stocks
-    const playerStocks = await prisma.playerStock.findMany({
-      where: { isListed: true },
-    });
-
-    for (const stock of playerStocks) {
-      const currentPrice = Number(stock.currentPrice);
-      const variation = (Math.random() - 0.5) * 0.01; // ±0.5% variation
-      const newPrice = currentPrice * (1 + variation);
-
-      let highPrice = Number(stock.highPrice24h);
-      let lowPrice = Number(stock.lowPrice24h);
-
-      if (newPrice > highPrice) highPrice = newPrice;
-      if (newPrice < lowPrice) lowPrice = newPrice;
-
-      await prisma.playerStock.update({
-        where: { id: stock.id },
-        data: {
-          currentPrice: new Decimal(Math.round(newPrice * 100) / 100),
-          highPrice24h: new Decimal(Math.round(highPrice * 100) / 100),
-          lowPrice24h: new Decimal(Math.round(lowPrice * 100) / 100),
-        },
-      });
-    }
-  }
+  // Note: we intentionally removed extra random price jitter here.
+  // Prices now move based on bot algorithms (updateBotStockPrices) and real trades
+  // via MarketDynamicsService.applyTradeImpact, so what you see reflects real market logic.
 
   /**
    * Update player stock price based on net worth
@@ -298,9 +242,8 @@ export class StockService {
    * Get all stocks (player + bot) for market view with real-time price updates
    */
   async getMarketStocks(): Promise<StockMarketData[]> {
-    // Update prices first - add small real-time variations
+    // Update prices first based on bot algorithms and player stock formula
     await this.updateBotStockPrices();
-    await this.addRealTimePriceVariations();
 
     const [botStocks, playerStocks] = await Promise.all([
       prisma.botStock.findMany({
@@ -960,6 +903,22 @@ export class StockService {
         },
       });
 
+      // Apply supply/demand price impact (after transaction commits)
+      // This creates realistic market pressure
+      setImmediate(async () => {
+        try {
+          const { MarketDynamicsService } = await import('./marketDynamics.service');
+          await MarketDynamicsService.applyTradeImpact(
+            updatedStock.tickerSymbol,
+            'buy',
+            shares,
+            pricePerShare
+          );
+        } catch (error) {
+          console.error('Failed to apply trade impact:', error);
+        }
+      });
+
       // Update bot stock volume if applicable
       if (updatedStock.stockType === 'bot') {
         const botStock = await tx.botStock.findUnique({
@@ -1172,6 +1131,21 @@ export class StockService {
         },
       });
 
+      // Apply supply/demand price impact (after transaction commits)
+      setImmediate(async () => {
+        try {
+          const { MarketDynamicsService } = await import('./marketDynamics.service');
+          await MarketDynamicsService.applyTradeImpact(
+            updatedStock.tickerSymbol,
+            'sell',
+            shares,
+            pricePerShare
+          );
+        } catch (error) {
+          console.error('Failed to apply trade impact:', error);
+        }
+      });
+
       // Update bot stock volume if applicable
       if (updatedStock.stockType === 'bot') {
         const botStock = await tx.botStock.findUnique({
@@ -1275,55 +1249,81 @@ export class StockService {
 
   /**
    * Get all recent trades (for live feed) - includes all users and bots
+   * Returns ALL completed trades regardless of user
    */
-  async getRecentTrades(limit: number = 50): Promise<Array<{
-    id: string;
-    tickerSymbol: string;
-    orderType: 'buy' | 'sell';
-    shares: number;
-    pricePerShare: string;
-    createdAt: string;
-    traderName: string;
-    traderType: 'player' | 'bot';
-  }>> {
-    const orders = await prisma.stockOrder.findMany({
-      where: {
-        status: 'completed',
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-          },
+  async getRecentTrades(limit?: number): Promise<
+    Array<{
+      id: string;
+      tickerSymbol: string;
+      orderType: 'buy' | 'sell';
+      shares: number;
+      pricePerShare: string;
+      createdAt: string;
+      traderName: string;
+      traderType: 'player' | 'bot';
+    }>
+  > {
+    try {
+      // Get all completed orders from all users (including bots)
+      // If a limit is provided, respect it; otherwise return all trades
+      const orders = await prisma.stockOrder.findMany({
+        where: {
+          status: 'completed',
         },
-      },
-    });
-
-    const trades = [];
-
-    for (const order of orders) {
-      // Check if this is a bot trade (bot user ID pattern)
-      const isBot = order.userId.includes('bot') || order.userId === 'system-bot-trader';
-      const traderName = isBot 
-        ? this.getBotTraderName(order.userId)
-        : order.user.username || 'Player';
-
-      trades.push({
-        id: order.id,
-        tickerSymbol: order.tickerSymbol,
-        orderType: order.orderType as 'buy' | 'sell',
-        shares: order.shares,
-        pricePerShare: order.pricePerShare.toString(),
-        createdAt: order.createdAt.toISOString(),
-        traderName,
-        traderType: isBot ? 'bot' : 'player',
+        orderBy: { createdAt: 'desc' },
+        ...(limit ? { take: limit } : {}),
       });
-    }
 
-    return trades;
+      const trades = [];
+
+      for (const order of orders) {
+        try {
+          // Check if this is a bot trade - be more explicit
+          const isBot =
+            order.userId === 'system-bot-trader' ||
+            order.userId.includes('bot') ||
+            order.userId.startsWith('system-');
+
+          // Get trader name
+          let traderName: string;
+          if (isBot) {
+            traderName = this.getBotTraderName(order.userId);
+          } else {
+            // For player trades, fetch username from database
+            try {
+              const user = await prisma.user.findUnique({
+                where: { id: order.userId },
+                select: { username: true },
+              });
+              traderName = user?.username || 'Player';
+            } catch (userError) {
+              traderName = 'Player';
+            }
+          }
+
+          const trade = {
+            id: order.id,
+            tickerSymbol: order.tickerSymbol,
+            orderType: order.orderType as 'buy' | 'sell',
+            shares: order.shares,
+            pricePerShare: order.pricePerShare.toString(),
+            createdAt: order.createdAt.toISOString(),
+            traderName,
+            traderType: (isBot ? 'bot' : 'player') as 'bot' | 'player',
+          };
+          
+          trades.push(trade);
+        } catch (error) {
+          // Skip this trade if there's an error
+          continue;
+        }
+      }
+      return trades;
+    } catch (error) {
+      console.error('[StockService] Error in getRecentTrades:', error);
+      // Return empty array on error rather than throwing
+      return [];
+    }
   }
 
   /**
@@ -1334,7 +1334,7 @@ export class StockService {
     // We need to identify which bot strategy made the trade
     // For now, return a generic name since we can't distinguish between bot strategies
     // In the future, we could add a field to StockOrder to track which bot made the trade
-    
+
     if (userId === 'system-bot-trader' || userId.includes('bot')) {
       return 'AI Trader';
     }

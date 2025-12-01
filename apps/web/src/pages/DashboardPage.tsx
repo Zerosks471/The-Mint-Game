@@ -211,30 +211,30 @@ function PhaseIndicator({ progression }: { progression: ProgressionStatus | null
   return (
     <Link
       to="/upgrades"
-      className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl p-4 hover:border-amber-500/50 transition-all group"
+      className="block bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl p-5 hover:border-amber-500/50 transition-all group"
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-3xl">{phaseIcons[currentPhase.slug] || '🎯'}</span>
           <div>
-            <p className="font-bold text-zinc-100">{currentPhase.name}</p>
-            <p className="text-xs text-zinc-500">Phase {currentPhase.id}</p>
+            <p className="font-bold text-zinc-100 text-lg leading-tight">{currentPhase.name}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Phase {currentPhase.id}</p>
           </div>
         </div>
-        <span className="text-zinc-500 group-hover:text-amber text-sm transition-colors">
-          View Upgrades &rarr;
+        <span className="text-zinc-500 group-hover:text-amber-400 text-sm font-medium transition-colors whitespace-nowrap">
+          View Upgrades →
         </span>
       </div>
 
       {nextPhase && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs">
+        <div className="space-y-2.5 mb-4">
+          <div className="flex justify-between items-center text-xs">
             <span className="text-zinc-500">Progress to {nextPhase.name}</span>
-            <span className="text-amber font-medium">{Math.round(currentPhase.progress)}%</span>
+            <span className="text-amber-400 font-semibold">{Math.round(currentPhase.progress)}%</span>
           </div>
-          <div className="h-2 bg-dark-border rounded-full overflow-hidden">
+          <div className="h-2.5 bg-dark-border/50 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
               style={{ width: `${Math.min(100, currentPhase.progress)}%` }}
             />
           </div>
@@ -242,12 +242,14 @@ function PhaseIndicator({ progression }: { progression: ProgressionStatus | null
       )}
 
       {!nextPhase && (
-        <p className="text-xs text-amber">Maximum phase reached!</p>
+        <div className="mb-4">
+          <p className="text-xs text-amber-400 font-medium">Maximum phase reached!</p>
+        </div>
       )}
 
-      <div className="mt-3 pt-3 border-t border-amber-500/20 flex justify-between text-xs">
+      <div className="pt-4 border-t border-amber-500/20 flex justify-between items-center text-xs">
         <span className="text-zinc-500">Projects Completed</span>
-        <span className="text-zinc-300 font-mono">{completedProjects} / {totalProjects}</span>
+        <span className="text-zinc-300 font-mono font-semibold">{completedProjects} / {totalProjects}</span>
       </div>
     </Link>
   );

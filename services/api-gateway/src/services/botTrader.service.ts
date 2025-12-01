@@ -1,6 +1,9 @@
 import { prisma } from '@mint/database';
 import { Decimal } from '@prisma/client/runtime/library';
+import bcrypt from 'bcrypt';
 import { stockService } from './stock.service';
+
+const SALT_ROUNDS = 10;
 
 interface BotTrader {
   id: string;
@@ -35,12 +38,15 @@ export class BotTraderService {
 
     if (!botUser) {
       // Create bot user if doesn't exist
+      // Hash password (bot can't login anyway, but schema requires it)
+      const passwordHash = await bcrypt.hash('system-bot-no-login', SALT_ROUNDS);
+
       botUser = await prisma.user.create({
         data: {
           id: BotTraderService.BOT_USER_ID,
           email: 'bot-trader@system.local',
           username: 'BotTrader',
-          password: 'system-bot-no-login', // Can't login
+          passwordHash,
         },
       });
 
@@ -112,190 +118,212 @@ export class BotTraderService {
   /**
    * Momentum strategy: Buy stocks that are rising, sell stocks that are falling
    */
-  private momentumStrategy(
-    stock: any,
-    holdings: any[],
-    cash: Decimal
-  ): TradingDecision {
+  private momentumStrategy(stock: any, holdings: any[], cash: Decimal): TradingDecision {
     const changePercent = parseFloat(stock.changePercent);
     const trend = stock.trend;
     const volume = stock.volume24h;
 
-    // Strong momentum signals
-    if (changePercent > 2 && trend === 'bullish' && volume > 1000) {
-      const confidence = Math.min(0.9, changePercent / 5);
+    // Strong momentum signals (lowered threshold for more trading)
+    if (changePercent > 1 && trend === 'bullish' && volume > 100) {
+      const confidence = Math.min(0.85, 0.5 + changePercent / 10);
       const maxInvestment = cash.mul(0.15); // 15% of cash
       const shares = Math.floor(Number(maxInvestment) / parseFloat(stock.currentPrice));
-      
+
       if (shares > 0) {
         return {
           action: 'buy',
           ticker: stock.tickerSymbol,
-          shares,
+          shares: Math.max(1, shares), // At least 1 share
           confidence,
-          reason: `Strong momentum: +${changePercent.toFixed(2)}% with bullish trend`,
+          reason: `Momentum: +${changePercent.toFixed(2)}% with bullish trend`,
         };
       }
     }
 
     // Sell if momentum reverses
     const holding = holdings.find((h) => h.tickerSymbol === stock.tickerSymbol);
-    if (holding && changePercent < -3 && trend === 'bearish') {
+    if (holding && changePercent < -2 && trend === 'bearish') {
       return {
         action: 'sell',
         ticker: stock.tickerSymbol,
-        shares: Math.floor(holding.shares * 0.5), // Sell 50%
-        confidence: 0.7,
+        shares: Math.max(1, Math.floor(holding.shares * 0.5)), // Sell 50%, at least 1
+        confidence: 0.65,
         reason: `Momentum reversal: ${changePercent.toFixed(2)}% with bearish trend`,
       };
     }
 
-    return { action: 'hold', ticker: stock.tickerSymbol, shares: 0, confidence: 0, reason: 'No strong signal' };
+    return {
+      action: 'hold',
+      ticker: stock.tickerSymbol,
+      shares: 0,
+      confidence: 0,
+      reason: 'No strong signal',
+    };
   }
 
   /**
    * Mean reversion strategy: Buy when price is below base, sell when above
    */
-  private meanReversionStrategy(
-    stock: any,
-    holdings: any[],
-    cash: Decimal
-  ): TradingDecision {
-    if (stock.stockType !== 'bot' || !stock.basePrice) {
-      return { action: 'hold', ticker: stock.tickerSymbol, shares: 0, confidence: 0, reason: 'No base price' };
+  private meanReversionStrategy(stock: any, holdings: any[], cash: Decimal): TradingDecision {
+    // Use basePrice for bot stocks, previousClose for player stocks
+    const basePriceStr = stock.basePrice || stock.previousClose;
+    if (!basePriceStr) {
+      return {
+        action: 'hold',
+        ticker: stock.tickerSymbol,
+        shares: 0,
+        confidence: 0,
+        reason: 'No base price',
+      };
     }
 
     const currentPrice = parseFloat(stock.currentPrice);
-    const basePrice = parseFloat(stock.basePrice);
+    const basePrice = parseFloat(basePriceStr);
+    if (basePrice <= 0) {
+      return {
+        action: 'hold',
+        ticker: stock.tickerSymbol,
+        shares: 0,
+        confidence: 0,
+        reason: 'Invalid base price',
+      };
+    }
+
     const deviation = (currentPrice - basePrice) / basePrice;
 
-    // Buy when significantly below base (oversold)
-    if (deviation < -0.1 && currentPrice > 0) {
-      const confidence = Math.min(0.8, Math.abs(deviation) * 2);
+    // Buy when significantly below base (oversold) - lowered threshold
+    if (deviation < -0.05 && currentPrice > 0) {
+      const confidence = Math.min(0.8, 0.5 + Math.abs(deviation) * 3);
       const maxInvestment = cash.mul(0.2);
       const shares = Math.floor(Number(maxInvestment) / currentPrice);
-      
+
       if (shares > 0) {
         return {
           action: 'buy',
           ticker: stock.tickerSymbol,
-          shares,
+          shares: Math.max(1, shares),
           confidence,
           reason: `Oversold: ${(deviation * 100).toFixed(2)}% below base price`,
         };
       }
     }
 
-    // Sell when significantly above base (overbought)
+    // Sell when significantly above base (overbought) - lowered threshold
     const holding = holdings.find((h) => h.tickerSymbol === stock.tickerSymbol);
-    if (holding && deviation > 0.15) {
+    if (holding && deviation > 0.08) {
       return {
         action: 'sell',
         ticker: stock.tickerSymbol,
-        shares: Math.floor(holding.shares * 0.6),
-        confidence: 0.75,
+        shares: Math.max(1, Math.floor(holding.shares * 0.6)),
+        confidence: 0.7,
         reason: `Overbought: ${(deviation * 100).toFixed(2)}% above base price`,
       };
     }
 
-    return { action: 'hold', ticker: stock.tickerSymbol, shares: 0, confidence: 0, reason: 'Price near base' };
+    return {
+      action: 'hold',
+      ticker: stock.tickerSymbol,
+      shares: 0,
+      confidence: 0,
+      reason: 'Price near base',
+    };
   }
 
   /**
    * Contrarian strategy: Buy when others are selling, sell when others are buying
    */
-  private contrarianStrategy(
-    stock: any,
-    holdings: any[],
-    cash: Decimal
-  ): TradingDecision {
+  private contrarianStrategy(stock: any, holdings: any[], cash: Decimal): TradingDecision {
     const changePercent = parseFloat(stock.changePercent);
     const volume = stock.volume24h;
 
-    // Buy on heavy selling (negative sentiment)
-    if (changePercent < -5 && volume > 500) {
-      const confidence = Math.min(0.7, Math.abs(changePercent) / 10);
+    // Buy on heavy selling (negative sentiment) - lowered threshold
+    if (changePercent < -3 && volume > 100) {
+      const confidence = Math.min(0.75, 0.5 + Math.abs(changePercent) / 15);
       const maxInvestment = cash.mul(0.12);
       const shares = Math.floor(Number(maxInvestment) / parseFloat(stock.currentPrice));
-      
+
       if (shares > 0) {
         return {
           action: 'buy',
           ticker: stock.tickerSymbol,
-          shares,
+          shares: Math.max(1, shares),
           confidence,
-          reason: `Contrarian buy: Heavy selling at ${changePercent.toFixed(2)}%`,
+          reason: `Contrarian buy: Selling at ${changePercent.toFixed(2)}%`,
         };
       }
     }
 
-    // Sell on heavy buying (positive sentiment)
+    // Sell on heavy buying (positive sentiment) - lowered threshold
     const holding = holdings.find((h) => h.tickerSymbol === stock.tickerSymbol);
-    if (holding && changePercent > 8 && volume > 1000) {
+    if (holding && changePercent > 5 && volume > 200) {
       return {
         action: 'sell',
         ticker: stock.tickerSymbol,
-        shares: Math.floor(holding.shares * 0.4),
-        confidence: 0.65,
-        reason: `Contrarian sell: Heavy buying at ${changePercent.toFixed(2)}%`,
+        shares: Math.max(1, Math.floor(holding.shares * 0.4)),
+        confidence: 0.6,
+        reason: `Contrarian sell: Buying at ${changePercent.toFixed(2)}%`,
       };
     }
 
-    return { action: 'hold', ticker: stock.tickerSymbol, shares: 0, confidence: 0, reason: 'No contrarian signal' };
+    return {
+      action: 'hold',
+      ticker: stock.tickerSymbol,
+      shares: 0,
+      confidence: 0,
+      reason: 'No contrarian signal',
+    };
   }
 
   /**
    * Trend following strategy: Follow the trend, buy uptrends, sell downtrends
    */
-  private trendFollowingStrategy(
-    stock: any,
-    holdings: any[],
-    cash: Decimal
-  ): TradingDecision {
+  private trendFollowingStrategy(stock: any, holdings: any[], cash: Decimal): TradingDecision {
     const trend = stock.trend;
     const trendStrength = stock.trendStrength || 1;
     const changePercent = parseFloat(stock.changePercent);
 
-    // Strong uptrend
-    if (trend === 'bullish' && trendStrength >= 3 && changePercent > 0) {
-      const confidence = Math.min(0.85, 0.5 + trendStrength * 0.1);
+    // Strong uptrend - lowered threshold
+    if (trend === 'bullish' && trendStrength >= 2 && changePercent > 0) {
+      const confidence = Math.min(0.85, 0.5 + trendStrength * 0.12);
       const maxInvestment = cash.mul(0.18);
       const shares = Math.floor(Number(maxInvestment) / parseFloat(stock.currentPrice));
-      
+
       if (shares > 0) {
         return {
           action: 'buy',
           ticker: stock.tickerSymbol,
-          shares,
+          shares: Math.max(1, shares),
           confidence,
-          reason: `Strong uptrend: ${trend} with strength ${trendStrength}`,
+          reason: `Uptrend: ${trend} with strength ${trendStrength}`,
         };
       }
     }
 
-    // Strong downtrend - exit position
+    // Strong downtrend - exit position - lowered threshold
     const holding = holdings.find((h) => h.tickerSymbol === stock.tickerSymbol);
-    if (holding && trend === 'bearish' && trendStrength >= 3) {
+    if (holding && trend === 'bearish' && trendStrength >= 2) {
       return {
         action: 'sell',
         ticker: stock.tickerSymbol,
-        shares: Math.floor(holding.shares * 0.7),
-        confidence: 0.8,
-        reason: `Strong downtrend: ${trend} with strength ${trendStrength}`,
+        shares: Math.max(1, Math.floor(holding.shares * 0.7)),
+        confidence: 0.75,
+        reason: `Downtrend: ${trend} with strength ${trendStrength}`,
       };
     }
 
-    return { action: 'hold', ticker: stock.tickerSymbol, shares: 0, confidence: 0, reason: 'Weak or neutral trend' };
+    return {
+      action: 'hold',
+      ticker: stock.tickerSymbol,
+      shares: 0,
+      confidence: 0,
+      reason: 'Weak or neutral trend',
+    };
   }
 
   /**
    * Volatility strategy: Trade on high volatility
    */
-  private volatilityStrategy(
-    stock: any,
-    holdings: any[],
-    cash: Decimal
-  ): TradingDecision {
+  private volatilityStrategy(stock: any, holdings: any[], cash: Decimal): TradingDecision {
     const high24h = parseFloat(stock.highPrice24h);
     const low24h = parseFloat(stock.lowPrice24h);
     const currentPrice = parseFloat(stock.currentPrice);
@@ -310,7 +338,7 @@ export class BotTraderService {
         const confidence = 0.6;
         const maxInvestment = cash.mul(0.1);
         const shares = Math.floor(Number(maxInvestment) / currentPrice);
-        
+
         if (shares > 0) {
           return {
             action: 'buy',
@@ -335,7 +363,13 @@ export class BotTraderService {
       }
     }
 
-    return { action: 'hold', ticker: stock.tickerSymbol, shares: 0, confidence: 0, reason: 'Low volatility or neutral position' };
+    return {
+      action: 'hold',
+      ticker: stock.tickerSymbol,
+      shares: 0,
+      confidence: 0,
+      reason: 'Low volatility or neutral position',
+    };
   }
 
   /**
@@ -365,79 +399,188 @@ export class BotTraderService {
    * Run bot trading algorithm
    */
   async runBotTrading(): Promise<void> {
-    const botUserId = await this.getBotUser();
-    const botTraders = this.getBotTraders();
+    try {
+      const botUserId = await this.getBotUser();
+      const botTraders = this.getBotTraders();
 
-    // Get all bot stocks
-    const stocks = await prisma.botStock.findMany({
-      where: { isActive: true },
-    });
+      // Get all stocks (bot and player)
+      const botStocks = await prisma.botStock.findMany({
+        where: { isActive: true },
+      });
+      const playerStocks = await prisma.playerStock.findMany({
+        where: { isListed: true },
+      });
 
-    // Get bot's current portfolio
-    const portfolio = await stockService.getPortfolio(botUserId);
-    const stats = await prisma.playerStats.findUnique({
-      where: { userId: botUserId },
-    });
+      // Get bot's current portfolio
+      const portfolio = await stockService.getPortfolio(botUserId);
+      const stats = await prisma.playerStats.findUnique({
+        where: { userId: botUserId },
+      });
 
-    if (!stats) return;
+      if (!stats) {
+        return;
+      }
 
-    const cash = new Decimal(stats.cash);
-    const totalValue = portfolio.reduce((sum, h) => sum + parseFloat(h.currentValue), 0) + Number(cash);
+      const cash = new Decimal(stats.cash);
+      if (cash.lessThan(1000)) {
+        return;
+      }
 
-    // Convert stocks to market data format
-    const marketStocks = await stockService.getMarketStocks();
-    const botStocks = marketStocks.filter((s) => s.stockType === 'bot');
+      // Get all market stocks (bot + player)
+      const marketStocks = await stockService.getMarketStocks();
+      const allStocks = marketStocks; // Include both bot and player stocks
 
-    // Each bot trader makes decisions
-    for (const bot of botTraders) {
-      // Check if bot should trade (based on aggressiveness and time since last trade)
-      const shouldTrade = Math.random() < bot.aggressiveness;
-      if (!shouldTrade) continue;
-
-      // Allocate portion of portfolio to this bot
-      const botCash = cash.mul(0.2); // Each bot gets 20% of total cash
-      const botHoldings = portfolio.filter((h) => 
-        botStocks.some((s) => s.tickerSymbol === h.tickerSymbol)
-      );
-
-      // Evaluate each stock
-      for (const stock of botStocks) {
-        const stockDetail = stocks.find((s) => s.tickerSymbol === stock.tickerSymbol);
-        if (!stockDetail) continue;
-
-        // Get decision based on strategy
-        let decision: TradingDecision;
-        switch (bot.strategy) {
-          case 'momentum':
-            decision = this.momentumStrategy(stock, botHoldings, botCash);
-            break;
-          case 'mean_reversion':
-            decision = this.meanReversionStrategy({ ...stock, basePrice: stockDetail.basePrice.toString() }, botHoldings, botCash);
-            break;
-          case 'contrarian':
-            decision = this.contrarianStrategy(stock, botHoldings, botCash);
-            break;
-          case 'trend_following':
-            decision = this.trendFollowingStrategy({ ...stock, trendStrength: stockDetail.trendStrength }, botHoldings, botCash);
-            break;
-          case 'volatility':
-            decision = this.volatilityStrategy(stock, botHoldings, botCash);
-            break;
-          default:
-            continue;
+      // Each bot trader makes decisions
+      // Increase trading frequency - each bot has a higher chance to trade
+      let tradesExecuted = 0; // Track total trades across all bots
+      for (const bot of botTraders) {
+        // Increased aggressiveness - bots trade more often
+        const shouldTrade = Math.random() < bot.aggressiveness * 1.5; // 50% more aggressive
+        if (!shouldTrade) {
+          continue;
         }
 
-        // Execute trade if confidence is high enough
-        if (decision.action !== 'hold' && decision.confidence >= 0.5 && Math.random() < decision.confidence) {
-          await this.executeTrade(botUserId, decision, stock);
-          
-          // Log the trade
-          console.log(`[${bot.name}] ${decision.action.toUpperCase()} ${decision.shares} shares of ${decision.ticker}: ${decision.reason}`);
+        // Allocate portion of portfolio to this bot
+        const botCash = cash.mul(0.2); // Each bot gets 20% of total cash
+        const botHoldings = portfolio; // All holdings
+
+        // Sector rotation - bots focus on different sectors each cycle
+        const sectorRotation = Math.floor(Date.now() / (30 * 1000)) % 5; // Rotate every 30 seconds
+        const focusSectors = ['tech', 'finance', 'energy', 'consumer', 'healthcare'];
+        const currentFocusSector = focusSectors[sectorRotation];
+
+        // Evaluate each stock (both bot and player stocks)
+        // Prioritize stocks in the current focus sector for more concentrated trading
+        const sortedStocks = [...allStocks].sort((a, b) => {
+          const aInFocus = a.sector?.toLowerCase().includes(currentFocusSector) ? 1 : 0;
+          const bInFocus = b.sector?.toLowerCase().includes(currentFocusSector) ? 1 : 0;
+          return bInFocus - aInFocus; // Focus sector stocks first
+        });
+
+        for (const stock of sortedStocks) {
+          // Skip if stock has no price or invalid data
+          if (!stock.currentPrice || parseFloat(stock.currentPrice) <= 0) continue;
+
+          // Sector focus bonus - bots are more likely to trade in focus sector
+          const isFocusSector = stock.sector?.toLowerCase().includes(currentFocusSector);
+          const sectorBonus = isFocusSector ? 0.2 : 0; // 20% confidence bonus for focus sector
+
+          // Get stock detail for additional data
+          let stockDetail: any = null;
+          if (stock.stockType === 'bot') {
+            stockDetail = botStocks.find((s) => s.tickerSymbol === stock.tickerSymbol);
+          } else {
+            stockDetail = playerStocks.find((s) => s.tickerSymbol === stock.tickerSymbol);
+          }
+
+          // Get decision based on strategy
+          let decision: TradingDecision;
+          switch (bot.strategy) {
+            case 'momentum':
+              decision = this.momentumStrategy(stock, botHoldings, botCash);
+              break;
+            case 'mean_reversion': {
+              // Mean reversion works for bot stocks (with basePrice) and player stocks (use previousClose as base)
+              const basePrice =
+                stock.stockType === 'bot' && stockDetail?.basePrice
+                  ? stockDetail.basePrice.toString()
+                  : stock.previousClose;
+              decision = this.meanReversionStrategy({ ...stock, basePrice }, botHoldings, botCash);
+              break;
+            }
+            case 'contrarian':
+              decision = this.contrarianStrategy(stock, botHoldings, botCash);
+              break;
+            case 'trend_following': {
+              const trendStrength = stockDetail?.trendStrength || 1;
+              decision = this.trendFollowingStrategy(
+                { ...stock, trendStrength },
+                botHoldings,
+                botCash
+              );
+              break;
+            }
+            case 'volatility':
+              decision = this.volatilityStrategy(stock, botHoldings, botCash);
+              break;
+            default:
+              continue;
+          }
+
+          // Apply sector bonus to confidence
+          const adjustedConfidence = Math.min(1, decision.confidence + sectorBonus);
+
+          // Execute trade if confidence is high enough (lowered threshold to 0.35 for more trading)
+          if (decision.action !== 'hold' && adjustedConfidence >= 0.35) {
+            // Use confidence as probability of executing
+            if (Math.random() < adjustedConfidence) {
+              const success = await this.executeTrade(botUserId, decision, stock);
+
+              if (success) {
+                tradesExecuted++;
+              }
+            }
+          }
+        }
+
+        // Extra: specifically target player stocks sometimes so names like TESS get real activity
+        if (playerStocks.length > 0 && Math.random() < 0.6) {
+          const randomPlayer = playerStocks[Math.floor(Math.random() * playerStocks.length)];
+          const marketStock = allStocks.find(
+            (s) => s.tickerSymbol === randomPlayer.tickerSymbol
+          );
+
+          if (marketStock && marketStock.currentPrice && parseFloat(marketStock.currentPrice) > 0) {
+            // Simple mean-reversion style decision for player stocks
+            const previousClose = parseFloat(marketStock.previousClose);
+            const currentPrice = parseFloat(marketStock.currentPrice);
+            const diffPct = (currentPrice - previousClose) / previousClose;
+
+            let action: 'buy' | 'sell' | 'hold' = 'hold';
+            let confidence = 0.4;
+            let shares = 0;
+
+            if (diffPct < -0.05) {
+              // Dropped a lot -> buy the dip
+              action = 'buy';
+              shares = Math.max(1, Math.floor(Number(botCash.div(20).toNumber()) / currentPrice));
+              confidence = 0.6;
+            } else if (diffPct > 0.05) {
+              // Up a lot and we hold some -> take profit
+              const holding = botHoldings.find(
+                (h) => h.tickerSymbol === marketStock.tickerSymbol
+              );
+              if (holding && holding.shares > 0) {
+                action = 'sell';
+                shares = Math.max(1, Math.floor(holding.shares * 0.25));
+                confidence = 0.6;
+              }
+            }
+
+            if (action !== 'hold' && shares > 0) {
+              const decision: TradingDecision = {
+                action,
+                ticker: marketStock.tickerSymbol,
+                shares,
+                confidence,
+                reason:
+                  action === 'buy'
+                    ? 'Buying discounted player stock'
+                    : 'Taking profits on strong player stock',
+              };
+
+              const success = await this.executeTrade(botUserId, decision, marketStock);
+              if (success) {
+                tradesExecuted++;
+              }
+            }
+          }
         }
       }
+    } catch (error) {
+      // Silently handle errors
     }
   }
 }
 
 export const botTraderService = new BotTraderService();
-

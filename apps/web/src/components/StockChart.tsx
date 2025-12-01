@@ -55,29 +55,9 @@ export function StockChart({
 }: StockChartProps) {
   const [timeRange, setTimeRange] = useState<'1H' | '24H' | '7D' | '30D'>('24H');
 
-  const [realTimePrice, setRealTimePrice] = useState(currentPrice);
-  
-  // Update real-time price every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const variation = (Math.random() - 0.5) * 0.002; // ±0.1% variation per second
-      setRealTimePrice((prev) => {
-        const newPrice = prev * (1 + variation);
-        // Keep price within reasonable bounds (±50% from previous close)
-        return Math.max(previousClose * 0.5, Math.min(previousClose * 2, newPrice));
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [previousClose]);
-
-  // Sync real-time price with currentPrice prop
-  useEffect(() => {
-    setRealTimePrice(currentPrice);
-  }, [currentPrice]);
-
-  const isPositive = realTimePrice >= previousClose;
-  const change = realTimePrice - previousClose;
+  // Use backend-provided currentPrice directly (no extra random jitter)
+  const isPositive = currentPrice >= previousClose;
+  const change = currentPrice - previousClose;
   const changePercent = ((change / previousClose) * 100).toFixed(2);
 
   // Calculate time range in seconds
@@ -102,7 +82,7 @@ export function StockChart({
     const cutoffTime = now - timeRangeSeconds;
 
     if (priceHistory.length > 0) {
-      // Filter price history by time range and add current real-time price
+      // Filter price history by time range and add current backend price
       const filtered = priceHistory
         .filter((point) => point.time >= cutoffTime)
         .map((point) => ({
@@ -110,10 +90,10 @@ export function StockChart({
           price: point.price,
         }));
 
-      // Add current real-time price point
+      // Add current price point from backend
       filtered.push({
         time: now,
-        price: realTimePrice,
+        price: currentPrice,
       });
 
       // If we have filtered data, return it
@@ -122,28 +102,29 @@ export function StockChart({
       }
     }
 
-    // Generate mock data if no history or filtered data is empty
-    const data = [];
-    const points = timeRange === '1H' ? 60 : timeRange === '24H' ? 24 : timeRange === '7D' ? 168 : 720; // Points per range
+    // Generate simple baseline data if no history:
+    // flat line at previousClose up to now, then currentPrice as last point.
+    const data: { time: number; price: number }[] = [];
+    const points =
+      timeRange === '1H' ? 60 : timeRange === '24H' ? 24 : timeRange === '7D' ? 168 : 720; // Points per range
     const interval = timeRangeSeconds / points;
 
-    for (let i = points; i >= 0; i--) {
+    for (let i = points; i >= 1; i--) {
       const time = now - i * interval;
-      const variation = (Math.random() - 0.5) * 0.1;
       data.push({
         time: Math.floor(time),
-        price: previousClose * (1 + variation),
+        price: previousClose,
       });
     }
-    
-    // Add current real-time price
+
+    // Last point is current backend price
     data.push({
       time: now,
-      price: realTimePrice,
+      price: currentPrice,
     });
-    
+
     return data;
-  }, [priceHistory, previousClose, timeRangeSeconds, timeRange, realTimePrice]);
+  }, [priceHistory, previousClose, timeRangeSeconds, timeRange, currentPrice]);
 
   const strokeColor = isPositive ? '#22c55e' : '#ef4444';
   const gradientId = isPositive ? 'stockPositiveGradient' : 'stockNegativeGradient';
@@ -162,7 +143,7 @@ export function StockChart({
             <h3 className="text-lg font-bold text-zinc-100">{ticker}</h3>
             <div className="flex items-center gap-4 mt-1">
               <span className="text-2xl font-bold text-zinc-100 font-mono">
-                ${realTimePrice.toFixed(2)}
+                ${currentPrice.toFixed(2)}
               </span>
               <span
                 className={`text-sm font-medium flex items-center gap-1 ${
@@ -197,10 +178,24 @@ export function StockChart({
       </div>
 
       {/* Chart Container */}
-      <div style={{ height: `${height}px` }} className="relative bg-[#0a0a0f]">
+      <div 
+        style={{ 
+          height: `${height}px`,
+          width: '100%',
+          minWidth: '0',
+          minHeight: `${height}px`,
+          position: 'relative'
+        }} 
+        className="bg-[#0a0a0f]"
+      >
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={height}>
+            <AreaChart 
+              data={chartData} 
+              margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+              width={undefined}
+              height={undefined}
+            >
               <defs>
                 <linearGradient id="stockPositiveGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />

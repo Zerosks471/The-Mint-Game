@@ -7,7 +7,6 @@ import {
   StockOrderData,
 } from '../api/game';
 import { formatCurrency } from '@mint/utils';
-import { StockCard } from '../components/StockCard';
 import { StockTradingModal } from '../components/StockTradingModal';
 import { StockTicker } from '../components/StockTicker';
 import { StockChart } from '../components/StockChart';
@@ -48,6 +47,12 @@ export function StocksPage() {
       const res = await gameApi.getMarketStocks();
       if (res.success && res.data) {
         setStocks(res.data);
+        // Initialize real-time prices from fetched data
+        const initialPrices: Record<string, number> = {};
+        res.data.forEach((stock) => {
+          initialPrices[stock.tickerSymbol] = parseFloat(stock.currentPrice);
+        });
+        setRealTimePrices((prev) => ({ ...prev, ...initialPrices }));
       }
     } catch (err) {
       console.error('Failed to fetch market stocks:', err);
@@ -108,7 +113,7 @@ export function StocksPage() {
     fetchAllData();
   }, [fetchAllData]);
 
-  // Poll for market updates
+  // Poll for market updates - more frequent for real-time feel
   useEffect(() => {
     const interval = setInterval(() => {
       if (activeTab === 'market') {
@@ -118,10 +123,11 @@ export function StocksPage() {
         fetchPortfolio();
         fetchMarketStocks(); // To get updated prices
       }
-    }, 10000); // Every 10 seconds
+    }, 5000); // Every 5 seconds for more real-time updates
 
     return () => clearInterval(interval);
   }, [activeTab, fetchMarketStocks, fetchPortfolio]);
+
 
   const handleBuy = async (ticker: string) => {
     try {
@@ -440,13 +446,15 @@ export function StocksPage() {
               </div>
 
               {/* Professional Chart */}
-              <StockChart
-                ticker={selectedStock.tickerSymbol}
-                priceHistory={priceHistory}
-                currentPrice={parseFloat(selectedStock.currentPrice)}
-                previousClose={parseFloat(selectedStock.previousClose)}
-                height={500}
-              />
+              <div className="w-full min-w-0">
+                <StockChart
+                  ticker={selectedStock.tickerSymbol}
+                  priceHistory={priceHistory}
+                  currentPrice={parseFloat(selectedStock.currentPrice)}
+                  previousClose={parseFloat(selectedStock.previousClose)}
+                  height={500}
+                />
+              </div>
 
               {/* Stock Details Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -496,76 +504,140 @@ export function StocksPage() {
             </div>
           ) : (
             <>
-              {/* Market Overview - Charts and Live Trades Side by Side */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Top Movers Charts - Takes 2/3 width */}
-                <div className="lg:col-span-2 space-y-4">
-                  <div>
-                    <h2 className="text-lg font-bold text-zinc-100 mb-4">Top Movers</h2>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {stocks.slice(0, 4).map((stock) => {
-                        // Generate dynamic history that updates with real stock price
-                        const mockHistory: Array<{ time: number; price: number }> = [];
-                        const now = Date.now() / 1000;
-                        const basePrice = parseFloat(stock.currentPrice);
-                        for (let i = 24; i >= 0; i--) {
-                          const time = now - i * 3600;
-                          const variation = (Math.random() - 0.5) * 0.1;
-                          mockHistory.push({
-                            time: Math.floor(time),
-                            price: basePrice * (1 + variation),
-                          });
-                        }
-                        // Add current price as latest point
-                        mockHistory.push({
-                          time: Math.floor(now),
-                          price: parseFloat(stock.currentPrice),
-                        });
-                        return (
-                          <div
-                            key={stock.tickerSymbol}
-                            className="cursor-pointer"
-                            onClick={() => handleViewStock(stock.tickerSymbol)}
-                          >
-                            <StockChart
-                              ticker={stock.tickerSymbol}
-                              priceHistory={mockHistory}
-                              currentPrice={parseFloat(stock.currentPrice)}
-                              previousClose={parseFloat(stock.previousClose)}
-                              height={250}
-                            />
-                          </div>
-                        );
-                      })}
+              {/* Market Overview - Professional Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                {/* Main Market Table - Takes 3/4 width */}
+                <div className="lg:col-span-3">
+          <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                    {/* Table Header */}
+                    <div className="bg-dark-elevated border-b border-dark-border px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-bold text-zinc-100">Market</h2>
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                          <span>{stocks.length} stocks</span>
+            </div>
+                      </div>
                     </div>
+
+                    {/* Stocks Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                        <thead className="bg-dark-elevated/50 border-b border-dark-border">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                              Symbol
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                              Company
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                              Price
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                              Change
+                            </th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                              Volume
+                            </th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                              Actions
+                            </th>
+                  </tr>
+                </thead>
+                        <tbody className="divide-y divide-dark-border">
+                          {stocks.map((stock) => {
+                            const hasHolding = portfolio.find((h) => h.tickerSymbol === stock.tickerSymbol);
+
+                            const currentPrice = parseFloat(stock.currentPrice);
+                            const previousClose = parseFloat(stock.previousClose);
+                            const priceChange = currentPrice - previousClose;
+                            const priceChangePercent = (priceChange / previousClose) * 100;
+                            const isPositive = priceChange >= 0;
+                            
+                            return (
+                              <tr
+                                key={stock.tickerSymbol}
+                                className="hover:bg-dark-elevated/30 transition-colors cursor-pointer"
+                                onClick={() => handleViewStock(stock.tickerSymbol)}
+                              >
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-zinc-100">{stock.tickerSymbol}</span>
+                                    {stock.stockType === 'player' && (
+                                      <span className="text-[10px] bg-mint/20 text-mint px-1.5 py-0.5 rounded uppercase">
+                                        Player
+                                      </span>
+                                    )}
+                                    {stock.sector && (
+                                      <span className="text-[10px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase">
+                                        {stock.sector}
+                                      </span>
+                                    )}
+                                  </div>
+                      </td>
+                                <td className="px-4 py-3">
+                                  <p className="text-sm text-zinc-300">{stock.companyName}</p>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <p className="font-mono font-bold text-zinc-100 transition-colors duration-300">
+                                    ${currentPrice.toFixed(2)}
+                                  </p>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <div className={`flex items-center justify-end gap-1 font-medium transition-colors duration-300 ${
+                                    isPositive ? 'text-green-400' : 'text-red-400'
+                                  }`}>
+                                    <span>{isPositive ? '↑' : '↓'}</span>
+                                    <span>
+                                      {isPositive ? '+' : ''}
+                                      {priceChangePercent.toFixed(2)}%
+                                    </span>
+                                    <span className="text-zinc-500 text-xs ml-1">
+                                      ({isPositive ? '+' : ''}${Math.abs(priceChange).toFixed(2)})
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <p className="text-sm text-zinc-400 font-mono">
+                                    {stock.volume24h.toLocaleString()}
+                                  </p>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => handleBuy(stock.tickerSymbol)}
+                                      className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400 rounded text-xs font-medium transition-colors"
+                                    >
+                                      Buy
+                                    </button>
+                                    {hasHolding && (
+                                      <button
+                                        onClick={() => handleSell(stock.tickerSymbol)}
+                                        className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 rounded text-xs font-medium transition-colors"
+                                      >
+                                        Sell
+                                      </button>
+                                    )}
+                                  </div>
+                      </td>
+                    </tr>
+                            );
+                          })}
+                </tbody>
+              </table>
+                      {stocks.length === 0 && (
+                        <div className="text-center py-12 text-zinc-500">
+                          <p>No stocks available</p>
+            </div>
+                      )}
+          </div>
                   </div>
                 </div>
                 
-                {/* Live Trades Feed - Takes 1/3 width, sticky on large screens */}
+                {/* Live Trades Feed - Takes 1/4 width, sticky on large screens */}
                 <div className="lg:sticky lg:top-4 lg:self-start">
-                  <LiveTradesFeed maxTrades={10} />
+                  <LiveTradesFeed />
                 </div>
-              </div>
-
-              {/* All Stocks Grid */}
-              <div className="mt-6">
-                <h2 className="text-lg font-bold text-zinc-100 mb-4">All Stocks</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {stocks.map((stock) => (
-                    <StockCard
-                      key={stock.tickerSymbol}
-                      stock={stock}
-                      onBuy={handleBuy}
-                      onSell={portfolio.find((h) => h.tickerSymbol === stock.tickerSymbol) ? handleSell : undefined}
-                      onView={handleViewStock}
-                    />
-                  ))}
-            </div>
-                {stocks.length === 0 && (
-                  <div className="text-center py-12 text-zinc-500">
-                    <p>No stocks available</p>
-          </div>
-                )}
               </div>
             </>
           )}
@@ -627,7 +699,7 @@ export function StocksPage() {
                 <h3 className="text-sm font-bold text-zinc-300 mb-3 uppercase tracking-wider">Top Performers</h3>
                 <div className="space-y-2">
                   {[...portfolio]
-                    .sort((a, b) => parseFloat(b.profitLossPercent) - parseFloat(a.profitLossPercent))
+                    .sort((a, b) => b.profitLossPercent - a.profitLossPercent)
                     .slice(0, 3)
                     .map((holding) => (
                       <div key={holding.id} className="flex items-center justify-between py-2 px-3 bg-dark-elevated rounded-lg">

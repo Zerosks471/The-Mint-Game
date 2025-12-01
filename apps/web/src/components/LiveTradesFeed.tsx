@@ -17,14 +17,18 @@ interface LiveTradesFeedProps {
   maxTrades?: number;
 }
 
-export function LiveTradesFeed({ maxTrades = 50 }: LiveTradesFeedProps) {
+export function LiveTradesFeed({ maxTrades }: LiveTradesFeedProps) {
   const [trades, setTrades] = useState<LiveTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchTrades = async () => {
+  const fetchTrades = async (isInitial: boolean = false) => {
     try {
-      const res = await gameApi.getRecentTrades(maxTrades);
-      if (res.success && res.data) {
+      if (isInitial) {
+        setIsLoading(true);
+      }
+      // No limit - fetch all trades
+      const res = await gameApi.getRecentTrades();
+      if (res.success && res.data && Array.isArray(res.data)) {
         const formattedTrades: LiveTrade[] = res.data.map((trade) => ({
           id: trade.id,
           ticker: trade.tickerSymbol,
@@ -32,21 +36,49 @@ export function LiveTradesFeed({ maxTrades = 50 }: LiveTradesFeedProps) {
           shares: trade.shares,
           price: trade.pricePerShare,
           timestamp: new Date(trade.createdAt),
-          trader: trade.traderName,
-          traderType: trade.traderType,
+          trader: trade.traderName || 'Unknown',
+          traderType: trade.traderType || 'player',
         }));
-        setTrades(formattedTrades);
+
+        // Merge new trades into existing list without resetting scroll
+        setTrades((prev) => {
+          if (prev.length === 0) {
+            return formattedTrades;
+          }
+
+          const existingIds = new Set(prev.map((t) => t.id));
+          const newTrades = formattedTrades.filter((t) => !existingIds.has(t.id));
+
+          if (newTrades.length === 0) {
+            return prev;
+          }
+
+          // Keep newest first (API already returns newest first)
+          const merged = [...newTrades, ...prev];
+
+          // Soft cap to avoid unbounded growth
+          return merged.slice(0, maxTrades ?? 300);
+        });
+      } else {
+        console.warn('Trades API returned unexpected response:', res);
+        // Only clear if we got an explicit error
+        if (!res.success) {
+          setTrades([]);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch trades:', err);
+      // Don't clear trades on error, keep showing last successful fetch
     } finally {
-      setIsLoading(false);
+      if (isInitial) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     // Fetch immediately
-    fetchTrades();
+    fetchTrades(true);
 
     // Poll for new trades every 3 seconds
     const interval = setInterval(() => {
@@ -78,7 +110,7 @@ export function LiveTradesFeed({ maxTrades = 50 }: LiveTradesFeedProps) {
           trades.map((trade) => (
             <div
               key={trade.id}
-              className="flex flex-col gap-2 py-2.5 px-3 bg-[#0a0a0f] rounded-lg border border-[#1a1a24] hover:border-mint/30 transition-all animate-fade-in"
+              className="flex flex-col gap-2 py-2.5 px-3 bg-[#0a0a0f] rounded-lg border border-[#1a1a24] hover:border-mint/30 transition-all duration-300 ease-out animate-fade-in"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

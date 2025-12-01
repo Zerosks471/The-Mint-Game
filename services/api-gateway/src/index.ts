@@ -27,7 +27,7 @@ async function main() {
     try {
       // Update stock prices first
       await stockService.updateBotStockPrices();
-      
+
       // Run bot trading
       await botTraderService.runBotTrading();
     } catch (error) {
@@ -35,12 +35,14 @@ async function main() {
     }
   };
 
-  // Run bot trading every 2 minutes (more frequent than price updates)
-  setInterval(startBotTrading, 2 * 60 * 1000);
-  console.log('🤖 Bot trading system started (runs every 2 minutes)');
+  // Run bot trading every 30 seconds for faster, more active market
+  setInterval(startBotTrading, 30 * 1000);
+  console.log('🤖 Bot trading system started (runs every 30 seconds)');
   
-  // Run immediately on startup
-  startBotTrading();
+  // Run immediately on startup (with delay to ensure DB is ready)
+  setTimeout(() => {
+    startBotTrading();
+  }, 5000);
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

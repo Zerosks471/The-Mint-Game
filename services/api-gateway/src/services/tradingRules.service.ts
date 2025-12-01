@@ -27,6 +27,17 @@ export class TradingRulesService {
   private static MAX_MARKET_CAP_MULTIPLIER = 100; // Can't be more than 100x net worth
 
   /**
+   * Check if user is a bot (exempt from some rules)
+   */
+  private static isBotUser(userId: string): boolean {
+    return (
+      userId === 'system-bot-trader' ||
+      userId.includes('bot') ||
+      userId.startsWith('system-')
+    );
+  }
+
+  /**
    * Validate a buy order
    */
   static async validateBuy(
@@ -35,21 +46,27 @@ export class TradingRulesService {
     shares: number,
     pricePerShare: Decimal
   ): Promise<void> {
-    // 1. Check if buying own stock (self-trading prevention)
-    const playerStock = await prisma.playerStock.findFirst({
-      where: { tickerSymbol: tickerSymbol.toUpperCase() },
-    });
+    const isBot = this.isBotUser(userId);
 
-    if (playerStock && playerStock.userId === userId) {
-      throw new AppError(
-        ErrorCodes.VALIDATION_ERROR,
-        'You cannot buy shares of your own company',
-        400
-      );
+    // 1. Check if buying own stock (self-trading prevention) - skip for bots
+    if (!isBot) {
+      const playerStock = await prisma.playerStock.findFirst({
+        where: { tickerSymbol: tickerSymbol.toUpperCase() },
+      });
+
+      if (playerStock && playerStock.userId === userId) {
+        throw new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          'You cannot buy shares of your own company',
+          400
+        );
+      }
     }
 
-    // 2. Check rate limiting
-    await this.checkRateLimit(userId);
+    // 2. Check rate limiting - skip for bots
+    if (!isBot) {
+      await this.checkRateLimit(userId);
+    }
 
     // 3. Check position size limits
     await this.checkPositionLimits(userId, tickerSymbol, shares, 'buy');
@@ -63,11 +80,15 @@ export class TradingRulesService {
       );
     }
 
-    // 5. Check wash trading (rapid buy/sell cycles)
-    await this.checkWashTrading(userId, tickerSymbol, 'buy');
+    // 5. Check wash trading (rapid buy/sell cycles) - skip for bots
+    if (!isBot) {
+      await this.checkWashTrading(userId, tickerSymbol, 'buy');
+    }
 
-    // 6. Check price impact (for large trades)
-    await this.checkPriceImpact(tickerSymbol, shares, pricePerShare, 'buy');
+    // 6. Check price impact (for large trades) - skip for bots (they can move markets)
+    if (!isBot) {
+      await this.checkPriceImpact(tickerSymbol, shares, pricePerShare, 'buy');
+    }
   }
 
   /**
@@ -80,18 +101,24 @@ export class TradingRulesService {
     pricePerShare: Decimal,
     holdingCreatedAt: Date
   ): Promise<void> {
-    // 1. Check rate limiting
-    await this.checkRateLimit(userId);
+    const isBot = this.isBotUser(userId);
 
-    // 2. Check minimum holding period (prevent day trading exploits)
-    const holdingAge = (Date.now() - holdingCreatedAt.getTime()) / 1000;
-    if (holdingAge < this.MIN_HOLDING_PERIOD_SECONDS) {
-      const remaining = Math.ceil(this.MIN_HOLDING_PERIOD_SECONDS - holdingAge);
-      throw new AppError(
-        ErrorCodes.VALIDATION_ERROR,
-        `Must hold shares for at least ${this.MIN_HOLDING_PERIOD_SECONDS} seconds. Wait ${remaining} more seconds.`,
-        400
-      );
+    // 1. Check rate limiting - skip for bots
+    if (!isBot) {
+      await this.checkRateLimit(userId);
+    }
+
+    // 2. Check minimum holding period (prevent day trading exploits) - skip for bots
+    if (!isBot) {
+      const holdingAge = (Date.now() - holdingCreatedAt.getTime()) / 1000;
+      if (holdingAge < this.MIN_HOLDING_PERIOD_SECONDS) {
+        const remaining = Math.ceil(this.MIN_HOLDING_PERIOD_SECONDS - holdingAge);
+        throw new AppError(
+          ErrorCodes.VALIDATION_ERROR,
+          `Must hold shares for at least ${this.MIN_HOLDING_PERIOD_SECONDS} seconds. Wait ${remaining} more seconds.`,
+          400
+        );
+      }
     }
 
     // 3. Check trade size limits
@@ -103,11 +130,15 @@ export class TradingRulesService {
       );
     }
 
-    // 4. Check wash trading
-    await this.checkWashTrading(userId, tickerSymbol, 'sell');
+    // 4. Check wash trading - skip for bots
+    if (!isBot) {
+      await this.checkWashTrading(userId, tickerSymbol, 'sell');
+    }
 
-    // 5. Check price impact
-    await this.checkPriceImpact(tickerSymbol, shares, pricePerShare, 'sell');
+    // 5. Check price impact - skip for bots (they can move markets)
+    if (!isBot) {
+      await this.checkPriceImpact(tickerSymbol, shares, pricePerShare, 'sell');
+    }
   }
 
   /**
