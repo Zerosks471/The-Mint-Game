@@ -660,6 +660,53 @@ model FailedPurchase {
 }
 
 // ============================================================================
+// MINI-GAME TASKS DOMAIN
+// ============================================================================
+
+model TaskAttempt {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  taskType        String    @map("task_type") // "business:restaurant", "property:apartment"
+  targetId        String    @map("target_id") // businessId or propertyId
+  attemptNumber   Int       @map("attempt_number") // 1, 2, or 3
+  success         Boolean
+  score           Int?
+  revenueMultiplier Float   @map("revenue_multiplier") // 1.0, 0.75, 0.5
+  difficulty      Int       @default(1)
+  completedAt     DateTime  @default(now()) @map("completed_at")
+
+  @@index([userId, taskType, targetId])
+  @@index([userId, completedAt])
+  @@map("task_attempts")
+}
+
+model TaskStreak {
+  id              String    @id @default(cuid())
+  playerId        String    @unique @map("player_id")
+  propertyStreak  Int       @default(0) @map("property_streak")
+  lastPropertyTask DateTime? @map("last_property_task")
+  businessStreak  Int       @default(0) @map("business_streak")
+  lastBusinessTask DateTime? @map("last_business_task")
+
+  @@map("task_streaks")
+}
+
+model BusinessTaskSession {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  businessId      String    @map("business_id")
+  businessType    String    @map("business_type")
+  attemptsUsed    Int       @default(0) @map("attempts_used")
+  cycleStart      DateTime  @map("cycle_start")
+  expiresAt       DateTime  @map("expires_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@unique([userId, businessId, cycleStart])
+  @@index([userId, expiresAt])
+  @@map("business_task_sessions")
+}
+
+// ============================================================================
 // EARNINGS HISTORY (for charts/analytics)
 // ============================================================================
 
