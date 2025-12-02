@@ -98,8 +98,9 @@ export async function seedStocks(): Promise<void> {
   console.log('🏦 Stock seeding complete!');
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ES module check)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   seedStocks()
     .then(() => prisma.$disconnect())
     .catch((e) => {

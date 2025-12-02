@@ -131,7 +131,9 @@ export async function seedIndices(): Promise<void> {
   console.log('📊 Index seeding complete!');
 }
 
-if (require.main === module) {
+// Run if called directly (ES module check)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   seedIndices()
     .then(() => prisma.$disconnect())
     .catch((e) => {
