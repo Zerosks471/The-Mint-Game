@@ -452,6 +452,8 @@ export class EnhancedBotTraderService {
     if (extremeStocks.length === 0) return;
 
     const target = extremeStocks[0];
+    if (!target) return;
+
     const stock = target.stock;
 
     // Check if stock is halted
@@ -509,6 +511,7 @@ export class EnhancedBotTraderService {
 
     // Pick a random stock
     const stock = stocks[Math.floor(Math.random() * stocks.length)];
+    if (!stock) return;
 
     // Check if halted
     if (circuitBreakerService.isStockHalted(stock.tickerSymbol)) {
@@ -559,6 +562,7 @@ export class EnhancedBotTraderService {
 
     // Pick a random event
     const event = events[Math.floor(Math.random() * events.length)];
+    if (!event) return;
 
     // Get affected tickers
     const affectedTickers = event.affectedTickers;
@@ -566,6 +570,7 @@ export class EnhancedBotTraderService {
 
     // Pick a random affected ticker
     const ticker = affectedTickers[Math.floor(Math.random() * affectedTickers.length)];
+    if (!ticker) return;
 
     // Find the stock
     const stock = await prisma.botStock.findUnique({
@@ -628,6 +633,7 @@ export class EnhancedBotTraderService {
 
     // Pick from top volume stocks
     const stock = stocks[Math.floor(Math.random() * Math.min(5, stocks.length))];
+    if (!stock) return;
 
     // Check if halted
     if (circuitBreakerService.isStockHalted(stock.tickerSymbol)) {

@@ -49,7 +49,7 @@ export class DividendService {
 
       // Calculate owner dividend based on their performance
       // Using net worth as proxy for "daily income" since we don't track daily separately
-      const netWorth = Number(stats.netWorth);
+      const netWorth = Number(stats.highestNetWorth);
       const ownerDividend = netWorth * DividendService.OWNER_DIVIDEND_RATE * 0.001; // Scale down
 
       if (ownerDividend >= DividendService.MIN_PAYOUT) {
@@ -192,25 +192,41 @@ export class DividendService {
       where: { userId },
       orderBy: { payoutDate: 'desc' },
       take: limit,
-      include: {
-        playerStock: true,
-        botStock: true,
-      },
     });
 
-    return payouts.map((p) => ({
-      id: p.id,
-      payoutType: p.payoutType,
-      stockType: p.stockType,
-      ticker:
-        p.playerStock?.tickerSymbol ||
-        p.botStock?.tickerSymbol ||
-        'Unknown',
-      shares: p.shares,
-      amount: p.amount.toString(),
-      dividendRate: p.dividendRate.toString(),
-      payoutDate: p.payoutDate.toISOString(),
-    }));
+    // Fetch stock details separately
+    const results = await Promise.all(
+      payouts.map(async (p) => {
+        let ticker = 'Unknown';
+
+        if (p.playerStockId) {
+          const playerStock = await prisma.playerStock.findUnique({
+            where: { id: p.playerStockId },
+            select: { tickerSymbol: true },
+          });
+          ticker = playerStock?.tickerSymbol || 'Unknown';
+        } else if (p.botStockId) {
+          const botStock = await prisma.botStock.findUnique({
+            where: { id: p.botStockId },
+            select: { tickerSymbol: true },
+          });
+          ticker = botStock?.tickerSymbol || 'Unknown';
+        }
+
+        return {
+          id: p.id,
+          payoutType: p.payoutType,
+          stockType: p.stockType,
+          ticker,
+          shares: p.shares,
+          amount: p.amount.toString(),
+          dividendRate: p.dividendRate.toString(),
+          payoutDate: p.payoutDate.toISOString(),
+        };
+      })
+    );
+
+    return results;
   }
 }
 
