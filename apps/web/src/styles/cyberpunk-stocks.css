@@ -1,0 +1,564 @@
+/**
+ * Cyberpunk Theme for Stock Market
+ * Phase 6 - Stock Market Rework
+ */
+
+/* CSS Variables */
+:root {
+  --cyberpunk-bg-dark: #0a0a0f;
+  --cyberpunk-cyan: #00f5ff;
+  --cyberpunk-pink: #ff006a;
+  --cyberpunk-green: #39ff14;
+  --cyberpunk-red: #ff3366;
+  --cyberpunk-purple: #bf00ff;
+  --cyberpunk-yellow: #ffea00;
+  --cyberpunk-grid-color: rgba(0, 245, 255, 0.1);
+  --cyberpunk-glow-cyan: rgba(0, 245, 255, 0.5);
+  --cyberpunk-glow-pink: rgba(255, 0, 106, 0.5);
+  --cyberpunk-glow-green: rgba(57, 255, 20, 0.5);
+}
+
+/* Grid Pattern Background */
+.cyberpunk-grid-bg {
+  background-color: var(--cyberpunk-bg-dark);
+  background-image:
+    linear-gradient(var(--cyberpunk-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cyberpunk-grid-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: relative;
+}
+
+.cyberpunk-grid-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 0%,
+    var(--cyberpunk-bg-dark) 100%
+  );
+  pointer-events: none;
+}
+
+/* Glass-morphism Cards */
+.cyberpunk-card {
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--cyberpunk-cyan);
+  border-radius: 8px;
+  box-shadow:
+    0 0 20px rgba(0, 245, 255, 0.2),
+    inset 0 0 20px rgba(0, 245, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.cyberpunk-card:hover {
+  border-color: var(--cyberpunk-pink);
+  box-shadow:
+    0 0 30px rgba(255, 0, 106, 0.3),
+    inset 0 0 30px rgba(255, 0, 106, 0.1);
+  transform: translateY(-2px);
+}
+
+.cyberpunk-card-pink {
+  border-color: var(--cyberpunk-pink);
+  box-shadow:
+    0 0 20px rgba(255, 0, 106, 0.2),
+    inset 0 0 20px rgba(255, 0, 106, 0.05);
+}
+
+.cyberpunk-card-green {
+  border-color: var(--cyberpunk-green);
+  box-shadow:
+    0 0 20px rgba(57, 255, 20, 0.2),
+    inset 0 0 20px rgba(57, 255, 20, 0.05);
+}
+
+/* Glowing Text Effects */
+.cyberpunk-glow-text {
+  color: var(--cyberpunk-cyan);
+  text-shadow:
+    0 0 10px var(--cyberpunk-glow-cyan),
+    0 0 20px var(--cyberpunk-glow-cyan),
+    0 0 30px var(--cyberpunk-glow-cyan);
+  font-weight: 600;
+}
+
+.cyberpunk-glow-text-pink {
+  color: var(--cyberpunk-pink);
+  text-shadow:
+    0 0 10px var(--cyberpunk-glow-pink),
+    0 0 20px var(--cyberpunk-glow-pink),
+    0 0 30px var(--cyberpunk-glow-pink);
+  font-weight: 600;
+}
+
+.cyberpunk-glow-text-green {
+  color: var(--cyberpunk-green);
+  text-shadow:
+    0 0 10px var(--cyberpunk-glow-green),
+    0 0 20px var(--cyberpunk-glow-green),
+    0 0 30px var(--cyberpunk-glow-green);
+  font-weight: 600;
+}
+
+/* Price Display */
+.cyberpunk-price {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 1.25rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.cyberpunk-price-large {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.cyberpunk-price-positive {
+  color: var(--cyberpunk-green);
+  text-shadow: 0 0 10px var(--cyberpunk-glow-green);
+}
+
+.cyberpunk-price-negative {
+  color: var(--cyberpunk-red);
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+}
+
+.cyberpunk-price-neutral {
+  color: var(--cyberpunk-cyan);
+  text-shadow: 0 0 10px var(--cyberpunk-glow-cyan);
+}
+
+/* Monospace Numbers */
+.cyberpunk-mono {
+  font-family: 'Courier New', 'Consolas', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* Ticker Tape Animation */
+.cyberpunk-ticker-tape {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 245, 255, 0.1) 0%,
+    rgba(255, 0, 106, 0.1) 50%,
+    rgba(0, 245, 255, 0.1) 100%
+  );
+  border-top: 1px solid var(--cyberpunk-cyan);
+  border-bottom: 1px solid var(--cyberpunk-cyan);
+  overflow: hidden;
+  padding: 8px 0;
+  position: relative;
+}
+
+.cyberpunk-ticker-content {
+  display: flex;
+  animation: ticker-scroll 30s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.cyberpunk-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 3rem;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.875rem;
+}
+
+.cyberpunk-ticker-symbol {
+  color: var(--cyberpunk-cyan);
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.cyberpunk-ticker-price {
+  color: white;
+  margin-right: 0.5rem;
+}
+
+.cyberpunk-ticker-change-up {
+  color: var(--cyberpunk-green);
+}
+
+.cyberpunk-ticker-change-down {
+  color: var(--cyberpunk-red);
+}
+
+/* Halted Stock Badge */
+.cyberpunk-halted-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: rgba(255, 234, 0, 0.2);
+  border: 1px solid var(--cyberpunk-yellow);
+  border-radius: 4px;
+  color: var(--cyberpunk-yellow);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  animation: pulse-yellow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-yellow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 234, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 234, 0, 0.6);
+  }
+}
+
+.cyberpunk-halted-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cyberpunk-yellow);
+  margin-right: 6px;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Circuit Breaker Warning */
+.cyberpunk-circuit-breaker {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 51, 102, 0.2) 0%,
+    rgba(255, 0, 106, 0.2) 100%
+  );
+  border: 2px solid var(--cyberpunk-red);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow:
+    0 0 20px rgba(255, 51, 102, 0.3),
+    inset 0 0 20px rgba(255, 51, 102, 0.1);
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    border-color: var(--cyberpunk-red);
+    box-shadow:
+      0 0 20px rgba(255, 51, 102, 0.3),
+      inset 0 0 20px rgba(255, 51, 102, 0.1);
+  }
+  50% {
+    border-color: rgba(255, 51, 102, 0.5);
+    box-shadow:
+      0 0 30px rgba(255, 51, 102, 0.5),
+      inset 0 0 30px rgba(255, 51, 102, 0.15);
+  }
+}
+
+/* Buttons */
+.cyberpunk-btn {
+  background: linear-gradient(
+    135deg,
+    var(--cyberpunk-cyan) 0%,
+    var(--cyberpunk-pink) 100%
+  );
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px var(--cyberpunk-glow-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cyberpunk-btn:hover {
+  box-shadow: 0 0 30px var(--cyberpunk-glow-pink);
+  transform: translateY(-2px);
+}
+
+.cyberpunk-btn:active {
+  transform: translateY(0);
+}
+
+.cyberpunk-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--cyberpunk-cyan);
+  color: var(--cyberpunk-cyan);
+  box-shadow: none;
+}
+
+.cyberpunk-btn-secondary:hover {
+  background: rgba(0, 245, 255, 0.1);
+  box-shadow: 0 0 20px var(--cyberpunk-glow-cyan);
+}
+
+/* Table Styles */
+.cyberpunk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: 'Courier New', 'Consolas', monospace;
+}
+
+.cyberpunk-table thead {
+  background: rgba(0, 245, 255, 0.1);
+  border-bottom: 2px solid var(--cyberpunk-cyan);
+}
+
+.cyberpunk-table th {
+  padding: 12px 16px;
+  text-align: left;
+  color: var(--cyberpunk-cyan);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+}
+
+.cyberpunk-table tbody tr {
+  border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+  transition: background 0.2s ease;
+}
+
+.cyberpunk-table tbody tr:hover {
+  background: rgba(0, 245, 255, 0.05);
+}
+
+.cyberpunk-table td {
+  padding: 12px 16px;
+  color: white;
+}
+
+/* Status Indicators */
+.cyberpunk-status-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cyberpunk-green);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.875rem;
+}
+
+.cyberpunk-status-online::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyberpunk-green);
+  box-shadow: 0 0 10px var(--cyberpunk-glow-green);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.cyberpunk-status-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cyberpunk-red);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.875rem;
+}
+
+.cyberpunk-status-offline::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyberpunk-red);
+}
+
+/* Dividers */
+.cyberpunk-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--cyberpunk-cyan) 50%,
+    transparent 100%
+  );
+  margin: 24px 0;
+}
+
+/* Input Fields */
+.cyberpunk-input {
+  background: rgba(0, 245, 255, 0.05);
+  border: 1px solid var(--cyberpunk-cyan);
+  border-radius: 4px;
+  color: white;
+  padding: 10px 16px;
+  font-family: 'Courier New', 'Consolas', monospace;
+  transition: all 0.3s ease;
+}
+
+.cyberpunk-input:focus {
+  outline: none;
+  border-color: var(--cyberpunk-pink);
+  box-shadow: 0 0 20px var(--cyberpunk-glow-pink);
+  background: rgba(255, 0, 106, 0.05);
+}
+
+.cyberpunk-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Scrollbar Styling */
+.cyberpunk-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.cyberpunk-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 245, 255, 0.1);
+}
+
+.cyberpunk-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--cyberpunk-cyan);
+  border-radius: 4px;
+}
+
+.cyberpunk-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--cyberpunk-pink);
+}
+
+/* Chart Styling */
+.cyberpunk-chart-container {
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid var(--cyberpunk-cyan);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow:
+    0 0 20px rgba(0, 245, 255, 0.2),
+    inset 0 0 20px rgba(0, 245, 255, 0.05);
+}
+
+/* Tooltip */
+.cyberpunk-tooltip {
+  background: rgba(10, 10, 15, 0.95);
+  border: 1px solid var(--cyberpunk-cyan);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: white;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.875rem;
+  box-shadow: 0 0 20px var(--cyberpunk-glow-cyan);
+}
+
+/* Loading Spinner */
+.cyberpunk-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 245, 255, 0.3);
+  border-top-color: var(--cyberpunk-cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Market Index Cards */
+.cyberpunk-index-card {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 245, 255, 0.1) 0%,
+    rgba(191, 0, 255, 0.1) 100%
+  );
+  border: 1px solid var(--cyberpunk-purple);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 0 15px rgba(191, 0, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.cyberpunk-index-card:hover {
+  border-color: var(--cyberpunk-cyan);
+  box-shadow: 0 0 25px var(--cyberpunk-glow-cyan);
+  transform: translateY(-2px);
+}
+
+/* Dividend Badge */
+.cyberpunk-dividend-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(57, 255, 20, 0.2);
+  border: 1px solid var(--cyberpunk-green);
+  border-radius: 4px;
+  color: var(--cyberpunk-green);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* Event Cards */
+.cyberpunk-event-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 106, 0.15) 0%,
+    rgba(255, 51, 102, 0.15) 100%
+  );
+  border-left: 4px solid var(--cyberpunk-pink);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.cyberpunk-event-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 106, 0.25) 0%,
+    rgba(255, 51, 102, 0.25) 100%
+  );
+  box-shadow: 0 0 20px var(--cyberpunk-glow-pink);
+}
+
+.cyberpunk-event-card-positive {
+  background: linear-gradient(
+    135deg,
+    rgba(57, 255, 20, 0.15) 0%,
+    rgba(57, 255, 20, 0.15) 100%
+  );
+  border-left-color: var(--cyberpunk-green);
+}
+
+.cyberpunk-event-card-positive:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(57, 255, 20, 0.25) 0%,
+    rgba(57, 255, 20, 0.25) 100%
+  );
+  box-shadow: 0 0 20px var(--cyberpunk-glow-green);
+}

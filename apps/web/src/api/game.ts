@@ -398,6 +398,76 @@ export interface MarketEvent {
   remainingMs: number;
 }
 
+// Market Indices types
+export interface MarketIndex {
+  ticker: string;
+  name: string;
+  value: string;
+  change: string;
+  changePercent: number;
+  volume24h: number;
+  componentCount: number;
+  lastUpdated: string;
+}
+
+export interface IndexComponent {
+  tickerSymbol: string;
+  companyName: string;
+  weight: number;
+  currentPrice: string;
+  contribution: string;
+}
+
+export interface IndexDetail extends MarketIndex {
+  components: IndexComponent[];
+  historicalHigh: string;
+  historicalLow: string;
+  avgVolume30d: number;
+}
+
+// Dividends types
+export interface DividendSummary {
+  totalDividendsEarned: string;
+  totalDividendsPaid: string;
+  netDividends: string;
+  stocksWithDividends: number;
+  nextDividendDate: string | null;
+  estimatedNextAmount: string | null;
+}
+
+export interface DividendRecord {
+  id: string;
+  tickerSymbol: string;
+  companyName: string;
+  dividendType: 'received' | 'paid';
+  amountPerShare: string;
+  totalAmount: string;
+  shares: number;
+  exDate: string;
+  payDate: string;
+  createdAt: string;
+}
+
+// Circuit Breaker types
+export interface HaltedStock {
+  tickerSymbol: string;
+  companyName: string;
+  haltedAt: string;
+  reason: string;
+  lastPrice: string;
+  priceBeforeHalt: string;
+  estimatedResumeTime: string | null;
+}
+
+export interface CircuitBreakerStatus {
+  isActive: boolean;
+  level: number | null;
+  triggeredAt: string | null;
+  estimatedResumeTime: string | null;
+  haltedStocks: HaltedStock[];
+  marketStatus: 'open' | 'halted' | 'closed';
+}
+
 export interface MarketSummaryData {
   overview: {
     totalStocks: number;
@@ -1045,5 +1115,34 @@ export const gameApi = {
 
   async getMarketSummary(): Promise<ApiResponse<MarketSummaryData>> {
     return apiClient.get<MarketSummaryData>('/stocks/market-summary');
+  },
+
+  // Market Indices
+  async getMarketIndices(): Promise<ApiResponse<MarketIndex[]>> {
+    return apiClient.get<MarketIndex[]>('/stocks/indices');
+  },
+
+  async getIndexDetail(ticker: string): Promise<ApiResponse<IndexDetail>> {
+    return apiClient.get<IndexDetail>(`/stocks/indices/${ticker}`);
+  },
+
+  // Dividends
+  async getDividendSummary(): Promise<ApiResponse<DividendSummary>> {
+    return apiClient.get<DividendSummary>('/stocks/dividends/summary');
+  },
+
+  async getDividendHistory(limit?: number): Promise<ApiResponse<DividendRecord[]>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return apiClient.get<DividendRecord[]>(`/stocks/dividends/history${query}`);
+  },
+
+  // Market Events
+  async getMarketEvents(): Promise<ApiResponse<MarketEvent[]>> {
+    return apiClient.get<MarketEvent[]>('/stocks/market-events');
+  },
+
+  // Circuit Breakers
+  async getCircuitBreakerStatus(): Promise<ApiResponse<CircuitBreakerStatus>> {
+    return apiClient.get<CircuitBreakerStatus>('/stocks/circuit-breaker/status');
   },
 };
