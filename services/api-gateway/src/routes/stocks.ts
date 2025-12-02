@@ -1,5 +1,9 @@
 import { Router, Response, NextFunction } from 'express';
 import { stockService } from '../services/stock.service';
+import { indexService } from '../services/index.service';
+import { dividendService } from '../services/dividend.service';
+import { circuitBreakerService } from '../services/circuitBreaker.service';
+import { marketEventService } from '../services/marketEvent.service';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
@@ -314,6 +318,105 @@ router.get('/market-summary', async (req: AuthenticatedRequest, res: Response, n
         volumeLeaders,
         activeEvents: formattedEvents,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/stocks/indices - Get all indices
+router.get('/indices', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const indices = await indexService.getAllIndices();
+    res.json({
+      success: true,
+      data: indices,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/stocks/indices/:ticker - Get index detail with components
+router.get(
+  '/indices/:ticker',
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const ticker = req.params.ticker;
+      if (!ticker) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ticker symbol is required',
+        });
+      }
+      const index = await indexService.getIndexByTicker(ticker);
+      if (!index) {
+        return res.status(404).json({
+          success: false,
+          error: 'Index not found',
+        });
+      }
+      res.json({
+        success: true,
+        data: index,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// GET /api/v1/stocks/dividends - Get player dividend summary (auth required)
+router.get('/dividends', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const summary = await dividendService.getPlayerDividendSummary(req.user!.id);
+    res.json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/stocks/dividends/history - Get dividend history (auth required)
+router.get(
+  '/dividends/history',
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const history = await dividendService.getPlayerDividendHistory(req.user!.id, limit);
+      res.json({
+        success: true,
+        data: history,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// GET /api/v1/stocks/events - Get active market events
+router.get('/events', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
+    const events = await marketEventService.getActiveEvents(limit);
+    res.json({
+      success: true,
+      data: events,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/stocks/halts - Get circuit breaker status
+router.get('/halts', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const status = circuitBreakerService.getStatus();
+    res.json({
+      success: true,
+      data: status,
     });
   } catch (error) {
     next(error);
