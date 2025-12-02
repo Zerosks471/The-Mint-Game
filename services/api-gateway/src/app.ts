@@ -43,8 +43,8 @@ export function createApp(): Application {
   app.use(requestIdMiddleware);
 
   // Stripe webhooks need raw body for signature verification
+  // All Stripe webhooks go through /api/v1/subscriptions/webhook (unified handler)
   app.use('/api/v1/subscriptions/webhook', express.raw({ type: 'application/json' }));
-  app.use('/api/v1/coins/webhook', express.raw({ type: 'application/json' }));
 
   // Body parsing (for all other routes)
   app.use(express.json({ limit: '1mb' }));

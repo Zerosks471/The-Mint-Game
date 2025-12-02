@@ -21,7 +21,8 @@
     "db:seed": "pnpm --filter @mint/database seed",
     "admin:dev": "pnpm --filter @mint/admin-dashboard dev & pnpm --filter @mint/admin dev",
     "admin:api": "pnpm --filter @mint/admin-dashboard dev",
-    "admin:web": "pnpm --filter @mint/admin dev"
+    "admin:web": "pnpm --filter @mint/admin dev",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/v1/subscriptions/webhook"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

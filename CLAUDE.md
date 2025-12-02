@@ -4,21 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**The Mint** is an idle financial tycoon simulation game. Players build investment empires through real estate, business management, and strategic decision-making.
+**The Mint** is an idle financial tycoon simulation game. Players build investment empires through real estate, business management, stock trading, and strategic decision-making.
 
 ## Architecture
 
 This is a **pnpm monorepo** using **Turborepo** for build orchestration:
 
 ```
-apps/web/              → React frontend (Vite, Tailwind, Zustand) - port 5173
-services/api-gateway/  → Express.js API server - port 3001
-packages/database/     → Prisma ORM schema and client
-packages/types/        → Shared TypeScript interfaces
-packages/utils/        → Shared utility functions
+apps/
+  web/                 → React frontend (Vite, Tailwind, Zustand) - port 5173
+  admin/               → Admin dashboard UI (Vite, React) - port 3003
+
+services/
+  api-gateway/         → Express.js main API server - port 3000
+  admin-dashboard/     → Admin API server - port 3002
+
+packages/
+  database/            → Prisma ORM schema and client
+  types/               → Shared TypeScript interfaces
+  utils/               → Shared utility functions
 ```
 
-**Stack:** React 18 + TypeScript + Vite | Express.js + PostgreSQL + Redis | Prisma ORM
+**Stack:** React 18 + TypeScript + Vite | Express.js + PostgreSQL + Redis | Prisma ORM | Stripe
 
 ## Essential Commands
 
@@ -42,7 +49,8 @@ pnpm db:studio       # Open Prisma Studio GUI
 # Single package commands
 pnpm --filter @mint/web dev
 pnpm --filter @mint/api-gateway dev
-pnpm --filter @mint/database generate
+pnpm --filter @mint/admin dev
+pnpm --filter @mint/admin-dashboard dev
 ```
 
 ## Development Setup
@@ -52,18 +60,64 @@ pnpm --filter @mint/database generate
 3. Run `pnpm setup` for complete initialization
 
 **Local Services (Docker):**
-
 - PostgreSQL on port 5434
 - Redis on port 6379
 - MailHog on ports 1025 (SMTP) / 8025 (Web UI)
-- Adminer on port 8080 (Database web admin - http://localhost:8080)
+- Adminer on port 8080 (Database web admin)
+
+**Application Ports:**
+- Main Web App: http://localhost:5173
+- Main API: http://localhost:3000
+- Admin Dashboard UI: http://localhost:3003
+- Admin API: http://localhost:3002
+
+## Stripe Integration
+
+Stripe is fully integrated for monetization:
+
+**Environment Variables:**
+```
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_MONTHLY=price_...
+STRIPE_PRICE_ANNUAL=price_...
+```
+
+**Webhook Setup (Local Development):**
+```bash
+stripe listen --forward-to localhost:3000/api/v1/subscriptions/webhook
+```
+
+**Purchase Types:**
+- Premium subscriptions (monthly $4.99, annual $39.99)
+- Mint Coins (4 tiers: 100-2600 coins)
+
+**Unified Webhook Handler:**
+All Stripe webhooks go to `/api/v1/subscriptions/webhook` and route based on `metadata.type`:
+- `coin_purchase` → Grants coins
+- `subscription` → Activates premium + 500 bonus coins
+
+## Premium Features
+
+| Feature | Free | Premium |
+|---------|------|---------|
+| Income Multiplier | 1.0x | 1.1x (+10%) |
+| Offline Cap | 8 hours | 24 hours |
+| Mint Coins on Subscribe | - | 500 coins |
+| Premium Badge | - | Visible on leaderboards |
+
+## Stock Market System
+
+- **35 Bot Stocks** pre-seeded across 6 sectors (tech, finance, energy, consumer, health, industrial)
+- **Player IPO** system - players can launch their own company stock
+- **Bot Trading** - 15+ bots with different strategies (momentum, contrarian, mean reversion)
+- **Price Simulation** - Mean reversion + volatility with tick intervals of 5-15 minutes
 
 ## Code Patterns
 
 **Adding API endpoints:** Create route in `services/api-gateway/src/routes/`, register in routes index
 
 **Database changes:** Edit `packages/database/prisma/schema.prisma`, then run:
-
 ```bash
 pnpm db:generate && pnpm db:push
 ```
@@ -71,6 +125,41 @@ pnpm db:generate && pnpm db:push
 **Shared types:** Add to `packages/types/src/`, export from index.ts
 
 **Frontend proxies `/api/*` to backend** - configured in Vite
+
+## API Route Structure
+
+All routes mounted at `/api/v1/`:
+- `/auth` - Authentication (login, register, refresh)
+- `/user` - Profile and user management
+- `/game` - Core game logic (properties, businesses, income)
+- `/prestige` - Prestige/upgrade system
+- `/daily` - Daily login rewards
+- `/leaderboards` - Player rankings
+- `/achievements` - Achievement tracking
+- `/ipo` - IPO system for player stocks
+- `/friends` - Friend system
+- `/clubs` - Club/guild system
+- `/gifts` - Gift sending
+- `/subscriptions` - Stripe subscriptions + unified webhooks
+- `/coins` - Coin purchases
+- `/cosmetics` - Cosmetics shop
+- `/minigames` - Mini-game activities
+- `/progression` - Phases, projects, upgrades
+- `/stocks` - Stock market trading
+- `/notifications` - In-game notifications
+
+## Admin Dashboard
+
+Separate microservice at http://localhost:3003 with pages for:
+- Dashboard (overview stats)
+- Users (player management, premium, coins)
+- Economy (cash circulation, market data)
+- Analytics (retention, revenue)
+- Stocks (bot stocks, player IPOs)
+- GameConfig (property/business settings)
+- Coupons (promotional codes)
+- Cosmetics (item management)
+- System/Security/Logs/Health
 
 ## Key Configuration
 
@@ -81,48 +170,6 @@ pnpm db:generate && pnpm db:push
 ## Design Documents
 
 Implementation plans are in `/docs/plans/`:
-
+- `IMPLEMENTATION-STATUS.md` - Current progress tracker
 - `2025-11-28-the-mint-technical-design.md` - System architecture
-- `2025-11-28-phase-1-core-game-mvp.md` - Current implementation phase
-- `2025-11-29-passive-income-system-design.md` - Income mechanics design
-
-## Stocks Page Deep Scan (Web)
-
-- **Location**: `apps/web/src/pages/StocksPage.tsx`
-- **Purpose**: Main in-game stock market experience (Market, Portfolio, My Company IPO, Orders).
-
-### Critical Issues Found
-
-- **Undefined state setter**: `setRealTimePrices` is called in `fetchMarketStocks` but no `useState` for `realTimePrices` exists and the value is never used. This is a hard error and dead code.
-- **Broken MarketStatus props**:
-  - `MarketStatus` is declared as `MarketStatus({ lastTickAt }: MarketStatusProps)` without any `MarketStatusProps` definition or import.
-  - `StocksPage` renders `<MarketStatus />` without props, while the component signature expects one.
-
-### Major Logic / Data Issues
-
-- **Unsafe price math**:
-  - Price change % in the market table and `StockChart` divides by `previousClose` without guarding for `0`/missing values, which can produce `Infinity`/`NaN` and ugly UI.
-- **IPO summary NaN risk**:
-  - `formatCurrency(parseFloat(marketCap))` can show `$NaN` if user input is invalid, even when other fields look fine.
-- **fetchAllData error handling is misleading**:
-  - `fetchAllData` wraps `Promise.all([...])` in a `try/catch`, but each fetch function swallows errors and only logs them, so the combined promise almost never rejects and the page-level `error` state rarely updates.
-
-### Performance / UX Concerns
-
-- **Multiple polling loops**:
-  - `StocksPage` polls stocks/portfolio every 5s and `LiveTradesFeed` polls trades every 3s; this can be noisy for the API and the client.
-- **Random chart history**:
-  - `handleViewStock` generates a random 24h history every open, making charts feel fake and non-deterministic relative to the backend price.
-- **Portfolio sorting mutates canonical state**:
-  - Sorting directly mutates the `portfolio` state array, losing the original order and mixing view concerns with data storage.
-- **Native confirm dialog**:
-  - `handleDelist` uses `window.confirm`, which breaks visual consistency with the rest of the game’s UI.
-
-### Fix Strategy (Implemented / Planned)
-
-- Remove or properly wire the unused `setRealTimePrices` state.
-- Define a simple `MarketStatusProps` type or inline props, and/or simplify `MarketStatus` to take no props (since `lastTickAt` is unused).
-- Guard all price percentage math against `0`/falsy denominators; render graceful fallbacks when data is missing.
-- Consolidate portfolio aggregate calculations (e.g., reuse `totalInvested`) to avoid repeated `reduce` calls.
-- Replace native `confirm` with a styled in-game confirmation pattern when delisting.
-- Revisit polling and chart history in a future pass to prefer shared live data streams or API-backed history over random client-side generation.
+- Archived plans in `/docs/plans/archive/`

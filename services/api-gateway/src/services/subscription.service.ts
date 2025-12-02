@@ -6,7 +6,8 @@ import { AppError } from '../middleware/errorHandler';
 
 const MINT_COINS_ON_SUBSCRIBE = 500;
 
-function getStripe(): Stripe {
+// Re-export getStripe for use by other services
+export function getStripe(): Stripe {
   if (!config.STRIPE_SECRET_KEY) {
     throw new AppError(
       ErrorCodes.SERVICE_UNAVAILABLE,
@@ -68,7 +69,7 @@ export class SubscriptionService {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${config.APP_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${config.APP_URL}/subscription/cancel`,
-      metadata: { userId: user.id, plan },
+      metadata: { userId: user.id, plan, type: 'subscription' },
       subscription_data: {
         metadata: { userId: user.id, plan },
       },
@@ -119,6 +120,59 @@ export class SubscriptionService {
   }
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    const purchaseType = session.metadata?.type;
+
+    // Route to appropriate handler based on purchase type
+    if (purchaseType === 'coin_purchase') {
+      await this.handleCoinPurchase(session);
+      return;
+    }
+
+    // Default: handle as subscription
+    await this.handleSubscriptionCheckout(session);
+  }
+
+  private async handleCoinPurchase(session: Stripe.Checkout.Session): Promise<void> {
+    const userId = session.metadata?.userId;
+    const coins = parseInt(session.metadata?.coins || '0', 10);
+
+    if (!userId || !coins) {
+      console.error('Invalid coin purchase metadata:', session.metadata);
+      return;
+    }
+
+    // Check if already fulfilled (idempotency)
+    const existingPurchase = await prisma.coinPurchase.findUnique({
+      where: { stripeSessionId: session.id },
+    });
+
+    if (existingPurchase) {
+      console.log('Coin purchase already fulfilled:', session.id);
+      return;
+    }
+
+    // Grant coins and record purchase
+    await prisma.$transaction(async (tx) => {
+      await tx.playerStats.update({
+        where: { userId },
+        data: { premiumCurrency: { increment: coins } },
+      });
+
+      await tx.coinPurchase.create({
+        data: {
+          userId,
+          stripeSessionId: session.id,
+          packageId: session.metadata?.packageId || 'unknown',
+          coins,
+          amountPaid: session.amount_total || 0,
+        },
+      });
+    });
+
+    console.log(`Granted ${coins} coins to user ${userId}`);
+  }
+
+  private async handleSubscriptionCheckout(session: Stripe.Checkout.Session): Promise<void> {
     const userId = session.metadata?.userId;
     const plan = session.metadata?.plan as 'monthly' | 'annual';
 
