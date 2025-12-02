@@ -272,7 +272,10 @@ export const useGameStore = create<GameState>()((set, get) => ({
     set({ error: null });
     const response = await gameApi.collectOfflineEarnings();
     if (response.success && response.data) {
-      await Promise.all([get().fetchStats(), get().fetchOfflineStatus()]);
+      // Only fetch stats - don't fetch offlineStatus to avoid showing 0 in the modal
+      // The offlineStatus will be refreshed on next page load
+      await get().fetchStats();
+      set({ offlineStatus: null });
       get().syncDisplayedCashFromStats();
       return response.data.collected;
     }

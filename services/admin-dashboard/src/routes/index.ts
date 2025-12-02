@@ -11,6 +11,8 @@ import stocksRouter from './stocks';
 import analyticsRouter from './analytics';
 import securityRouter from './security';
 import couponsRouter from './coupons';
+import cosmeticsRouter from './cosmetics';
+import uploadsRouter from './uploads';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -37,6 +39,8 @@ router.use('/stocks', stocksRouter);
 router.use('/analytics', analyticsRouter);
 router.use('/security', securityRouter);
 router.use('/coupons', couponsRouter);
+router.use('/cosmetics', cosmeticsRouter);
+router.use('/uploads', uploadsRouter);
 
 // Admin info endpoint
 router.get('/me', (req: any, res) => {

@@ -3,21 +3,23 @@ import { ErrorCodes } from '@mint/types';
 import { AppError } from '../middleware/errorHandler';
 
 // Task difficulty configurations by business type
+// Short and quick minigames: max 4-5 orders, plenty of time per task
 const BUSINESS_TASK_CONFIG: Record<string, {
   baseItems: number;
   itemsPerLevel: number;
+  maxItems: number;
   baseTimeSeconds: number;
   timeReductionPerLevel: number;
   minTimeSeconds: number;
 }> = {
-  restaurant: { baseItems: 2, itemsPerLevel: 0.6, baseTimeSeconds: 30, timeReductionPerLevel: 1, minTimeSeconds: 10 },
-  tech_startup: { baseItems: 1, itemsPerLevel: 0.3, baseTimeSeconds: 45, timeReductionPerLevel: 2, minTimeSeconds: 15 },
-  retail_store: { baseItems: 4, itemsPerLevel: 0.8, baseTimeSeconds: 30, timeReductionPerLevel: 1, minTimeSeconds: 12 },
-  factory: { baseItems: 4, itemsPerLevel: 0.8, baseTimeSeconds: 25, timeReductionPerLevel: 1, minTimeSeconds: 10 },
-  bank: { baseItems: 2, itemsPerLevel: 0.4, baseTimeSeconds: 30, timeReductionPerLevel: 1, minTimeSeconds: 12 },
-  hotel: { baseItems: 3, itemsPerLevel: 0.5, baseTimeSeconds: 35, timeReductionPerLevel: 1, minTimeSeconds: 15 },
-  marketing_agency: { baseItems: 3, itemsPerLevel: 0.5, baseTimeSeconds: 30, timeReductionPerLevel: 1, minTimeSeconds: 10 },
-  consulting_firm: { baseItems: 3, itemsPerLevel: 0.5, baseTimeSeconds: 35, timeReductionPerLevel: 1, minTimeSeconds: 15 },
+  restaurant: { baseItems: 3, itemsPerLevel: 0.1, maxItems: 5, baseTimeSeconds: 30, timeReductionPerLevel: 0.3, minTimeSeconds: 20 },
+  tech_startup: { baseItems: 2, itemsPerLevel: 0.1, maxItems: 4, baseTimeSeconds: 25, timeReductionPerLevel: 0.2, minTimeSeconds: 18 },
+  retail_store: { baseItems: 3, itemsPerLevel: 0.1, maxItems: 5, baseTimeSeconds: 30, timeReductionPerLevel: 0.3, minTimeSeconds: 20 },
+  factory: { baseItems: 3, itemsPerLevel: 0.1, maxItems: 5, baseTimeSeconds: 28, timeReductionPerLevel: 0.25, minTimeSeconds: 18 },
+  bank: { baseItems: 2, itemsPerLevel: 0.1, maxItems: 4, baseTimeSeconds: 25, timeReductionPerLevel: 0.2, minTimeSeconds: 18 },
+  hotel: { baseItems: 3, itemsPerLevel: 0.1, maxItems: 4, baseTimeSeconds: 28, timeReductionPerLevel: 0.25, minTimeSeconds: 20 },
+  marketing_agency: { baseItems: 2, itemsPerLevel: 0.1, maxItems: 4, baseTimeSeconds: 25, timeReductionPerLevel: 0.2, minTimeSeconds: 18 },
+  consulting_firm: { baseItems: 2, itemsPerLevel: 0.1, maxItems: 4, baseTimeSeconds: 25, timeReductionPerLevel: 0.2, minTimeSeconds: 18 },
 };
 
 // Revenue multipliers based on attempt number
@@ -48,7 +50,10 @@ export class MinigameService {
   getBusinessTaskDifficulty(businessType: string, level: number): TaskDifficulty {
     const config = BUSINESS_TASK_CONFIG[businessType] || BUSINESS_TASK_CONFIG['restaurant']!;
 
-    const itemCount = Math.floor(config.baseItems + (level - 1) * config.itemsPerLevel);
+    // Calculate item count with max cap for quick minigames
+    const rawItemCount = Math.floor(config.baseItems + (level - 1) * config.itemsPerLevel);
+    const itemCount = Math.min(rawItemCount, config.maxItems);
+
     const timeLimit = Math.max(
       config.minTimeSeconds,
       config.baseTimeSeconds - (level - 1) * config.timeReductionPerLevel

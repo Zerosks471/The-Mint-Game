@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import { config } from './config';
 import { requestIdMiddleware, errorHandler, notFoundHandler } from './middleware';
 import routes from './routes';
@@ -51,6 +52,13 @@ export function createApp(): Application {
 
   // Cookie parsing
   app.use(cookieParser());
+
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+    maxAge: '7d',
+    etag: true,
+    lastModified: true,
+  }));
 
   // Routes
   app.use('/api', routes);

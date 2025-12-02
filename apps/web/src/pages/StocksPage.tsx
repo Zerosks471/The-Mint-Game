@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   gameApi,
   StockMarketData,
@@ -20,6 +20,9 @@ import { DividendSummary } from '../components/stocks/DividendSummary';
 
 // Import cyberpunk CSS
 import '../styles/cyberpunk-stocks.css';
+
+type MarketSortOption = 'symbol' | 'price_high' | 'price_low' | 'change_high' | 'change_low' | 'volume';
+type PortfolioSortOption = 'symbol' | 'value_high' | 'value_low' | 'profit_high' | 'profit_low' | 'shares';
 
 // Generate simulated price history for sparkline based on current price and trend
 function generateSparklineData(currentPrice: number, changePercent: number, points: number = 12): number[] {
@@ -64,7 +67,51 @@ export function StocksPage() {
   const [selectedStock, setSelectedStock] = useState<StockDetail | null>(null);
   const [priceHistory, setPriceHistory] = useState<Array<{ time: number; price: number }>>([]);
   const [showDelistConfirm, setShowDelistConfirm] = useState(false);
+  const [marketSort, setMarketSort] = useState<MarketSortOption>('symbol');
+  const [portfolioSort, setPortfolioSort] = useState<PortfolioSortOption>('value_high');
   const refreshStats = useGameStore((s) => s.refreshStats);
+
+  // Sorted market stocks
+  const sortedStocks = useMemo(() => {
+    const sorted = [...stocks];
+    switch (marketSort) {
+      case 'symbol':
+        return sorted.sort((a, b) => a.tickerSymbol.localeCompare(b.tickerSymbol));
+      case 'price_high':
+        return sorted.sort((a, b) => parseFloat(b.currentPrice) - parseFloat(a.currentPrice));
+      case 'price_low':
+        return sorted.sort((a, b) => parseFloat(a.currentPrice) - parseFloat(b.currentPrice));
+      case 'change_high':
+        return sorted.sort((a, b) => b.changePercent - a.changePercent);
+      case 'change_low':
+        return sorted.sort((a, b) => a.changePercent - b.changePercent);
+      case 'volume':
+        return sorted.sort((a, b) => b.volume24h - a.volume24h);
+      default:
+        return sorted;
+    }
+  }, [stocks, marketSort]);
+
+  // Sorted portfolio
+  const sortedPortfolio = useMemo(() => {
+    const sorted = [...portfolio];
+    switch (portfolioSort) {
+      case 'symbol':
+        return sorted.sort((a, b) => a.tickerSymbol.localeCompare(b.tickerSymbol));
+      case 'value_high':
+        return sorted.sort((a, b) => parseFloat(b.currentValue) - parseFloat(a.currentValue));
+      case 'value_low':
+        return sorted.sort((a, b) => parseFloat(a.currentValue) - parseFloat(b.currentValue));
+      case 'profit_high':
+        return sorted.sort((a, b) => parseFloat(b.profitLoss) - parseFloat(a.profitLoss));
+      case 'profit_low':
+        return sorted.sort((a, b) => parseFloat(a.profitLoss) - parseFloat(b.profitLoss));
+      case 'shares':
+        return sorted.sort((a, b) => b.shares - a.shares);
+      default:
+        return sorted;
+    }
+  }, [portfolio, portfolioSort]);
 
   const fetchMarketStocks = useCallback(async () => {
     try {
@@ -456,7 +503,21 @@ export function StocksPage() {
                     <div className="px-5 py-4 border-b border-zinc-800">
                       <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-white">Market</h2>
-                        <span className="text-xs text-zinc-500">{stocks.length} stocks</span>
+                        <div className="flex items-center gap-3">
+                          <select
+                            value={marketSort}
+                            onChange={(e) => setMarketSort(e.target.value as MarketSortOption)}
+                            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+                          >
+                            <option value="symbol">A-Z</option>
+                            <option value="price_high">Price: High to Low</option>
+                            <option value="price_low">Price: Low to High</option>
+                            <option value="change_high">Gainers</option>
+                            <option value="change_low">Losers</option>
+                            <option value="volume">Volume</option>
+                          </select>
+                          <span className="text-xs text-zinc-500">{stocks.length} stocks</span>
+                        </div>
                       </div>
                     </div>
 
@@ -473,7 +534,7 @@ export function StocksPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {stocks.map((stock) => {
+                          {sortedStocks.map((stock) => {
                             const hasHolding = portfolio.find((h) => h.tickerSymbol === stock.tickerSymbol);
                             const currentPrice = parseFloat(stock.currentPrice);
                             const previousClose = parseFloat(stock.previousClose);
@@ -578,7 +639,21 @@ export function StocksPage() {
             {portfolio.length > 0 ? (
               <div className="cyberpunk-card overflow-hidden">
                 <div className="px-5 py-4 border-b border-zinc-800">
-                  <h2 className="text-lg font-semibold text-white">Your Holdings</h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-white">Your Holdings</h2>
+                    <select
+                      value={portfolioSort}
+                      onChange={(e) => setPortfolioSort(e.target.value as PortfolioSortOption)}
+                      className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-100 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+                    >
+                      <option value="value_high">Value: High to Low</option>
+                      <option value="value_low">Value: Low to High</option>
+                      <option value="profit_high">Profit: High to Low</option>
+                      <option value="profit_low">Profit: Low to High</option>
+                      <option value="shares">Most Shares</option>
+                      <option value="symbol">A-Z</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="overflow-x-auto cyberpunk-scrollbar">
                   <table className="cyberpunk-table">
@@ -594,7 +669,7 @@ export function StocksPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {portfolio.map((holding) => {
+                      {sortedPortfolio.map((holding) => {
                         const stock = stocks.find((s) => s.tickerSymbol === holding.tickerSymbol);
                         const profitLoss = parseFloat(holding.profitLoss);
                         const isProfit = profitLoss >= 0;

@@ -8,6 +8,7 @@ const navItems = [
   { path: '/analytics', label: 'Analytics', icon: '📈' },
   { path: '/stocks', label: 'Stocks', icon: '📉' },
   { path: '/gameconfig', label: 'Game Config', icon: '⚙️' },
+  { path: '/cosmetics', label: 'Cosmetics', icon: '🎨' },
   { path: '/coupons', label: 'Coupons', icon: '🎟️' },
   { path: '/system', label: 'System', icon: '🖥️' },
   { path: '/security', label: 'Security', icon: '🛡️' },

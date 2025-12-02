@@ -246,7 +246,9 @@ function App() {
         path="/shop"
         element={
           <ProtectedRoute>
-            <ShopPage />
+            <Layout>
+              <ShopPage />
+            </Layout>
           </ProtectedRoute>
         }
       />

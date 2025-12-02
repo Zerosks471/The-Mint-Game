@@ -240,7 +240,7 @@ export function Layout({ children }: LayoutProps) {
                 {/* IPO Status Indicator */}
                 {ipoStatus && (
                   <Link
-                    to="/prestige"
+                    to="/stocks"
                     className={`
                       relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
                       transition-all duration-200 border

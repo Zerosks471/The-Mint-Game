@@ -547,6 +547,97 @@ class AdminApi {
   async getCouponStats() {
     return this.request('/coupons/stats/summary');
   }
+
+  // Cosmetics
+  async getCosmetics(type?: string, rarity?: string) {
+    const query = new URLSearchParams();
+    if (type) query.set('type', type);
+    if (rarity) query.set('rarity', rarity);
+    return this.request(`/cosmetics?${query}`);
+  }
+
+  async getCosmetic(id: string) {
+    return this.request(`/cosmetics/${id}`);
+  }
+
+  async createCosmetic(data: {
+    id: string;
+    name: string;
+    description?: string;
+    type: string;
+    category?: string;
+    rarity?: string;
+    previewUrl?: string;
+    assetUrl?: string;
+    acquisitionType: string;
+    premiumCost?: number;
+    isAvailable?: boolean;
+    sortOrder?: number;
+  }) {
+    return this.request('/cosmetics', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCosmetic(id: string, data: Record<string, unknown>) {
+    return this.request(`/cosmetics/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCosmetic(id: string) {
+    return this.request(`/cosmetics/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getCosmeticStats() {
+    return this.request('/cosmetics/stats/summary');
+  }
+
+  // Uploads
+  async uploadCosmeticImage(file: File) {
+    const token = this.getToken();
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch(`${API_BASE}/uploads/cosmetic`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          this.clearToken();
+          window.location.href = '/login';
+        }
+        return data;
+      }
+
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        error: { code: 'NETWORK_ERROR', message: 'Failed to upload image' },
+      };
+    }
+  }
+
+  async deleteCosmeticImage(filename: string) {
+    return this.request(`/uploads/cosmetic/${encodeURIComponent(filename)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async listCosmeticImages() {
+    return this.request('/uploads/cosmetics');
+  }
 }
 
 export const api = new AdminApi();

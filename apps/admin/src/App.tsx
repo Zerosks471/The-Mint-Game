@@ -14,6 +14,7 @@ import { GameConfigPage } from '@/pages/GameConfigPage';
 import { CouponsPage } from '@/pages/CouponsPage';
 import { SystemPage } from '@/pages/SystemPage';
 import { SecurityPage } from '@/pages/SecurityPage';
+import { CosmeticsPage } from '@/pages/CosmeticsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -56,6 +57,7 @@ export default function App() {
                 <Route path="/stocks" element={<StocksPage />} />
                 <Route path="/gameconfig" element={<GameConfigPage />} />
                 <Route path="/coupons" element={<CouponsPage />} />
+                <Route path="/cosmetics" element={<CosmeticsPage />} />
                 <Route path="/system" element={<SystemPage />} />
                 <Route path="/security" element={<SecurityPage />} />
                 <Route path="/logs" element={<LogsPage />} />
