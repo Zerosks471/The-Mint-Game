@@ -25,7 +25,6 @@ export function CircularProgress({
 }: CircularProgressProps) {
   const circleRef = useRef<SVGCircleElement>(null);
   const containerRef = useRef<SVGSVGElement>(null);
-  const waveRef = useRef<SVGPathElement>(null);
   const clipId = useId();
 
   const radius = (size - strokeWidth) / 2;
@@ -57,47 +56,9 @@ export function CircularProgress({
     }
   }, [progress, circumference, isComplete]);
 
-  // Continuous wave animation
-  useEffect(() => {
-    if (!waveRef.current || !showWave) return;
-
-    const tl = gsap.timeline({ repeat: -1 });
-    tl.to(waveRef.current, {
-      x: -size,
-      duration: 2,
-      ease: 'linear',
-    });
-
-    return () => {
-      tl.kill();
-    };
-  }, [size, showWave]);
-
   // Glow effect color based on progress
   const glowColor = isComplete ? '#4ade80' : color;
   const currentColor = isComplete ? '#4ade80' : color;
-
-  // Calculate wave fill level (inverted because SVG y-axis is flipped)
-  const fillLevel = size - (progress / 100) * size;
-
-  // Generate wave path
-  const waveHeight = 4;
-  const waveWidth = size;
-  const generateWavePath = () => {
-    // Create a wave that spans 2x the width so we can animate it
-    const points: string[] = [];
-    const totalWidth = size * 2;
-
-    for (let x = 0; x <= totalWidth; x += 2) {
-      const y = Math.sin((x / waveWidth) * Math.PI * 2) * waveHeight;
-      points.push(`${x},${fillLevel + y}`);
-    }
-
-    // Close the path at the bottom
-    return `M0,${fillLevel} ` +
-           points.map((p, i) => (i === 0 ? `L${p}` : `L${p}`)).join(' ') +
-           ` L${totalWidth},${size + 10} L0,${size + 10} Z`;
-  };
 
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
@@ -109,13 +70,6 @@ export function CircularProgress({
           filter: isComplete ? `drop-shadow(0 0 10px ${glowColor})` : 'none',
         }}
       >
-        <defs>
-          {/* Circular clip path for the wave */}
-          <clipPath id={`wave-clip-${clipId}`}>
-            <circle cx={center} cy={center} r={innerRadius} />
-          </clipPath>
-        </defs>
-
         {/* Background fill */}
         <circle
           cx={center}
@@ -123,25 +77,6 @@ export function CircularProgress({
           r={innerRadius}
           fill="rgba(0, 0, 0, 0.3)"
         />
-
-        {/* Animated wave fill */}
-        {showWave && (
-          <g clipPath={`url(#wave-clip-${clipId})`}>
-            <path
-              ref={waveRef}
-              d={generateWavePath()}
-              fill={currentColor}
-              opacity={0.6}
-            />
-            {/* Second wave layer for depth */}
-            <path
-              d={generateWavePath()}
-              fill={currentColor}
-              opacity={0.3}
-              transform={`translate(${size / 4}, 2)`}
-            />
-          </g>
-        )}
 
         {/* Background track (outer ring) */}
         <circle
@@ -174,45 +109,47 @@ export function CircularProgress({
       </svg>
 
       {/* Center content - thin wave bar */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <svg
-          width={size * 0.5}
-          height={size * 0.15}
-          viewBox="0 0 50 15"
-          className="overflow-visible"
-        >
-          <defs>
-            <linearGradient id={`wave-bar-grad-${clipId}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={currentColor} stopOpacity={0.3} />
-              <stop offset="50%" stopColor={currentColor} stopOpacity={1} />
-              <stop offset="100%" stopColor={currentColor} stopOpacity={0.3} />
-            </linearGradient>
-          </defs>
-          {/* Animated wave bars */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <rect
-              key={i}
-              x={8 + i * 8}
-              y={7.5}
-              width={3}
-              height={1}
-              rx={0.5}
-              fill={`url(#wave-bar-grad-${clipId})`}
-              style={{
-                transformOrigin: `${9.5 + i * 8}px 7.5px`,
-                animation: `waveBar 0.8s ease-in-out infinite`,
-                animationDelay: `${i * 0.1}s`,
-              }}
-            />
-          ))}
-          <style>{`
-            @keyframes waveBar {
-              0%, 100% { transform: scaleY(1); }
-              50% { transform: scaleY(${isComplete ? 4 : 2 + (progress / 100) * 3}); }
-            }
-          `}</style>
-        </svg>
-      </div>
+      {showWave && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg
+            width={size * 0.5}
+            height={size * 0.15}
+            viewBox="0 0 50 15"
+            className="overflow-visible"
+          >
+            <defs>
+              <linearGradient id={`wave-bar-grad-${clipId}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={currentColor} stopOpacity={0.3} />
+                <stop offset="50%" stopColor={currentColor} stopOpacity={1} />
+                <stop offset="100%" stopColor={currentColor} stopOpacity={0.3} />
+              </linearGradient>
+            </defs>
+            {/* Animated wave bars */}
+            {[0, 1, 2, 3, 4].map((i) => (
+              <rect
+                key={i}
+                x={8 + i * 8}
+                y={7.5}
+                width={3}
+                height={1}
+                rx={0.5}
+                fill={`url(#wave-bar-grad-${clipId})`}
+                style={{
+                  transformOrigin: `${9.5 + i * 8}px 7.5px`,
+                  animation: `waveBar 0.8s ease-in-out infinite`,
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+            <style>{`
+              @keyframes waveBar {
+                0%, 100% { transform: scaleY(1); }
+                50% { transform: scaleY(${isComplete ? 4 : 2 + (progress / 100) * 3}); }
+              }
+            `}</style>
+          </svg>
+        </div>
+      )}
     </div>
   );
 }

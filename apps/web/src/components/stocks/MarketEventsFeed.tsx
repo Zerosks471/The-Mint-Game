@@ -17,7 +17,6 @@ interface MarketEventsFeedProps {
   maxEvents?: number;
 }
 
-// Convert API market events to our extended format
 function convertApiEvents(apiEvents: ApiMarketEvent[]): MarketEvent[] {
   return apiEvents.map((event, index) => {
     const now = new Date();
@@ -30,22 +29,22 @@ function convertApiEvents(apiEvents: ApiMarketEvent[]): MarketEvent[] {
     switch (event.type) {
       case 'pump':
         type = 'pump';
-        title = `${event.tickerSymbol} is surging!`;
+        title = `${event.tickerSymbol} surging`;
         severity = 'high';
         break;
       case 'dump':
         type = 'dump';
-        title = `${event.tickerSymbol} is crashing!`;
+        title = `${event.tickerSymbol} crashing`;
         severity = 'high';
         break;
       case 'news_positive':
         type = 'news';
-        title = `Positive news for ${event.tickerSymbol}`;
+        title = `Good news: ${event.tickerSymbol}`;
         severity = 'medium';
         break;
       case 'news_negative':
         type = 'news';
-        title = `Negative news for ${event.tickerSymbol}`;
+        title = `Bad news: ${event.tickerSymbol}`;
         severity = 'medium';
         break;
     }
@@ -54,7 +53,7 @@ function convertApiEvents(apiEvents: ApiMarketEvent[]): MarketEvent[] {
       id: `${event.tickerSymbol}-${index}`,
       type,
       title,
-      description: `Market activity detected with ${(event.magnitude * 100).toFixed(1)}% impact`,
+      description: `${(event.magnitude * 100).toFixed(1)}% impact`,
       affectedTickers: [event.tickerSymbol],
       timestamp: new Date(now.getTime() - (300000 - event.remainingMs)),
       expiresAt,
@@ -83,160 +82,84 @@ export function MarketEventsFeed({ onTickerClick, maxEvents = 10 }: MarketEvents
 
   useEffect(() => {
     fetchEvents();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchEvents, 30000);
     return () => clearInterval(interval);
   }, [maxEvents]);
 
-  const getEventBadge = (type: MarketEvent['type']) => {
+  const getEventIcon = (type: MarketEvent['type']) => {
     switch (type) {
-      case 'news':
-        return { icon: '📰', label: 'News', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
-      case 'halt':
-        return { icon: '⛔', label: 'Halt', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
-      case 'player_action':
-        return { icon: '👤', label: 'Player', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' };
-      case 'pump':
-        return { icon: '🚀', label: 'Pump', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
-      case 'dump':
-        return { icon: '💥', label: 'Dump', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
-      default:
-        return { icon: '📊', label: 'Event', color: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30' };
+      case 'pump': return '↑';
+      case 'dump': return '↓';
+      case 'news': return '•';
+      case 'halt': return '⏸';
+      default: return '•';
+    }
+  };
+
+  const getEventColor = (type: MarketEvent['type']) => {
+    switch (type) {
+      case 'pump': return 'text-green-400';
+      case 'dump': return 'text-red-400';
+      case 'news': return 'text-cyan-400';
+      case 'halt': return 'text-yellow-400';
+      default: return 'text-zinc-400';
     }
   };
 
   const getTimeRemaining = (expiresAt: Date): string => {
-    const now = new Date();
-    const diff = expiresAt.getTime() - now.getTime();
-
+    const diff = expiresAt.getTime() - Date.now();
     if (diff <= 0) return 'Expired';
-
     const minutes = Math.floor(diff / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
-
-    if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
-    }
+    if (minutes > 0) return `${minutes}m`;
     return `${seconds}s`;
-  };
-
-  const getTimeAgo = (timestamp: Date): string => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return `${seconds}s ago`;
   };
 
   if (isLoading) {
     return (
-      <div className="bg-dark-card border border-dark-border rounded-xl p-6">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mint" />
+      <div className="cyberpunk-card p-4">
+        <div className="flex items-center justify-center py-6">
+          <div className="cyberpunk-spinner" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-dark-border bg-dark-bg flex items-center justify-between">
-        <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-mint animate-pulse" />
-          Market Events
-        </h3>
-        <span className="text-xs text-zinc-500">Auto-refresh: 30s</span>
+    <div className="cyberpunk-card overflow-hidden">
+      <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-white">Events</h3>
+        <span className="text-xs text-zinc-500">Live</span>
       </div>
 
-      {/* Events List */}
-      <div className="divide-y divide-dark-border max-h-[500px] overflow-y-auto">
+      <div className="max-h-[300px] overflow-y-auto cyberpunk-scrollbar">
         {events.length === 0 ? (
-          <div className="p-8 text-center">
-            <span className="text-4xl mb-2 block">📊</span>
-            <p className="text-zinc-400 text-sm">No active market events</p>
-            <p className="text-zinc-500 text-xs mt-1">Events will appear here as they happen</p>
+          <div className="p-6 text-center">
+            <p className="text-zinc-500 text-sm">No active events</p>
           </div>
         ) : (
-          events.map((event) => {
-            const badge = getEventBadge(event.type);
-            const timeRemaining = getTimeRemaining(event.expiresAt);
-            const isExpiring = event.expiresAt.getTime() - Date.now() < 60000; // Less than 1 minute
-
-            return (
+          <div className="divide-y divide-zinc-800">
+            {events.map((event) => (
               <div
                 key={event.id}
-                className="p-4 hover:bg-dark-bg transition-colors"
+                className="px-4 py-3 hover:bg-zinc-800/30 transition-colors cursor-pointer"
+                onClick={() => onTickerClick?.(event.affectedTickers[0])}
               >
-                {/* Event Header */}
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-xl">{badge.icon}</span>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-zinc-100 text-sm">{event.title}</h4>
-                      <p className="text-xs text-zinc-500 mt-0.5">{getTimeAgo(event.timestamp)}</p>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-lg font-bold ${getEventColor(event.type)}`}>
+                    {getEventIcon(event.type)}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">{event.title}</p>
+                    <p className="text-xs text-zinc-500">{event.description}</p>
                   </div>
-                  <span className={`text-[10px] px-2 py-1 rounded font-bold border ${badge.color}`}>
-                    {badge.label}
+                  <span className="text-xs text-zinc-500 font-mono">
+                    {getTimeRemaining(event.expiresAt)}
                   </span>
                 </div>
-
-                {/* Event Description */}
-                <p className="text-sm text-zinc-400 mb-2">{event.description}</p>
-
-                {/* Affected Tickers */}
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="text-xs text-zinc-500">Affected:</span>
-                  {event.affectedTickers.map((ticker) => (
-                    <button
-                      key={ticker}
-                      onClick={() => onTickerClick?.(ticker)}
-                      className="text-xs font-bold px-2 py-1 bg-mint/10 text-mint border border-mint/30 rounded hover:bg-mint/20 transition-colors"
-                    >
-                      {ticker}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Expiration Indicator */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-dark-border">
-                  <span className="text-xs text-zinc-500">Expires in:</span>
-                  <span
-                    className={`text-xs font-mono font-bold ${
-                      isExpiring ? 'text-red-400 animate-pulse' : 'text-zinc-400'
-                    }`}
-                  >
-                    {timeRemaining}
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                {timeRemaining !== 'Expired' && (
-                  <div className="mt-2 h-1 bg-dark-bg rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-1000 ${
-                        isExpiring ? 'bg-red-500' : 'bg-mint'
-                      }`}
-                      style={{
-                        width: `${Math.max(
-                          0,
-                          Math.min(
-                            100,
-                            ((event.expiresAt.getTime() - Date.now()) / 300000) * 100
-                          )
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                )}
               </div>
-            );
-          })
+            ))}
+          </div>
         )}
       </div>
     </div>
