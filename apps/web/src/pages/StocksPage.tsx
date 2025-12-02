@@ -16,7 +16,8 @@ import { MiniSparkline } from '../components/ui';
 
 // New cyberpunk stock components
 import { StockTickerTape } from '../components/stocks/StockTickerTape';
-import { HaltedStocksBanner } from '../components/stocks/HaltedStocksBanner';
+// TODO: Enable when circuit breaker API is connected
+// import { HaltedStocksBanner } from '../components/stocks/HaltedStocksBanner';
 import { StockIndexCard } from '../components/stocks/StockIndexCard';
 import { MarketEventsFeed } from '../components/stocks/MarketEventsFeed';
 import { DividendSummary } from '../components/stocks/DividendSummary';
@@ -48,7 +49,7 @@ export function StocksPage() {
   const [activeTab, setActiveTab] = useState<TabType>('market');
   const [stocks, setStocks] = useState<StockMarketData[]>([]);
   const [portfolio, setPortfolio] = useState<StockHoldingData[]>([]);
-  const [orders, setOrders] = useState<StockOrderData[]>([]);
+  const [_orders, setOrders] = useState<StockOrderData[]>([]);
   const [playerStock, setPlayerStock] = useState<StockDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
