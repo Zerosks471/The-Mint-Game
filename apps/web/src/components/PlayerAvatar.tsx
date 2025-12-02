@@ -1,18 +1,12 @@
+import { useState } from 'react';
+
 interface PlayerAvatarProps {
   avatarId?: string | null;
   frameId?: string | null;
-  size?: 'sm' | 'md' | 'lg';
+  previewUrl?: string | null;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
-
-// Emoji placeholders for avatars
-const AVATAR_EMOJIS: Record<string, string> = {
-  avatar_default: '👤',
-  avatar_investor: '💼',
-  avatar_tycoon: '🎩',
-  avatar_mogul: '👔',
-  avatar_legend: '👑',
-};
 
 // Frame colors for the border
 const FRAME_STYLES: Record<string, string> = {
@@ -27,16 +21,16 @@ const SIZE_CLASSES = {
   sm: 'w-8 h-8 text-lg',
   md: 'w-10 h-10 text-xl',
   lg: 'w-14 h-14 text-3xl',
+  xl: 'w-20 h-20 text-4xl',
 };
 
 export function PlayerAvatar({
-  avatarId,
   frameId,
+  previewUrl,
   size = 'md',
   className = '',
 }: PlayerAvatarProps) {
-  const avatar = avatarId || 'avatar_default';
-  const emoji = AVATAR_EMOJIS[avatar] || '👤';
+  const [imageError, setImageError] = useState(false);
   const frameStyle = frameId ? FRAME_STYLES[frameId] || '' : '';
 
   return (
@@ -47,11 +41,23 @@ export function PlayerAvatar({
         bg-dark-elevated
         flex items-center justify-center
         border-2
+        overflow-hidden
         ${frameStyle || 'border-dark-border'}
         ${className}
       `}
     >
-      {emoji}
+      {previewUrl && !imageError ? (
+        <img
+          src={previewUrl}
+          alt=""
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <span className={size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-3xl' : 'text-xl'}>
+          👤
+        </span>
+      )}
     </div>
   );
 }

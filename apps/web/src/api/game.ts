@@ -198,6 +198,7 @@ export interface LeaderboardEntry {
   displayName: string | null;
   avatarId: string | null;
   avatarFrameId: string | null;
+  avatarPreviewUrl: string | null;
   badgeId: string | null;
   isPremium: boolean;
   score: string;

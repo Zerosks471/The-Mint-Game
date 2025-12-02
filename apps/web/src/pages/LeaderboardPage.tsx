@@ -22,7 +22,6 @@ const BADGE_EMOJIS: Record<string, string> = {
 const TYPE_ICONS: Record<string, string> = {
   global_net_worth: '💰',
   global_income: '📈',
-  global_prestige: '⭐',
   weekly_earnings: '📅',
 };
 
@@ -95,13 +94,8 @@ export function LeaderboardPage() {
     }
   };
 
-  const formatScore = (score: string, type: string): string => {
+  const formatScore = (score: string, _type: string): string => {
     const num = parseFloat(score);
-    if (type === 'global_prestige') {
-      const level = Math.floor(num / 1000);
-      const points = num % 1000;
-      return `Lv.${level} (${points} PP)`;
-    }
     return formatCurrency(num);
   };
 
@@ -267,6 +261,7 @@ export function LeaderboardPage() {
                   <PlayerAvatar
                     avatarId={leaderboard.entries[1]?.avatarId}
                     frameId={leaderboard.entries[1]?.avatarFrameId}
+                    previewUrl={leaderboard.entries[1]?.avatarPreviewUrl}
                     size="lg"
                   />
                   <div className="mt-2 text-center">
@@ -287,6 +282,7 @@ export function LeaderboardPage() {
                     <PlayerAvatar
                       avatarId={leaderboard.entries[0]?.avatarId}
                       frameId={leaderboard.entries[0]?.avatarFrameId}
+                      previewUrl={leaderboard.entries[0]?.avatarPreviewUrl}
                       size="xl"
                     />
                     <div className="absolute -top-2 -right-2 text-2xl animate-bounce">👑</div>
@@ -308,6 +304,7 @@ export function LeaderboardPage() {
                   <PlayerAvatar
                     avatarId={leaderboard.entries[2]?.avatarId}
                     frameId={leaderboard.entries[2]?.avatarFrameId}
+                    previewUrl={leaderboard.entries[2]?.avatarPreviewUrl}
                     size="lg"
                   />
                   <div className="mt-2 text-center">
@@ -365,6 +362,7 @@ export function LeaderboardPage() {
                     <PlayerAvatar
                       avatarId={entry.avatarId}
                       frameId={entry.avatarFrameId}
+                      previewUrl={entry.avatarPreviewUrl}
                       size="md"
                     />
                     <div className="min-w-0">

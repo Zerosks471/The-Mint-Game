@@ -9,6 +9,7 @@ export interface LeaderboardEntry {
   displayName: string | null;
   avatarId: string | null;
   avatarFrameId: string | null;
+  avatarPreviewUrl: string | null;
   badgeId: string | null;
   isPremium: boolean;
   score: string;
@@ -42,10 +43,6 @@ const LEADERBOARD_CONFIG = {
   global_income: {
     name: 'Income/Hour',
     description: 'Highest earning players',
-  },
-  global_prestige: {
-    name: 'Prestige Masters',
-    description: 'Most prestigious players',
   },
   weekly_earnings: {
     name: 'Weekly Earnings',
@@ -82,6 +79,16 @@ export class LeaderboardService {
       }),
     ]);
 
+    // Fetch avatar cosmetics to get previewUrls
+    const avatarIds = entries.map(e => e.avatarId).filter(Boolean) as string[];
+    const cosmetics = avatarIds.length > 0
+      ? await prisma.cosmetic.findMany({
+          where: { id: { in: avatarIds } },
+          select: { id: true, previewUrl: true },
+        })
+      : [];
+    const cosmeticMap = new Map(cosmetics.map(c => [c.id, c.previewUrl]));
+
     // Get the last update time
     const lastEntry = entries[0];
 
@@ -97,6 +104,7 @@ export class LeaderboardService {
         displayName: e.displayName,
         avatarId: e.avatarId,
         avatarFrameId: e.avatarFrameId,
+        avatarPreviewUrl: e.avatarId ? cosmeticMap.get(e.avatarId) || null : null,
         badgeId: e.badgeId,
         isPremium: e.isPremium,
         score: e.score.toString(),
@@ -146,7 +154,7 @@ export class LeaderboardService {
     const types: LeaderboardType[] = [
       'global_net_worth',
       'global_income',
-      'global_prestige',
+      'weekly_earnings',
     ];
 
     for (const type of types) {
