@@ -2,11 +2,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
-import { gameApi, DailyStatus, IPOStatus } from '../api/game';
+import { gameApi, DailyStatus } from '../api/game';
 import { DailyRewardModal } from './DailyRewardModal';
-import { BuyCoinsModal } from './BuyCoinsModal';
-import { PremiumBadge } from './PremiumBadge';
-import { UpgradeButton } from './UpgradeButton';
 import { PlayerAvatar } from './PlayerAvatar';
 import { Sidebar } from './Sidebar';
 import { NotificationBell } from './NotificationBell';
@@ -30,8 +27,6 @@ export function Layout({ children }: LayoutProps) {
   const { stats, playerBusinesses, refreshStats, fetchPlayerBusinesses } = useGameStore();
   const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null);
   const [showDailyModal, setShowDailyModal] = useState(false);
-  const [showCoinsModal, setShowCoinsModal] = useState(false);
-  const [ipoStatus, setIpoStatus] = useState<IPOStatus | null>(null);
   const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary | null>(null);
   const [sidebarCollapsed] = useState(false);
 
@@ -49,13 +44,12 @@ export function Layout({ children }: LayoutProps) {
     }, 0),
   } : null;
 
-  // Fetch daily reward status, IPO status, and portfolio on mount
+  // Fetch daily reward status and portfolio on mount
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const [dailyRes, ipoRes, portfolioRes] = await Promise.all([
+        const [dailyRes, portfolioRes] = await Promise.all([
           gameApi.getDailyStatus(),
-          gameApi.getIPOStatus(),
           gameApi.getPortfolio(),
         ]);
 
@@ -64,10 +58,6 @@ export function Layout({ children }: LayoutProps) {
           if (dailyRes.data.canClaim) {
             setShowDailyModal(true);
           }
-        }
-
-        if (ipoRes.success && ipoRes.data) {
-          setIpoStatus(ipoRes.data);
         }
 
         if (portfolioRes.success && portfolioRes.data) {
@@ -237,78 +227,36 @@ export function Layout({ children }: LayoutProps) {
                 {/* Notifications */}
                 <NotificationBell />
 
-                {/* IPO Status Indicator */}
-                {ipoStatus && (
-                  <Link
-                    to="/stocks"
-                    className={`
-                      relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-                      transition-all duration-200 border
-                      ${ipoStatus.percentChange >= 0
-                        ? 'bg-mint/10 border-mint/30 text-mint hover:bg-mint/20'
-                        : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
-                      }
-                    `}
-                  >
-                    <span>📈</span>
-                    <span className="font-mono">${ipoStatus.tickerSymbol}</span>
-                    <span className={`text-xs font-bold ${ipoStatus.percentChange >= 0 ? 'text-mint' : 'text-red-400'}`}>
-                      {ipoStatus.percentChange >= 0 ? '+' : ''}{ipoStatus.percentChange.toFixed(1)}%
-                    </span>
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-purple rounded-full animate-pulse" />
-                  </Link>
-                )}
-
-                {/* Coin Balance Button */}
-                {stats && (
-                  <button
-                    onClick={() => setShowCoinsModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-                      bg-amber/10 border border-amber/30 text-amber hover:bg-amber/20 transition-all duration-200"
-                    title="Buy Mint Coins"
-                  >
-                    <span>🪙</span>
-                    <span className="font-bold font-mono">{stats.premiumCurrency?.toLocaleString() ?? 0}</span>
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                )}
-
                 {/* Daily Reward Button */}
                 <button
                   onClick={() => setShowDailyModal(true)}
                   className={`
-                    relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
+                    relative flex items-center justify-center w-10 h-10 rounded-xl text-lg
                     transition-all duration-200 border
                     ${dailyStatus?.canClaim
                       ? 'bg-amber/10 border-amber/30 text-amber hover:bg-amber/20 animate-pulse'
                       : 'bg-dark-elevated border-dark-border text-zinc-400 hover:bg-dark-border hover:text-zinc-300'
                     }
                   `}
+                  title={dailyStatus?.canClaim ? 'Claim Daily Reward!' : 'Daily Reward'}
                 >
-                  <span>🎁</span>
-                  <span className="hidden sm:inline">Daily</span>
+                  🎁
                   {dailyStatus?.canClaim && (
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
                   )}
                 </button>
 
-                {/* User Profile */}
-                <Link to="/shop" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                {/* User Avatar - Links to Settings */}
+                <Link
+                  to="/settings"
+                  className="hover:opacity-80 transition-opacity"
+                  title="Settings"
+                >
                   <PlayerAvatar
                     avatarId={user?.avatarId}
                     frameId={user?.avatarFrameId}
                     size="sm"
                   />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-zinc-200">{user?.username}</span>
-                    {user?.isPremium ? (
-                      <PremiumBadge size="sm" />
-                    ) : (
-                      <UpgradeButton size="sm" />
-                    )}
-                  </div>
                 </Link>
               </div>
             </div>
@@ -347,11 +295,6 @@ export function Layout({ children }: LayoutProps) {
         isOpen={showDailyModal}
         onClose={() => setShowDailyModal(false)}
         onClaim={handleDailyClaim}
-      />
-
-      <BuyCoinsModal
-        isOpen={showCoinsModal}
-        onClose={() => setShowCoinsModal(false)}
       />
 
       {/* Toast Notifications */}
